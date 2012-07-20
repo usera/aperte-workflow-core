@@ -21,7 +21,11 @@ import org.aperteworkflow.search.ProcessInstanceSearchData;
 import org.aperteworkflow.search.SearchProvider;
 import org.aperteworkflow.ui.view.ViewRegistry;
 import org.aperteworkflow.ui.view.impl.DefaultViewRegistryImpl;
+import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.osgi.framework.*;
+
+import com.thoughtworks.xstream.XStream;
+
 import pl.net.bluesoft.rnd.poutils.cquery.func.F;
 import pl.net.bluesoft.rnd.processtool.plugins.*;
 import pl.net.bluesoft.rnd.processtool.steps.ProcessToolProcessStep;
@@ -58,6 +62,8 @@ public class PluginHelper implements PluginManager, SearchProvider {
     private static final String AWF_RUNNING = "__AWF__running";
     private static final String AWF__ASSIGNEE = "__AWF__assignee";
     private static final String AWF__QUEUE = "__AWF__queue";
+    
+    private static final String SEPARATOR = "/";
 
     private StringBuffer monitorInfo = new StringBuffer();
 
@@ -247,6 +253,8 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
         if (bundleHelper.hasHeaderValues(PROCESS_DEPLOYMENT)) {
             handleProcessDeployment(eventType, bundleHelper, registry);
+            /* Uzupełnij role, //TODO do odkomentowania po 23.07.2012 */
+            //handleProcessRoles(eventType, bundleHelper, registry);
         }
 
         if (bundleHelper.hasHeaderValues(GLOBAL_DICTIONARY)) {
@@ -353,10 +361,10 @@ public class PluginHelper implements PluginManager, SearchProvider {
         final Bundle bundle = bundleHelper.getBundle();
         String[] properties = bundleHelper.getHeaderValues(PROCESS_DEPLOYMENT);
         for (String processPackage : properties) {
-            String providerId = bundle.getBundleId() + "/" + processPackage.replace(".", "/") + "/messages";
+            String providerId = bundle.getBundleId() + SEPARATOR + processPackage.replace(".", SEPARATOR) + "/messages";
             if (eventType == Bundle.ACTIVE) {
                 try {
-                    String basePath = "/" + processPackage.replace(".", "/") + "/";
+                    String basePath = SEPARATOR + processPackage.replace(".", SEPARATOR) + SEPARATOR;
                     toolRegistry.deployOrUpdateProcessDefinition(
                             bundleHelper.getBundleResourceStream(basePath + "processdefinition." +
                                     toolRegistry.getBpmDefinitionLanguage() + ".xml"),
@@ -370,7 +378,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
                         public InputStream loadProperty(String path) throws IOException {
                             return getBundleResourceStream(bundle, path);
                         }
-                    }, "/" + processPackage.replace(".", "/") + "/messages"), providerId);
+                    }, "/" + processPackage.replace(".", SEPARATOR) + "/messages"), providerId);
 
                     toolRegistry.registerProcessDictionaries(bundleHelper.getBundleResourceStream(basePath + "process-dictionaries.xml"));
 
@@ -385,6 +393,75 @@ public class PluginHelper implements PluginManager, SearchProvider {
             }
         }
     }
+    
+	private void handleProcessRoles(int eventType, OSGiBundleHelper bundleHelper, ProcessToolRegistry registry) {
+		if (eventType != Bundle.ACTIVE) {
+			return;
+		}
+		
+		final Bundle bundle = bundleHelper.getBundle();
+
+		if (bundleHelper.hasHeaderValues(ROLE_FILES)) {
+			String[] files = bundleHelper.getHeaderValues(ROLE_FILES);
+			for (String file : files) {
+				try {
+					InputStream input = bundleHelper.getBundleResourceStream(file);
+					Collection<ProcessRoleConfig> roles = getRoles(input);
+					createRoles(roles,registry);
+				}
+				catch (Exception e) {
+					LOGGER.log(Level.SEVERE, e.getMessage(), e);
+					forwardErrorInfoToMonitor(bundle.getSymbolicName(), e);
+				}
+			}
+		}
+
+		if (bundleHelper.hasHeaderValues(PROCESS_DEPLOYMENT)) {
+			String[] properties = bundleHelper.getHeaderValues(PROCESS_DEPLOYMENT);
+			for (String processPackage : properties) {
+				String basePath = SEPARATOR + processPackage.replace(".", SEPARATOR) + SEPARATOR;
+				try {
+					InputStream input = bundleHelper.getBundleResourceStream(basePath + "roles-config.xml");
+					Collection<ProcessRoleConfig> roles = getRoles(input);
+					createRoles(roles,registry);
+				}
+				catch (Exception e) {
+					LOGGER.log(Level.SEVERE, e.getMessage(), e);
+					forwardErrorInfoToMonitor(bundle.getSymbolicName(), e);
+				}
+			}
+		}
+	}
+
+	private Collection<ProcessRoleConfig> getRoles(InputStream input) {
+		if (input == null) {
+			return null;
+		}
+		XStream xstream = new XStream();
+		xstream.aliasPackage("config", ProcessRoleConfig.class.getPackage().getName());
+		xstream.useAttributeFor(String.class);
+		xstream.useAttributeFor(Boolean.class);
+		xstream.useAttributeFor(Integer.class);
+		return (Collection<ProcessRoleConfig>) xstream.fromXML(input);
+	}
+
+	private void createRoles(Collection<ProcessRoleConfig> roles,ProcessToolRegistry registry) {
+		if (roles != null) {
+			for (ProcessRoleConfig role : roles) {
+				try 
+				{
+					boolean roleCreated = LiferayBridge.createRoleIfNotExists(role.getName(), role.getDescription());
+					if (roleCreated) 
+						LOGGER.log(Level.INFO, "Created role " + role.getName());
+
+				} catch (RuntimeException e) {
+					forwardErrorInfoToMonitor("adding role " + role.getName(), e);
+					throw e;
+				}
+			}
+		}
+	}
+
 
     private void handleBundleResources(int eventType, OSGiBundleHelper bundleHelper, ProcessToolRegistry toolRegistry) {
         Bundle bundle = bundleHelper.getBundle();
@@ -392,9 +469,9 @@ public class PluginHelper implements PluginManager, SearchProvider {
         for (String pack : resources) {
             if (eventType == Bundle.ACTIVE) 
             {
-                String basePath = "/" + pack.replace(".", "/");
-                if (!basePath.endsWith("/")) {
-                    basePath += "/";
+                String basePath = SEPARATOR + pack.replace(".", SEPARATOR);
+                if (!basePath.endsWith(SEPARATOR)) {
+                    basePath += SEPARATOR;
                 }
                 Enumeration<URL> urls = bundle.findEntries(basePath, null, true);
                 while (urls.hasMoreElements()) {
@@ -413,7 +490,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
         if (eventType == Bundle.ACTIVE) {
             for (String pack : properties) {
                 try {
-                    String basePath = "/" + pack.replace(".", "/") + "/";
+                    String basePath = SEPARATOR + pack.replace(".", SEPARATOR) + SEPARATOR;
                     InputStream is = bundleHelper.getBundleResourceStream(basePath + "global-dictionaries.xml");
                     if (is != null) {
                         toolRegistry.registerGlobalDictionaries(is);
