@@ -1064,7 +1064,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            BpmTask autoSkipTask = null;
 
            List<BpmTask> tasksAfterCompletion = null;
-           if(startsSubprocess) {
+           if(startsSubprocess && pi.getChildren() != null) {
 	           for(ProcessInstance child : pi.getChildren()) {
 	        	   tasksAfterCompletion = findProcessTasks(child, ctx);
 	        	   if(tasksAfterCompletion != null && tasksAfterCompletion.size() > 0)
@@ -1074,20 +1074,22 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            if(tasksAfterCompletion == null || tasksAfterCompletion.size() == 0) {
                tasksAfterCompletion = findProcessTasks(pi, ctx);
            }
-           if(tasksAfterCompletion == null || tasksAfterCompletion.size() == 0) {
+           if(pi.getParent() != null && (tasksAfterCompletion == null || tasksAfterCompletion.size() == 0)) {
                tasksAfterCompletion = findProcessTasks(pi.getParent(), ctx);
            }
-           for (BpmTask createdTask : tasksAfterCompletion) {
-               if (!taskIdsBeforeCompletion.contains(createdTask.getInternalTaskId())) {
-                   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, createdTask, user));
-               }
-               if (Lang.equals(user.getId(), createdTask.getOwner().getId())) {
-                   userTask = createdTask;
-               }
-               if(createdTask.getTaskName().toLowerCase().startsWith(AUTO_SKIP_TASK_NAME_PREFIX.toLowerCase())) {
-            	   autoSkipTask = createdTask;
-               }
-          }
+           if(tasksAfterCompletion != null) {
+	           for (BpmTask createdTask : tasksAfterCompletion) {
+	               if (!taskIdsBeforeCompletion.contains(createdTask.getInternalTaskId())) {
+	                   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, createdTask, user));
+	               }
+	               if (Lang.equals(user.getId(), createdTask.getOwner().getId())) {
+	                   userTask = createdTask;
+	               }
+	               if(createdTask.getTaskName().toLowerCase().startsWith(AUTO_SKIP_TASK_NAME_PREFIX.toLowerCase())) {
+	            	   autoSkipTask = createdTask;
+	               }
+	           }
+           }
            
            if(autoSkipTask != null) {
         	   ProcessStateAction skipAction = new ProcessStateAction();
