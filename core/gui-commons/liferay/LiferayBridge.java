@@ -3,6 +3,7 @@ package org.aperteworkflow.util.liferay;
 import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.model.Role;
+import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.service.RoleLocalServiceUtil;
@@ -228,5 +229,20 @@ public class LiferayBridge {
         catch (SystemException e) {
             throw new LiferayBridgeException(e);
         }
+    }
+    
+    public boolean createRoleIfNotExists(String roleName, String description) {
+    	try {
+			int cnt = RoleLocalServiceUtil.searchCount(PortalUtil.getDefaultCompanyId(), roleName, null, null);
+			if (cnt == 0) {
+				Map<Locale, String> titles = new HashMap<Locale,  String>();
+				RoleLocalServiceUtil.addRole(0, PortalUtil.getDefaultCompanyId(), roleName, titles, description, RoleConstants.TYPE_REGULAR);
+				return true;
+			}
+			return false;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
     }
 }

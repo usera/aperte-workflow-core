@@ -888,21 +888,5 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
         public <K, V> void registerCache(String cacheName, Map<K, V> cache) {
             caches.put(cacheName, cache);
             logger.warning("Registered cache named: " + cacheName);
-        }
-
-//        public boolean createRoleIfNotExists(String roleName, String description) {
-//        	try {
-//    			int cnt = RoleLocalServiceUtil.searchCount(PortalUtil.getDefaultCompanyId(), roleName, null, null);
-//    			if (cnt == 0) {
-//    				Map<Locale, String> titles = new HashMap<Locale,  String>();
-//    				RoleLocalServiceUtil.addRole(0, PortalUtil.getDefaultCompanyId(), roleName, titles, description, RoleConstants.TYPE_REGULAR);
-//    				return true;
-//    			}
-//    			return false;
-//    		}
-//    		catch (Exception e) {
-//    			throw new RuntimeException(e);
-//    		}
-//        }
-    
+        } 
 }
