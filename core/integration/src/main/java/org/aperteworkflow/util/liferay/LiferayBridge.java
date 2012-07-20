@@ -3,6 +3,7 @@ package org.aperteworkflow.util.liferay;
 import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.model.Role;
+import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.service.RoleLocalServiceUtil;
@@ -10,6 +11,7 @@ import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import pl.net.bluesoft.rnd.processtool.model.UserAttribute;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
+import pl.net.bluesoft.rnd.processtool.model.UserRole;
 import pl.net.bluesoft.util.lang.Collections;
 import pl.net.bluesoft.util.lang.Mapcar;
 import pl.net.bluesoft.util.lang.Predicate;
@@ -51,8 +53,9 @@ public class LiferayBridge {
         ud.setJobTitle(user.getJobTitle());
         ud.setCompanyId(user.getCompanyId());
         ud.setLiferayUserId(user.getUserId());
-        for (Role role : user.getRoles()) {
-            ud.addRoleName(role.getName());
+        for (Role role : user.getRoles()) 
+        {
+            ud.addRoleName(role.getName(), role.getDescription());
         }
         setGroupRoles(ud, user);
         return ud;
@@ -228,5 +231,29 @@ public class LiferayBridge {
         catch (SystemException e) {
             throw new LiferayBridgeException(e);
         }
+    }
+    
+    public static boolean createRoleIfNotExists(String roleName, String description) {
+    	try 
+    	{
+    		/* Look for the role with provided name */
+    		Role role = RoleLocalServiceUtil.getRole(PortalUtil.getDefaultCompanyId(), roleName);
+			if (role == null) 
+			{
+				Map<Locale, String> titles = new HashMap<Locale,  String>();
+				RoleLocalServiceUtil.addRole(0, PortalUtil.getDefaultCompanyId(), roleName, titles, description, RoleConstants.TYPE_REGULAR);
+				return true;
+			}
+			/* Role found, maybe there is need to update description */
+			else if(description != null && !description.equals(role.getDescription()))
+			{
+				role.setDescription(description);
+				RoleLocalServiceUtil.updateRole(role);
+			}
+			return false;
+		}
+		catch (Exception e) {
+			throw new LiferayBridgeException(e);
+		}
     }
 }
