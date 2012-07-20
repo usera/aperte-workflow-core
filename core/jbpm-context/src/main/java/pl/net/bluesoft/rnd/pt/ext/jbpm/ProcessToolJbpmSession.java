@@ -1277,7 +1277,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
         log.setUser(findOrCreateUser(user, ctx));
         log.setUserSubstitute(getSubstitutingUser(ctx));
         log.setExecutionId(task.getExecutionId());
-        task.getProcessInstance().addProcessLog(log);
+        task.getProcessInstance().getRootProcessInstance().addProcessLog(log);
         return log;
     }
     @Override
