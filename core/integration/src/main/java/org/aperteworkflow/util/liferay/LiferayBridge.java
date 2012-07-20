@@ -53,8 +53,9 @@ public class LiferayBridge {
         ud.setJobTitle(user.getJobTitle());
         ud.setCompanyId(user.getCompanyId());
         ud.setLiferayUserId(user.getUserId());
-        for (Role role : user.getRoles()) {
-            ud.addRoleName(role.getName());
+        for (Role role : user.getRoles()) 
+        {
+            ud.addRoleName(role.getName(), role.getDescription());
         }
         setGroupRoles(ud, user);
         return ud;
