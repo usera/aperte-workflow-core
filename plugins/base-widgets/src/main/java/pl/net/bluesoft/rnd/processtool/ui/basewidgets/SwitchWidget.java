@@ -48,8 +48,12 @@ public class SwitchWidget extends BaseProcessToolVaadinWidget implements Process
 		if (widgets.size() > 0)
 			return widgets.get(0).render();
 		else {
-			return new Label();
+			return null;
 		}
+	}
+	
+	public boolean hasWidgets() {
+		return widgets.size() > 0;
 	}
 
 	@Override
