@@ -46,7 +46,7 @@ public class TabSheetWidget extends BaseProcessToolVaadinWidget implements Proce
 		ProcessToolVaadinWidget vChild = (ProcessToolVaadinWidget) child;
 		try {
 			component = vChild.render();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
             Panel p = new Panel();
             VerticalLayout vl = new VerticalLayout();
