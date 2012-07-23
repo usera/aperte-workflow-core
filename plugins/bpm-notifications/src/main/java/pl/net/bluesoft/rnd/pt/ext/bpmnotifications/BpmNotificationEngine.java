@@ -308,14 +308,14 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     
                     if(bnmp.isDebug())
                     {
-                    	logger.info("mail.smtp.host = "+bnmp.getSmtpHost());
-                    	logger.info("mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort());
-                    	logger.info("mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass());
-                    	logger.info("mail.smtp.auth = "+bnmp.isSmtpAuth());
-                    	logger.info("mail.smtp.port = "+bnmp.getSmtpPort());
-                    	logger.info("mail.smtp.user = "+bnmp.getSmtpUser());
-                    	logger.info("mail.debug = "+bnmp.isDebug());
-                    	logger.info("mail.smtp.starttls.enable = "+bnmp.isStarttls());
+                    	logger.info(" mail.smtp.host = "+bnmp.getSmtpHost());
+                    	logger.info("\n mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort());
+                    	logger.info("\n mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass());
+                    	logger.info("\n mail.smtp.auth = "+bnmp.isSmtpAuth());
+                    	logger.info("\n mail.smtp.port = "+bnmp.getSmtpPort());
+                    	logger.info("\n mail.smtp.user = "+bnmp.getSmtpUser());
+                    	logger.info("\n mail.debug = "+bnmp.isDebug());
+                    	logger.info("\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
                     }
                     
                     if(bnmp.getSmtpHost() != null)
