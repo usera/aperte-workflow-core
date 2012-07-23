@@ -306,6 +306,18 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                 {
                     Properties prop = new Properties();
                     
+                    if(bnmp.isDebug())
+                    {
+                    	logger.info("mail.smtp.host = "+bnmp.getSmtpHost());
+                    	logger.info("mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort());
+                    	logger.info("mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass());
+                    	logger.info("mail.smtp.auth = "+bnmp.isSmtpAuth());
+                    	logger.info("mail.smtp.port = "+bnmp.getSmtpPort());
+                    	logger.info("mail.smtp.user = "+bnmp.getSmtpUser());
+                    	logger.info("mail.debug = "+bnmp.isDebug());
+                    	logger.info("mail.smtp.starttls.enable = "+bnmp.isStarttls());
+                    }
+                    
                     if(bnmp.getSmtpHost() != null)
                     	prop.put("mail.smtp.host",  bnmp.getSmtpHost());
                     
@@ -415,9 +427,10 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         
         message.setContent(multipart);
         message.setSentDate(new Date());
-        logger.info("Sending mail with attaments to " + recipient + " from " + sender);
         
+        logger.info("Sending mail with attaments to " + recipient + " from " + sender);
         sendMessage(message);
+        logger.info("Emails sent");
     }
     
     private void sendMessage(Message message) throws Exception {
