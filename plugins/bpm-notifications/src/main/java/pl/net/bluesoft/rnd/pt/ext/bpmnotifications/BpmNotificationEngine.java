@@ -267,6 +267,7 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
         Transport.send(message);
+        logger.info("Emails sent");
     }
 
     public synchronized void refreshConfigIfNecessary() {
