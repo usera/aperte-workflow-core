@@ -79,6 +79,9 @@ public abstract class BaseProcessToolActionButton implements ProcessToolActionBu
 		map.put("skipSaving", String.valueOf(definition.getSkipSaving()));
 		map.put("markProcessImportant", String.valueOf(definition.getMarkProcessImportant()));
 		map.put("priority", String.valueOf(definition.getPriority()));
+		map.put("url", String.valueOf(definition.getUrl()));
+		map.put("title", String.valueOf(definition.getTitle()));
+		map.put("question", String.valueOf(definition.getQuestion()));
 		for (ProcessStateActionAttribute attr : definition.getAttributes()) {
 			map.put(attr.getName(), attr.getValue());
 		}
