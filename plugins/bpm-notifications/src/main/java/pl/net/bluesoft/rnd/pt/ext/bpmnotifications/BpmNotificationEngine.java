@@ -146,14 +146,31 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
 		return emails;
 	}
 
-	private javax.mail.Session getMailSession(String profileName) {
-        final Properties properties = hasText(profileName) && persistentMailProperties.containsKey(profileName) ?
-                persistentMailProperties.get(profileName) : mailProperties;
+	private javax.mail.Session getMailSession(String profileName) 
+	{
+		Boolean profileExists = hasText(profileName) && persistentMailProperties.containsKey(profileName);
+		Properties properties = null;
+		
+		if(profileExists)
+		{
+			properties = persistentMailProperties.get(profileName);
+		}
+		else
+		{
+			properties = mailProperties;
+			logger.warning("Warning, profile "+profileName+" doesn't exist in configuration, using default from mail.properties!");
+		}
+		
+		/* Get user name and password from configuration */
+		String userName = properties.getProperty("mail.smtp.user");
+		String userPassword = properties.getProperty("mail.smtp.password");
+		
+		final PasswordAuthentication authentication = new PasswordAuthentication(userName, userPassword);
+		
         return javax.mail.Session.getInstance(properties,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(properties.getProperty("mail.smtp.user"),
-                                properties.getProperty("mail.smtp.password"));
+                        return authentication;
                     }
                 });
     }
