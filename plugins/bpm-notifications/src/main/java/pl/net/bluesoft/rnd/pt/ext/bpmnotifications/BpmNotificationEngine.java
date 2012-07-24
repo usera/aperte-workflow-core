@@ -147,6 +147,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     {
     	/* Register simple providers */
     	templateProvider = new  MailTemplateProvider();
+    	templateProvider.refreshConfig();
     	
     	/* Look for configuration for mail provider. If none exists, default is database */
     	String providerName = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(PROVIDER_TYPE);
@@ -171,6 +172,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     		logger.severe("Unknown provider ["+providerName+"]! Service will be stopped");
     		//throw new IllegalArgumentException("Unknown provider ["+providerName+"]! Service will be stopped");
     	}
+    	
     	
     }
 
@@ -277,6 +279,12 @@ public class BpmNotificationEngine implements BpmNotificationService
                     .list();
 
             cacheUpdateTime = System.currentTimeMillis();
+            
+            registerMailSettingProvider();
+            
+            /* Refresh config for providers */
+            templateProvider.refreshConfig();
+            mailSessionProvider.refreshConfig();
 
             persistentMailProperties = new HashMap<String, Properties>();
             List<BpmNotificationMailProperties> properties = session.createCriteria(BpmNotificationMailProperties.class).list();
@@ -330,10 +338,6 @@ public class BpmNotificationEngine implements BpmNotificationService
             }
 
             bpmSession = ProcessToolContext.Util.getThreadProcessToolContext().getProcessToolSessionFactory().createAutoSession();
-            
-            /* Refresh config for providers */
-            templateProvider.refreshConfig();
-            mailSessionProvider.refreshConfig();
         }
 
     }
