@@ -37,16 +37,6 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		
 		mailEventListener = new MailEventListener(engine);
 		registry.getEventBusManager().subscribe(MailEvent.class, mailEventListener);
-		
-        registry.withExistingOrNewContext(new ProcessToolContextCallback() 
-        {
-			@Override
-			public void withContext(ProcessToolContext ctx)
-			{
-				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
-				engine.registerMailSettingProvider();
-			}
-        });
 	}
 
 	@Override
