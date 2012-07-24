@@ -164,15 +164,22 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
 		/* Get user name and password from configuration */
 		String userName = properties.getProperty("mail.smtp.user");
 		String userPassword = properties.getProperty("mail.smtp.password");
+		String isDebug = properties.getProperty("mail.debug");
 		
 		final PasswordAuthentication authentication = new PasswordAuthentication(userName, userPassword);
 		
-        return javax.mail.Session.getInstance(properties,
+		javax.mail.Session mailSession = javax.mail.Session.getInstance(properties,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return authentication;
                     }
                 });
+		
+		/* If set, enable debug informations */
+		if(isDebug != null && isDebug.equals("true"))
+			mailSession.setDebug(true);
+		
+		return mailSession;
     }
 
     public void sendNotification(String recipient, String subject, String body) throws Exception {
@@ -266,8 +273,8 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         message.setSubject(subject);
         message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
-        Transport.send(message);
-        logger.info("Emails sent");
+        
+        sendMessage(message, mailSession);
     }
 
     public synchronized void refreshConfigIfNecessary() {
@@ -329,7 +336,7 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     	prop.put("mail.smtp.socketFactory.class", bnmp.getSmtpSocketFactoryClass());
                     
 
-                    prop.put("mail.smtp.auth", bnmp.isSmtpAuth());
+                    prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
                     
                     if(bnmp.getSmtpPort() != null)
                     	prop.put("mail.smtp.port", bnmp.getSmtpPort());
@@ -340,8 +347,8 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     if(bnmp.getSmtpPassword() != null)
                     	prop.put("mail.smtp.password", bnmp.getSmtpPassword());
                     
-                    prop.put("mail.debug", bnmp.isDebug());
-                    prop.put("mail.smtp.starttls.enable", bnmp.isStarttls());
+                    prop.put("mail.debug", getStringValueFromBoolean(bnmp.isDebug()));
+                    prop.put("mail.smtp.starttls.enable", getStringValueFromBoolean(bnmp.isStarttls()));
                     
                     persistentMailProperties.put(bnmp.getProfileName(), prop);
                 }
@@ -353,6 +360,17 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
             bpmSession = ProcessToolContext.Util.getThreadProcessToolContext().getProcessToolSessionFactory().createAutoSession();
         }
 
+    }
+    
+    private String getStringValueFromBoolean(Boolean value)
+    {
+    	if(value == null)
+    		return "false";
+    	
+    	if(value)
+    		return "true";
+    	else
+    		return "false";
     }
 
     @Override
@@ -430,11 +448,41 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         message.setSentDate(new Date());
         
         logger.info("Sending mail with attaments to " + recipient + " from " + sender);
-        sendMessage(message);
+        sendMessage(message, mailSession);
+    }
+    
+    private void sendMessage(Message message, javax.mail.Session mailSession) throws Exception 
+    {
+    	/* If smtps is required, force diffrent transport properties */
+    	if(isSmtpsRequired(mailSession))
+    	{
+    		Properties emailPrtoperties = mailSession.getProperties();
+    		
+    		String secureHost = emailPrtoperties.getProperty("mail.smtp.host");
+    		String securePort = emailPrtoperties.getProperty("mail.smtp.port");
+    		String userName = emailPrtoperties.getProperty("mail.smtp.user");
+    		String userPassword = emailPrtoperties.getProperty("mail.smtp.password");
+    		
+            Transport transport = mailSession.getTransport("smtps");
+            transport.connect(secureHost, Integer.parseInt(securePort), userName, userPassword);
+            transport.sendMessage(message, message.getAllRecipients());
+            transport.close();
+    	}
+    	/* Default transport mechanism */
+    	else
+    	{
+    		Transport.send(message);
+    	}
+        
         logger.info("Emails sent");
     }
     
-    private void sendMessage(Message message) throws Exception {
-        Transport.send(message);
+    /** Check is smtps is required */
+    private boolean isSmtpsRequired(javax.mail.Session mailSession)
+    {
+    	Properties emailPrtoperties = mailSession.getProperties();
+    	String starttls = emailPrtoperties.getProperty("mail.smtp.starttls.enable");
+    	
+    	return starttls != null && starttls.equals("true");
     }
 }
