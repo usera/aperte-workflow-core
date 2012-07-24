@@ -480,9 +480,7 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
     /** Check is smtps is required */
     private boolean isSmtpsRequired(javax.mail.Session mailSession)
     {
-    	Properties emailPrtoperties = mailSession.getProperties();
-    	String starttls = emailPrtoperties.getProperty("mail.smtp.starttls.enable");
-    	
-    	return starttls != null && starttls.equals("true");
+    	//TODO to implement
+    	return false;
     }
 }
