@@ -545,7 +545,8 @@ public class HistoryListPane extends AbstractListPane implements DateRangeListen
     private void openHistoryInstance(ProcessInstanceLog log, String notFoundMessage, boolean finalTask) {
         getHistorySelection().update(table.getPageLength(), filterExpression, isBaseUserOnly, (DateRange) dateRangeField.getValue(), log);
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-        ProcessInstance pi = ctx.getProcessInstanceDAO().getProcessInstance(log.getProcessInstance().getId());
+        //ProcessInstance pi = ctx.getProcessInstanceDAO().getProcessInstance(log.getProcessInstance().getId());
+		ProcessInstance pi = ctx.getProcessInstanceDAO().getProcessInstanceByInternalId(log.getExecutionId());
         log.setProcessInstance(pi);
         BpmTask task = finalTask ? bpmSession.getPastEndTask(log, ctx) : bpmSession.getPastOrActualTask(log, ctx);
         if (task != null) {
