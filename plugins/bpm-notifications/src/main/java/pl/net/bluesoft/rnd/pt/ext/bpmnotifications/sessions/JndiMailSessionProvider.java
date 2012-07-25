@@ -4,7 +4,9 @@ package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions;
 
 import java.util.logging.Logger;
 
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
+import javax.mail.URLName;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -31,6 +33,24 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 			logger.severe("Connection name for jndi resource not found: "+profileName);
 			throw new IllegalArgumentException("Connection name for jndi resource not found: "+profileName);
 		}
+		
+		/* Add smtp authentication */
+		
+		PasswordAuthentication authentication =
+				      new PasswordAuthentication(
+				    		  mailSession.getProperties().getProperty("mail.smtp.user"),
+				    		  mailSession.getProperties().getProperty("ws.transport.password"));
+
+
+	    URLName url=  new URLName(
+	    		mailSession.getProperties().getProperty("mail.transport.protocol"),
+	        mailSession.getProperties().getProperty("mail.smtp.host"),
+	        -1,
+	        null,
+	        mailSession.getProperties().getProperty("mail.smtp.user"),
+	        null);
+	    
+	    mailSession.setPasswordAuthentication(url,authentication);
 		
 		return mailSession;
 	}
