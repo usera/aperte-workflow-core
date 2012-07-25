@@ -75,6 +75,13 @@ public class BpmNotificationEngine implements BpmNotificationService
     
     private IMailSessionProvider mailSessionProvider;
     private MailTemplateProvider templateProvider;
+    
+    public BpmNotificationEngine()
+    {
+    	/* Register simple providers */
+    	templateProvider = new  MailTemplateProvider();
+    	mailSessionProvider = new DatabaseMailSessionProvider();
+    }
 
     public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
         refreshConfigIfNecessary();
@@ -145,8 +152,6 @@ public class BpmNotificationEngine implements BpmNotificationService
      */
     public void registerMailSettingProvider()
     {
-    	/* Register simple providers */
-    	templateProvider = new  MailTemplateProvider();
     	templateProvider.refreshConfig();
     	
     	/* Look for configuration for mail provider. If none exists, default is database */
