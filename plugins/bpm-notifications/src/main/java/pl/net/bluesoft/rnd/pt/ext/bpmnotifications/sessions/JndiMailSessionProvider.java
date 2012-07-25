@@ -36,19 +36,30 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		
 		/* Add smtp authentication */
 		
-		PasswordAuthentication authentication =
-				      new PasswordAuthentication(
-				    		  mailSession.getProperties().getProperty("mail.smtp.user"),
-				    		  mailSession.getProperties().getProperty("ws.transport.password"));
-
+		String userName = mailSession.getProperties().getProperty("mail.smtp.user");
+		String userPassword = mailSession.getProperties().getProperty("mail.smtp.password");
+		String isDebug = mailSession.getProperties().getProperty("mail.debug");
+		
+		if(isDebug != null && isDebug.equals("true"))
+		{
+			for(Object property: mailSession.getProperties().keySet())
+			{
+				Object value = mailSession.getProperties().get(property);
+				
+				logger.info("Property "+property+" = "+value);
+			}
+		}
+		
+		
+		if(userPassword == null)
+			userPassword = mailSession.getProperties().getProperty("password");
+		
+		PasswordAuthentication authentication = new PasswordAuthentication(userName,userPassword);
 
 	    URLName url=  new URLName(
 	    		mailSession.getProperties().getProperty("mail.transport.protocol"),
 	        mailSession.getProperties().getProperty("mail.smtp.host"),
-	        -1,
-	        null,
-	        mailSession.getProperties().getProperty("mail.smtp.user"),
-	        null);
+	        -1, null, userName, null);
 	    
 	    mailSession.setPasswordAuthentication(url,authentication);
 		

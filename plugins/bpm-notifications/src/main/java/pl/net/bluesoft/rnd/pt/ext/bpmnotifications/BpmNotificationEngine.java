@@ -151,9 +151,7 @@ public class BpmNotificationEngine implements BpmNotificationService
      * If configuration in pt_settings is not set, default is database
      */
     public void registerMailSettingProvider()
-    {
-    	templateProvider.refreshConfig();
-    	
+    {	
     	/* Look for configuration for mail provider. If none exists, default is database */
     	String providerName = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(PROVIDER_TYPE);
     	
@@ -447,12 +445,14 @@ public class BpmNotificationEngine implements BpmNotificationService
 	@Override
 	public String findTemplate(String templateName)
 	{
+		refreshConfigIfNecessary();
 		return templateProvider.findTemplate(templateName);
 	}
 
 	@Override
 	public String processTemplate(String templateName, Map data)
 	{
+		refreshConfigIfNecessary();
 		return templateProvider.processTemplate(templateName,data);
 	}
 }

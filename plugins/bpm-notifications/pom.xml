@@ -27,7 +27,7 @@
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
-            <version>1.4.3</version>
+            <version>1.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -57,6 +57,8 @@
                         <Export-Package>
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service,
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.util,
+                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates,
+                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions
                         </Export-Package>
                         <Import-Package>
                             javax.mail;version=!,
