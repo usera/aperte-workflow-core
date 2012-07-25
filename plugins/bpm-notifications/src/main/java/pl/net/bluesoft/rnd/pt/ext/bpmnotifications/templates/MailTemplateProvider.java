@@ -75,7 +75,8 @@ public class MailTemplateProvider implements TemplateLoader
 	{
         logger.info("Using template " + templateName);
         StringWriter sw = new StringWriter();
-        try {
+        try 
+        {
             Template template = freemarkerConfiguration.getTemplate(templateName);
             template.process(data != null ? data : new HashMap(), sw);
         }

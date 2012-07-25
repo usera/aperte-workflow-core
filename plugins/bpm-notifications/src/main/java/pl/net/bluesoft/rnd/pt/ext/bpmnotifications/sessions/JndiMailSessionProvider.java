@@ -38,6 +38,18 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		
 		String userName = mailSession.getProperties().getProperty("mail.smtp.user");
 		String userPassword = mailSession.getProperties().getProperty("mail.smtp.password");
+		String isDebug = mailSession.getProperties().getProperty("mail.debug");
+		
+		if(isDebug != null && isDebug.equals("true"))
+		{
+			for(Object property: mailSession.getProperties().keySet())
+			{
+				Object value = mailSession.getProperties().get(property);
+				
+				logger.info("Property "+property+" = "+value);
+			}
+		}
+		
 		
 		if(userPassword == null)
 			userPassword = mailSession.getProperties().getProperty("password");
@@ -47,7 +59,7 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 	    URLName url=  new URLName(
 	    		mailSession.getProperties().getProperty("mail.transport.protocol"),
 	        mailSession.getProperties().getProperty("mail.smtp.host"),
-	        -1, null, userName, userPassword);
+	        -1, null, userName, null);
 	    
 	    mailSession.setPasswordAuthentication(url,authentication);
 		
