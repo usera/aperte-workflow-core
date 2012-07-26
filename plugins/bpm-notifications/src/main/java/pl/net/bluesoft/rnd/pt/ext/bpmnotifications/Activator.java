@@ -1,8 +1,13 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications;
 
+import java.util.Properties;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+
+import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
@@ -13,8 +18,6 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProp
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.util.eventbus.EventListener;
-
-import java.util.Properties;
 
 /**
  * @author tlipski@bluesoft.net.pl

@@ -1,72 +1,87 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications;
 
-import freemarker.cache.TemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
+import static pl.net.bluesoft.rnd.util.TaskUtil.getTaskLink;
+import static pl.net.bluesoft.util.lang.Strings.hasText;
+
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.activation.DataHandler;
+import javax.activation.URLDataSource;
+import javax.mail.Message;
+import javax.mail.Multipart;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
-import pl.net.bluesoft.rnd.processtool.template.ProcessToolTemplateErrorException;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProviderParams;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProviderParams;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.DatabaseMailSessionProvider;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.IMailSessionProvider;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvider;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates.MailTemplateProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
-import javax.activation.DataHandler;
-import javax.activation.URLDataSource;
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.URL;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static pl.net.bluesoft.rnd.util.TaskUtil.getTaskLink;
-import static pl.net.bluesoft.util.lang.Strings.hasText;
-
 /**
  * @author tlipski@bluesoft.net.pl
  */
-public class BpmNotificationEngine implements TemplateLoader, BpmNotificationService {
+public class BpmNotificationEngine implements BpmNotificationService 
+{
     private static final String SUBJECT_TEMPLATE_SUFFIX = "_subject";
-    private static final String SENDER_TEMPLATE_SUFFIX = "_sender";
+    private static final String PROVIDER_TYPE = "mail.settings.provider.type";
 
     private Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
 
     private I18NSource messageSource = new DefaultI18NSource();
 
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
-    private Map<String, BpmNotificationTemplate> templateMap = new HashMap<String, BpmNotificationTemplate>();
-    private Map<String, String> templateCache = new HashMap<String, String>();
+
     private long cacheUpdateTime;
-    private Configuration freemarkerConfiguration;
     private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 1000;
     private ProcessToolBpmSession bpmSession;
-    private Properties mailProperties;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
 
     private Map<String, Properties> persistentMailProperties = new HashMap<String, Properties>();
+    
+    private IMailSessionProvider mailSessionProvider;
+    private MailTemplateProvider templateProvider;
+    
+    public BpmNotificationEngine()
+    {
+    	/* Register simple providers */
+    	templateProvider = new  MailTemplateProvider();
+    	mailSessionProvider = new DatabaseMailSessionProvider();
+    }
 
     public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
         refreshConfigIfNecessary();
@@ -109,28 +124,59 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     continue;
                 }
                 String templateName = cfg.getTemplateName();
-                BpmNotificationTemplate template = templateMap.get(templateName);
+                
+                BpmNotificationTemplate template = templateProvider.getBpmNotificationTemplate(templateName);
 
                 ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
                 Map data = prepareData(task, pi, userData, cfg, ctx);
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
 
-                javax.mail.Session mailSession = getMailSession(cfg.getProfileName());
+                javax.mail.Session mailSession = mailSessionProvider.getSession(cfg.getProfileName());
 
                 for (String rcpt : new HashSet<String>(emailsToNotify)) {
-                    try {
                         sendEmail(rcpt, template.getSender(), subject, body, cfg.isSendHtml(), mailSession);
-                    }
-                    catch (Exception e) {
-                        logger.log(Level.SEVERE, e.getMessage(), e);
-                    }
                 }
             }
             catch (Exception e) {
                 logger.log(Level.SEVERE, e.getMessage(), e);
             }
         }
+    }
+    
+    /** Register mail session provider. There is support for:
+     * <li> Database configuration (mail.settings.provider.type = database)
+     * <li> JNDI resource configuration (mail.settings.provider.type = jndi)
+     * 
+     * If configuration in pt_settings is not set, default is database
+     */
+    public void registerMailSettingProvider()
+    {	
+    	/* Look for configuration for mail provider. If none exists, default is database */
+    	String providerName = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(PROVIDER_TYPE);
+    	
+    	if(providerName == null)
+    	{
+    		logger.warning("Mail session provider type is not set, using default database provider");
+    		mailSessionProvider = new DatabaseMailSessionProvider();
+    	}
+    	else if(providerName.equals("database"))
+    	{
+    		logger.info("Mail session provider set to database");
+    		mailSessionProvider = new DatabaseMailSessionProvider();
+    	}
+    	else if(providerName.equals("jndi"))
+    	{
+    		logger.info("Mail session provider set to jndi resources");
+    		mailSessionProvider = new JndiMailSessionProvider();
+    	}
+    	else
+    	{
+    		logger.severe("Unknown provider ["+providerName+"]! Service will be stopped");
+    		//throw new IllegalArgumentException("Unknown provider ["+providerName+"]! Service will be stopped");
+    	}
+    	
+    	
     }
 
 	private Collection<String> extractUserEmails(String notifyUserAttributes) {
@@ -146,18 +192,6 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
 		return emails;
 	}
 
-	private javax.mail.Session getMailSession(String profileName) {
-        final Properties properties = hasText(profileName) && persistentMailProperties.containsKey(profileName) ?
-                persistentMailProperties.get(profileName) : mailProperties;
-        return javax.mail.Session.getInstance(properties,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(properties.getProperty("mail.smtp.user"),
-                                properties.getProperty("mail.smtp.password"));
-                    }
-                });
-    }
-
     public void sendNotification(String recipient, String subject, String body) throws Exception {
         sendNotification(null, recipient, subject, body);
     }
@@ -168,7 +202,7 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
 
     public void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body) throws Exception {
         refreshConfigIfNecessary();
-        javax.mail.Session mailSession = getMailSession(mailSessionProfileName);
+        javax.mail.Session mailSession = mailSessionProvider.getSession(mailSessionProfileName);
         if (!Strings.hasText(sender)) {
             UserData autoUser = ProcessToolContext.Util.getThreadProcessToolContext().getAutoUser();
             sender = autoUser.getEmail();
@@ -213,20 +247,6 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         return m;
     }
 
-	public String processTemplate(String templateName, Map data) {
-    	refreshConfigIfNecessary();
-        logger.info("Using template " + templateName);
-        StringWriter sw = new StringWriter();
-        try {
-            Template template = freemarkerConfiguration.getTemplate(templateName);
-            template.process(data != null ? data : new HashMap(), sw);
-        }
-        catch (Exception e) {
-            throw new ProcessToolTemplateErrorException(e);
-        }
-        sw.flush();
-        return sw.toString();
-    }
 
 	@Override
 	public void registerTemplateArgumentProvider(TemplateArgumentProvider provider) {
@@ -249,7 +269,8 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         message.setSubject(subject);
         message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
-        Transport.send(message);
+        
+        sendMessage(message, mailSession);
     }
 
     public synchronized void refreshConfigIfNecessary() {
@@ -260,26 +281,13 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     .add(Restrictions.eq("active", true))
                     .list();
 
-            Collection<BpmNotificationTemplate> templates = session.createCriteria(BpmNotificationTemplate.class).list();
-            for (BpmNotificationTemplate t : templates) {
-                templateMap.put(t.getTemplateName(), t);
-                templateCache.put(t.getTemplateName(), t.getTemplateBody() != null ? t.getTemplateBody().replaceAll("\\\\u", "\\u") : "");
-                templateCache.put(t.getTemplateName() + SUBJECT_TEMPLATE_SUFFIX, t.getSubjectTemplate() != null
-                        ? t.getSubjectTemplate().replaceAll("\\\\u", "\\u") : "");
-                templateCache.put(t.getTemplateName() + SENDER_TEMPLATE_SUFFIX, t.getSender());
-            }
-            freemarkerConfiguration = new Configuration();
-            freemarkerConfiguration.setTemplateLoader(this);
             cacheUpdateTime = System.currentTimeMillis();
-            Properties p = new Properties();
-            try {
-                p.load(getClass().getResourceAsStream("/pl/net/bluesoft/rnd/pt/ext/bpmnotifications/mail.properties"));
-                mailProperties = p;
-            }
-            catch (IOException e) {
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                throw new RuntimeException(e);
-            }
+            
+            registerMailSettingProvider();
+            
+            /* Refresh config for providers */
+            templateProvider.refreshConfig();
+            mailSessionProvider.refreshConfig();
 
             persistentMailProperties = new HashMap<String, Properties>();
             List<BpmNotificationMailProperties> properties = session.createCriteria(BpmNotificationMailProperties.class).list();
@@ -288,6 +296,18 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                 if (hasText(bnmp.getProfileName())) 
                 {
                     Properties prop = new Properties();
+                    
+                    if(bnmp.isDebug())
+                    {
+                    	logger.info(" mail.smtp.host = "+bnmp.getSmtpHost() +
+                    		"\n mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort() +
+                    		"\n mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass() +
+                    		"\n mail.smtp.auth = "+bnmp.isSmtpAuth() +
+                    		"\n mail.smtp.port = "+bnmp.getSmtpPort() +
+                    		"\n mail.smtp.user = "+bnmp.getSmtpUser() +
+                    		"\n mail.debug = "+bnmp.isDebug() +
+                    		"\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
+                    }
                     
                     if(bnmp.getSmtpHost() != null)
                     	prop.put("mail.smtp.host",  bnmp.getSmtpHost());
@@ -299,7 +319,7 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     	prop.put("mail.smtp.socketFactory.class", bnmp.getSmtpSocketFactoryClass());
                     
 
-                    prop.put("mail.smtp.auth", bnmp.isSmtpAuth());
+                    prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
                     
                     if(bnmp.getSmtpPort() != null)
                     	prop.put("mail.smtp.port", bnmp.getSmtpPort());
@@ -310,8 +330,8 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
                     if(bnmp.getSmtpPassword() != null)
                     	prop.put("mail.smtp.password", bnmp.getSmtpPassword());
                     
-                    prop.put("mail.debug", bnmp.isDebug());
-                    prop.put("mail.smtp.starttls.enable", bnmp.isStarttls());
+                    prop.put("mail.debug", getStringValueFromBoolean(bnmp.isDebug()));
+                    prop.put("mail.smtp.starttls.enable", getStringValueFromBoolean(bnmp.isStarttls()));
                     
                     persistentMailProperties.put(bnmp.getProfileName(), prop);
                 }
@@ -324,43 +344,22 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         }
 
     }
-
-    @Override
-    public String findTemplate(String templateName) {
-        try {
-            return (String) findTemplateSource(templateName);
-        }
-        catch (IOException e) {
-            throw new ProcessToolTemplateErrorException(e);
-        }
-    }
-
-    @Override
-    public Object findTemplateSource(String name) throws IOException {
-        return templateCache.containsKey(name) ? templateCache.get(name) : null;
-    }
-
-    @Override
-    public long getLastModified(Object templateSource) {
-        return 0;
-    }
-
-    @Override
-    public Reader getReader(Object templateSource, String encoding) throws IOException {
-        if (templateSource == null) {
-            return null;
-        }
-        return new StringReader(((String) templateSource));
-    }
-
-    @Override
-    public void closeTemplateSource(Object templateSource) throws IOException {
+    
+    private String getStringValueFromBoolean(Boolean value)
+    {
+    	if(value == null)
+    		return "false";
+    	
+    	if(value)
+    		return "true";
+    	else
+    		return "false";
     }
     
     public void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body, List<String> attachments) throws Exception {
 
         refreshConfigIfNecessary();
-        javax.mail.Session mailSession = getMailSession(mailSessionProfileName);
+        javax.mail.Session mailSession = mailSessionProvider.getSession(mailSessionProfileName);
         if (!Strings.hasText(sender)) {
             UserData autoUser = ProcessToolContext.Util.getThreadProcessToolContext().getAutoUser();
             sender = autoUser.getEmail();
@@ -398,12 +397,62 @@ public class BpmNotificationEngine implements TemplateLoader, BpmNotificationSer
         
         message.setContent(multipart);
         message.setSentDate(new Date());
-        logger.info("Sending mail with attaments to " + recipient + " from " + sender);
         
-        sendMessage(message);
+        logger.info("Sending mail with attaments to " + recipient + " from " + sender);
+        sendMessage(message, mailSession);
     }
     
-    private void sendMessage(Message message) throws Exception {
-        Transport.send(message);
+    private void sendMessage(Message message, javax.mail.Session mailSession) throws Exception 
+    {
+        try 
+        {
+	    	/* If smtps is required, force diffrent transport properties */
+	    	if(isSmtpsRequired(mailSession))
+	    	{
+	    		Properties emailPrtoperties = mailSession.getProperties();
+	    		
+	    		String secureHost = emailPrtoperties.getProperty("mail.smtp.host");
+	    		String securePort = emailPrtoperties.getProperty("mail.smtp.port");
+	    		String userName = emailPrtoperties.getProperty("mail.smtp.user");
+	    		String userPassword = emailPrtoperties.getProperty("mail.smtp.password");
+	    		
+	            Transport transport = mailSession.getTransport("smtps");
+	            transport.connect(secureHost, Integer.parseInt(securePort), userName, userPassword);
+	            transport.sendMessage(message, message.getAllRecipients());
+	            transport.close();
+	    	}
+	    	/* Default transport mechanism */
+	    	else
+	    	{
+	    		Transport.send(message);
+	    	}
+	    	
+	    	 logger.info("Emails sent");
+        }
+        catch (Exception e) 
+        {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
     }
+    
+    /** Check is smtps is required */
+    private boolean isSmtpsRequired(javax.mail.Session mailSession)
+    {
+    	//TODO to implement
+    	return false;
+    }
+
+	@Override
+	public String findTemplate(String templateName)
+	{
+		refreshConfigIfNecessary();
+		return templateProvider.findTemplate(templateName);
+	}
+
+	@Override
+	public String processTemplate(String templateName, Map data)
+	{
+		refreshConfigIfNecessary();
+		return templateProvider.processTemplate(templateName,data);
+	}
 }
