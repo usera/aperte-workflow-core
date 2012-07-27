@@ -49,6 +49,7 @@ public class GenericUserPortletApplication extends GenericVaadinPortlet2BpmAppli
 		if (portletMode.equals(PortletMode.VIEW)) {
 			String[] viewKeys = getSelectedViewKeys();
 			if (viewKeys.length == 0) {
+				getMainWindow().removeAllComponents();
 				getMainWindow().addComponent(new Label("Please configure this portlet."));
 			}
 			else {

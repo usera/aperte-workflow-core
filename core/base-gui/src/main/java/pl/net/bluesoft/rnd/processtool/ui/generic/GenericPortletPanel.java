@@ -48,25 +48,19 @@ public abstract class GenericPortletPanel extends VerticalLayout {
 		List<GenericPortletViewRenderer> permittedRenderers = getPermittedRenderers();
 
 		if (permittedRenderers.size() > 1) {
-			TabSheet tabSheet = new TabSheet();
-			tabSheet.setWidth("100%");
-			addComponent(tabSheet);
-
-			for (GenericPortletViewRenderer renderer : permittedRenderers) {
-				RenderParams params = createParams();
-				Object gui = renderer.render(params);
-
-				if (gui instanceof Component) {
-					tabSheet.addTab(addControls((Component)gui, renderer), renderer.getName(i18NSource));
-				}
-			}
+			addComponent(renderTabSheet(permittedRenderers));
 		}
 		else {
-			VerticalLayout layout = new VerticalLayout();
-			layout.setWidth("100%");
-			addComponent(layout);
+			addComponent(renderVerticalLayout(permittedRenderers));
+		}
+	}
 
-			GenericPortletViewRenderer renderer = permittedRenderers.get(0);
+	protected Component renderVerticalLayout(List<GenericPortletViewRenderer> permittedRenderers) {
+		VerticalLayout layout = new VerticalLayout();
+		layout.setSpacing(true);
+		layout.setWidth("100%");
+
+		for (GenericPortletViewRenderer renderer : permittedRenderers) {
 			RenderParams params = createParams();
 			Object gui = renderer.render(params);
 
@@ -74,6 +68,22 @@ public abstract class GenericPortletPanel extends VerticalLayout {
 				layout.addComponent(addControls((Component)gui, renderer));
 			}
 		}
+		return layout;
+	}
+
+	protected Component renderTabSheet(List<GenericPortletViewRenderer> permittedRenderers) {
+		TabSheet tabSheet = new TabSheet();
+		tabSheet.setWidth("100%");
+
+		for (GenericPortletViewRenderer renderer : permittedRenderers) {
+			RenderParams params = createParams();
+			Object gui = renderer.render(params);
+
+			if (gui instanceof Component) {
+				tabSheet.addTab(addControls((Component)gui, renderer), renderer.getName(i18NSource));
+			}
+		}
+		return tabSheet;
 	}
 
 	private RenderParams createParams() {
