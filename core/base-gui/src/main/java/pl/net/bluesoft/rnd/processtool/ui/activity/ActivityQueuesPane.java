@@ -104,7 +104,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 		try {
 			watch = new TaskWatch(ActivityQueuesPane.class.getSimpleName() + " - lista kolejek " + (onEvent ? " refresh ON_EVENT" : ""));
-			watch.watchTask("Total refreshing data", new Callable() {
+			watch.watchTask("Total refreshing data", new Callable<Object>() {
 
 				@Override
 				public Object call() throws Exception {
@@ -431,7 +431,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 
 		try {
-			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable() {
+			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable<Button>() {
 
 				@Override
 				public Button call() throws Exception {
