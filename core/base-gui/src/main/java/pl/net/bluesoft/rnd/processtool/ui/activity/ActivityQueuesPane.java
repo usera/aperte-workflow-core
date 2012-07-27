@@ -431,7 +431,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 
 		try {
-			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable() {
+			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable<Button>() {
 
 				@Override
 				public Button call() throws Exception {
