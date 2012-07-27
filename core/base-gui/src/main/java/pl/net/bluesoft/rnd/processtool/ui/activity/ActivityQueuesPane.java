@@ -15,6 +15,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
@@ -31,6 +34,7 @@ import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.util.eventbus.EventListener;
 import pl.net.bluesoft.util.lang.DateUtil;
+import pl.net.bluesoft.util.lang.TaskWatch;
 import pl.net.bluesoft.util.lang.cquery.func.F;
 
 import com.vaadin.data.util.HierarchicalContainer;
@@ -55,14 +59,17 @@ import com.vaadin.ui.themes.ChameleonTheme;
  */
 public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshable
 {
+    private static final Logger logger = Logger.getLogger(ActivityQueuesPane.class.getName());
 
 	private ActivityMainPane activityMainPane;
 	private VerticalLayout taskList;
 	private EventListener<BpmEvent> bpmEventListener = null;
 	private Tree substitutionsTree;
 	private Panel substitutionsPanel;
-
+	private TaskWatch watch;
 	private Collection<Button> taskButtons = new ArrayList<Button>();
+
+	protected boolean onEvent = false;
 
 	public ActivityQueuesPane(ActivityMainPane activityMainPane)
 	{
@@ -76,14 +83,16 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 		if(bpmEventListener == null)
 		{
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class,bpmEventListener = new EventListener<BpmEvent>()
+			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>()
 			{
 				@Override
 				public void onEvent(BpmEvent e)
 				{
 					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null)
 					{
+						onEvent = true;
 						refreshData();
+						onEvent = false;
 					}
 				}
 			});
@@ -93,6 +102,25 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	@Override
 	public void refreshData()
 	{
+		try {
+			watch = new TaskWatch(ActivityQueuesPane.class.getSimpleName() + " - lista kolejek " + (onEvent ? " refresh ON_EVENT" : ""));
+			watch.watchTask("Total refreshing data", new Callable() {
+
+				@Override
+				public Object call() throws Exception {
+					internalRefreshData();
+					return null;
+				}
+			});
+			watch.stopAll();
+			logger.log(Level.INFO, watch.printSummary());
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Refreshing data", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void internalRefreshData() {
 		taskList.removeAllComponents();
 
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
@@ -184,7 +212,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		return userAvailableQueues;
 	}
 
-	private int buildSubstitutedTasks(ProcessToolContext ctx, final ProcessToolBpmSession bpmSessionForSubstituted, UserData user,
+	private int buildSubstitutedTasks(final ProcessToolContext ctx, final ProcessToolBpmSession bpmSessionForSubstituted, UserData user,
 			HierarchicalContainer container, final ProcessInstanceFilter parent)
 	{
 		Collection<ProcessInstanceFilter> taskFilters = new ArrayList<ProcessInstanceFilter>();
@@ -201,12 +229,24 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 		int total = 0;
 
-		for(ProcessInstanceFilter filter: taskFilters)
+		for(final ProcessInstanceFilter filter: taskFilters)
 		{
 			container.addItem(filter);
 			if(filter.getOwners().contains(user) && !filter.getStates().contains(TaskState.CLOSED))
 			{
-				ResultsPageWrapper<BpmTask> tasks = bpmSessionForSubstituted.findProcessTasks(filter,0,0,ctx);
+				ResultsPageWrapper<BpmTask> tasks = new ResultsPageWrapper<BpmTask>();
+				try {
+					tasks = watch.watchTask("Fetching tasks for " + filter.getName() + " for substituted " + user.getRealName(), new Callable<ResultsPageWrapper<BpmTask>>() {
+
+						@Override
+						public ResultsPageWrapper<BpmTask> call() throws Exception {
+							return bpmSessionForSubstituted.findProcessTasks(filter,0,0,ctx);
+						}
+					});
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "Refreshing data", e);
+				}
+				
 				total += tasks.getTotal();
 
 				container.getItem(filter).getItemProperty("name").setValue(filter.getName() + " (" + tasks.getTotal() + ")");
@@ -390,6 +430,27 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			final ProcessInstanceFilter processInstanceFilter, final boolean showCounter)
 	{
 
+		try {
+			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable() {
+
+				@Override
+				public Button call() throws Exception {
+					return internalCreateUserTasksButton(bpmSession, ctx,
+							processInstanceFilter, showCounter);
+				}
+			});
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Refreshing data", e);
+			return new Button();
+		}
+
+	}
+
+	public Button internalCreateUserTasksButton(
+			final ProcessToolBpmSession bpmSession,
+			final ProcessToolContext ctx,
+			final ProcessInstanceFilter processInstanceFilter,
+			final boolean showCounter) {
 		final Button b = new Button(processInstanceFilter.getName());
 		b.setStyleName(BaseTheme.BUTTON_LINK);
 		if(showCounter)
