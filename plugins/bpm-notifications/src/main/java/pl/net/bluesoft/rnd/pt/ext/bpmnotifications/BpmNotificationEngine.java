@@ -33,6 +33,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
@@ -86,14 +87,51 @@ public class BpmNotificationEngine implements BpmNotificationService
     {
     	this.registry = registry;
     	
-    	/* Register simple providers */
-    	templateProvider = new  MailTemplateProvider();
-    	mailSessionProvider = new DatabaseMailSessionProvider();
+    	init();
+    }
+    
+    /** Initialize all providers and configurations */
+    private void init()
+    {
+        registry.withProcessToolContext(new ProcessToolContextCallback() 
+        {
+			@Override
+			public void withContext(ProcessToolContext ctx)
+			{
+				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
+				
+		    	/* Register simple providers */
+		    	templateProvider = new  MailTemplateProvider();
+		    	
+		    	registerMailSettingProvider();
+		    	
+	            /* Refresh config for providers */
+	            templateProvider.refreshConfig();
+	            mailSessionProvider.refreshConfig();
+			}
+        });
     }
     
     /** The method check if there are any new notifications in database to be sent */
     public void handleNotifications()
     {
+        registry.withProcessToolContext(new ProcessToolContextCallback() 
+        {
+			@Override
+			public void withContext(ProcessToolContext ctx)
+			{
+				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
+				
+				handleNotificationsWithContext();
+			}
+        });
+    }
+    
+    /** The method check if there are any new notifications in database to be sent */
+    private void handleNotificationsWithContext()
+    {
+    	logger.info("[NOTIFICATIONS JOB] Checking awaiting notifications... ");
+    	
     	/* Get all notifications waiting to be sent */
     	Collection<BpmNotification> notificationsToSend = NotificationsFacade.getNotificationsToSend();
     	
@@ -187,7 +225,7 @@ public class BpmNotificationEngine implements BpmNotificationService
      * 
      * If configuration in pt_settings is not set, default is database
      */
-    public void registerMailSettingProvider()
+    private void registerMailSettingProvider()
     {	
     	/* Look for configuration for mail provider. If none exists, default is database */
     	String providerName = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(PROVIDER_TYPE);
@@ -409,7 +447,8 @@ public class BpmNotificationEngine implements BpmNotificationService
         }
         
         notification.setAttachments(attachmentsString.toString());
-
+        
+        NotificationsFacade.addNotificationToBeSent(notification);
     }
     
     
