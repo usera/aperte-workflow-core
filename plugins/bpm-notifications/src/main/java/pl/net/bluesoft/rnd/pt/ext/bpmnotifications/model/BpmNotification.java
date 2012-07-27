@@ -20,6 +20,8 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.HandleEmailsJob;
 @Table(name="pt_ext_bpm_notification")
 public class BpmNotification extends PersistentEntity 
 {
+	private static final long serialVersionUID = -1358169256410750304L;
+
 	/** Sender email adress */
 	private String sender;
 	
