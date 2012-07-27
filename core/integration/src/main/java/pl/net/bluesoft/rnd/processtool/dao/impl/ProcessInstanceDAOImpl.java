@@ -164,11 +164,11 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         }
         searchData.addSearchAttribute("__AWF__running", String.valueOf(processInstance.getRunning()), true);
 
-        logger.warning("Prepare data for Lucene index update for" + processInstance + " took "
+        logger.finest("Prepare data for Lucene index update for" + processInstance + " took "
                 + (System.currentTimeMillis()-time) + " ms");
         time = System.currentTimeMillis();
         searchProvider.updateIndex(searchData);
-        logger.warning("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
+        logger.finest("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
                 + "attributes)  took " + (System.currentTimeMillis()-time) + " ms");
 		return processInstance.getId();
 	}

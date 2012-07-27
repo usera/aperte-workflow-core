@@ -26,10 +26,12 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.util.lang.Strings;
+import pl.net.bluesoft.util.lang.TaskWatch;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -113,7 +115,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 
 	/** Odśwież odśwież widok po zmianie kroku lub procesu */
 	private void initLayout(boolean autoHide) {
-		ProcessToolContext ctx = getCurrentContext();
+		final ProcessToolContext ctx = getCurrentContext();
 
 		removeAllComponents();
 		setWidth("100%");
@@ -148,7 +150,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		}
 		guiAction = null;
 
-		ProcessStateConfiguration stateConfiguration = ctx.getProcessDefinitionDAO()
+		final ProcessStateConfiguration stateConfiguration = ctx.getProcessDefinitionDAO()
                 .getProcessStateConfiguration(task);
 
 		Label stateDescription = new Label(getMessage(stateConfiguration.getDescription()));
@@ -171,26 +173,45 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 
         List<ProcessStateWidget> widgets = new ArrayList<ProcessStateWidget>(stateConfiguration.getWidgets());
         Collections.sort(widgets, new WidgetPriorityComparator());
+        
+        
+        TaskWatch watch = new TaskWatch(ProcessDataPane.class.getSimpleName() + " - generowanie interfejsu dla kroku " + stateConfiguration.getName());
+        
 
-		for (ProcessStateWidget w : widgets) {
+		for (final ProcessStateWidget w : widgets) {
 			try {
-				ProcessToolWidget realWidget = getWidget(w, stateConfiguration, ctx, null);
-				if (realWidget instanceof ProcessToolVaadinRenderable && (!nvl(w.getOptional(), false) || realWidget.hasVisibleData())) {
-					processWidgetChildren(w, realWidget, stateConfiguration, ctx, null);
-					ProcessToolVaadinRenderable vaadinW = (ProcessToolVaadinRenderable) realWidget;
-					vl.addComponent(vaadinW.render());
-				}
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, e.getMessage(), e);
-				vl.addComponent(new Label(getMessage("process.data.widget.exception-occurred")));
-				vl.addComponent(new Label(e.getMessage()));
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				e.printStackTrace(new PrintWriter(baos));
-				vl.addComponent(new Label("<pre>" + baos.toString() + "</pre>", CONTENT_XHTML));
+				watch.watchTask(w.getClassName() + ": " + w.getName(), new Callable() {
+
+					@Override
+					public Object call() throws Exception {
+						try {
+							ProcessToolWidget realWidget = getWidget(w, stateConfiguration, ctx, null);
+							if (realWidget instanceof ProcessToolVaadinRenderable && (!nvl(w.getOptional(), false) || realWidget.hasVisibleData())) {
+								processWidgetChildren(w, realWidget, stateConfiguration, ctx, null);
+								ProcessToolVaadinRenderable vaadinW = (ProcessToolVaadinRenderable) realWidget;
+								vl.addComponent(vaadinW.render());
+							}
+						}
+						catch (Exception e) {
+							logger.log(Level.SEVERE, e.getMessage(), e);
+							vl.addComponent(new Label(getMessage("process.data.widget.exception-occurred")));
+							vl.addComponent(new Label(e.getMessage()));
+							ByteArrayOutputStream baos = new ByteArrayOutputStream();
+							e.printStackTrace(new PrintWriter(baos));
+							vl.addComponent(new Label("<pre>" + baos.toString() + "</pre>", CONTENT_XHTML));
+						}
+						// TODO Auto-generated method stub
+						return null;
+					}
+				});
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
 
 		}
+		
+		watch.stopAll();
+		logger.log(Level.INFO, watch.printSummary());
 
 		addComponent(vl);
 		setExpandRatio(vl, 1.0f);
