@@ -3,8 +3,8 @@ package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions;
 import static pl.net.bluesoft.util.lang.Strings.hasText;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -15,6 +15,7 @@ import javax.mail.PasswordAuthentication;
 import org.hibernate.Session;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 
 /**
@@ -69,8 +70,6 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
 	
     public synchronized void refreshConfig() 
     {
-        Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
-
         Properties p = new Properties();
         try {
             p.load(getClass().getResourceAsStream("/pl/net/bluesoft/rnd/pt/ext/bpmnotifications/mail.properties"));
@@ -82,7 +81,10 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
         }
 
         persistentMailProperties = new HashMap<String, Properties>();
-        List<BpmNotificationMailProperties> properties = session.createCriteria(BpmNotificationMailProperties.class).list();
+        
+        /* Get the current mail properties */
+        Collection<BpmNotificationMailProperties> properties = NotificationsFacade.getNotificationMailProperties();
+        
         for (BpmNotificationMailProperties bnmp : properties) 
         {
             if (hasText(bnmp.getProfileName())) 

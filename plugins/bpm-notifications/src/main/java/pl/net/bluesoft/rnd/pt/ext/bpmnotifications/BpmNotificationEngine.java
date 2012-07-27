@@ -4,6 +4,7 @@ import static pl.net.bluesoft.rnd.util.TaskUtil.getTaskLink;
 import static pl.net.bluesoft.util.lang.Strings.hasText;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -32,11 +33,15 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
@@ -73,16 +78,86 @@ public class BpmNotificationEngine implements BpmNotificationService
 
     private Map<String, Properties> persistentMailProperties = new HashMap<String, Properties>();
     
+    private ProcessToolRegistry registry;
+    
     private IMailSessionProvider mailSessionProvider;
     private MailTemplateProvider templateProvider;
     
-    public BpmNotificationEngine()
+    public BpmNotificationEngine(ProcessToolRegistry registry)
     {
-    	/* Register simple providers */
-    	templateProvider = new  MailTemplateProvider();
-    	mailSessionProvider = new DatabaseMailSessionProvider();
+    	this.registry = registry;
+    	
+    	init();
     }
-
+    
+    /** Initialize all providers and configurations */
+    private void init()
+    {
+        registry.withProcessToolContext(new ProcessToolContextCallback() 
+        {
+			@Override
+			public void withContext(ProcessToolContext ctx)
+			{
+				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
+				
+		    	/* Register simple providers */
+		    	templateProvider = new  MailTemplateProvider();
+		    	
+		    	registerMailSettingProvider();
+		    	
+	            /* Refresh config for providers */
+	            templateProvider.refreshConfig();
+	            mailSessionProvider.refreshConfig();
+			}
+        });
+    }
+    
+    /** The method check if there are any new notifications in database to be sent */
+    public void handleNotifications()
+    {
+        registry.withProcessToolContext(new ProcessToolContextCallback() 
+        {
+			@Override
+			public void withContext(ProcessToolContext ctx)
+			{
+				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
+				
+				handleNotificationsWithContext();
+			}
+        });
+    }
+    
+    /** The method check if there are any new notifications in database to be sent */
+    private void handleNotificationsWithContext()
+    {
+    	logger.info("[NOTIFICATIONS JOB] Checking awaiting notifications... ");
+    	
+    	/* Get all notifications waiting to be sent */
+    	Collection<BpmNotification> notificationsToSend = NotificationsFacade.getNotificationsToSend();
+    	
+    	/* The queue is empty, so stop */
+    	if(notificationsToSend.isEmpty())
+    		return;
+    	
+    	logger.info("[NOTIFICATIONS JOB] "+notificationsToSend.size()+" notifications waiting to be sent...");
+    	
+    	for(BpmNotification notification: notificationsToSend)
+    	{
+    		try
+    		{
+    			sendNotification(notification);
+    			
+    			/* Notification was sent, so remove it from te queue */
+    			NotificationsFacade.removeNotification(notification);
+    		}
+    		catch(Exception ex)
+    		{
+    			logger.log(Level.SEVERE, "[NOTIFICATIONS JOB] Problem during notification sending", ex);
+    		}
+    	}
+    }
+    
+    
     public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
         refreshConfigIfNecessary();
         for (BpmNotificationConfig cfg : configCache) {
@@ -132,10 +207,10 @@ public class BpmNotificationEngine implements BpmNotificationService
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
 
-                javax.mail.Session mailSession = mailSessionProvider.getSession(cfg.getProfileName());
-
+                
+                /* Add all notification to queue */
                 for (String rcpt : new HashSet<String>(emailsToNotify)) {
-                        sendEmail(rcpt, template.getSender(), subject, body, cfg.isSendHtml(), mailSession);
+                	addNotificationToSend("Default", rcpt, template.getSender(), subject, body, cfg.isSendHtml());
                 }
             }
             catch (Exception e) {
@@ -150,7 +225,7 @@ public class BpmNotificationEngine implements BpmNotificationService
      * 
      * If configuration in pt_settings is not set, default is database
      */
-    public void registerMailSettingProvider()
+    private void registerMailSettingProvider()
     {	
     	/* Look for configuration for mail provider. If none exists, default is database */
     	String providerName = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(PROVIDER_TYPE);
@@ -191,24 +266,6 @@ public class BpmNotificationEngine implements BpmNotificationService
 		}
 		return emails;
 	}
-
-    public void sendNotification(String recipient, String subject, String body) throws Exception {
-        sendNotification(null, recipient, subject, body);
-    }
-
-    public void sendNotification(String mailSessionProfileName, String recipient, String subject, String body) throws Exception {
-        sendNotification(mailSessionProfileName, null, recipient, subject, body);
-    }
-
-    public void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body) throws Exception {
-        refreshConfigIfNecessary();
-        javax.mail.Session mailSession = mailSessionProvider.getSession(mailSessionProfileName);
-        if (!Strings.hasText(sender)) {
-            UserData autoUser = ProcessToolContext.Util.getThreadProcessToolContext().getAutoUser();
-            sender = autoUser.getEmail();
-        }
-        sendEmail(recipient, sender, subject, body, true, mailSession);
-    }
 
     private Map prepareData(BpmTask task, ProcessInstance pi, UserData userData, BpmNotificationConfig cfg, ProcessToolContext ctx) {
         Map m = new HashMap();
@@ -257,21 +314,6 @@ public class BpmNotificationEngine implements BpmNotificationService
 	public void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider) {
 		argumentProviders.add(provider);
 	}
-
-	private void sendEmail(String rcpt, String from, String subject, String body, boolean sendHtml, javax.mail.Session mailSession) throws Exception {
-        if (!Strings.hasText(rcpt)) {
-            throw new IllegalArgumentException("Cannot send email: Recipient is null!");
-        }
-        logger.info("Sending mail to " + rcpt + " from " + from);
-        Message message = new MimeMessage(mailSession);
-        message.setFrom(new InternetAddress(from));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(rcpt));
-        message.setSubject(subject);
-        message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
-        message.setSentDate(new Date());
-        
-        sendMessage(message, mailSession);
-    }
 
     public synchronized void refreshConfigIfNecessary() {
         if (cacheUpdateTime + CONFIG_CACHE_REFRESH_INTERVAL < System.currentTimeMillis()) {
@@ -356,10 +398,26 @@ public class BpmNotificationEngine implements BpmNotificationService
     		return "false";
     }
     
-    public void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body, List<String> attachments) throws Exception {
-
-        refreshConfigIfNecessary();
-        javax.mail.Session mailSession = mailSessionProvider.getSession(mailSessionProfileName);
+    /** Methods add notification to queue for notifications to be sent in the
+     * next scheduler job run
+     * 
+     */
+    public void addNotificationToSend(String profileName, String sender, String recipient, String subject, String body, boolean sendAsHtml,  String ... attachments) throws Exception
+    {
+    	Collection<String> attachmentsCollection = new ArrayList<String>();
+    	
+    	for(String attachment: attachments)
+    		attachmentsCollection.add(attachment);
+    	
+    	addNotificationToSend(profileName, sender, recipient, subject, body, sendAsHtml, attachmentsCollection);
+    }
+    
+    /** Methods add notification to queue for notifications to be sent in the
+     * next scheduler job run
+     * 
+     */
+    public void addNotificationToSend(String profileName, String sender, String recipient, String subject, String body, boolean sendAsHtml, Collection<String> attachments) throws Exception 
+    {
         if (!Strings.hasText(sender)) {
             UserData autoUser = ProcessToolContext.Util.getThreadProcessToolContext().getAutoUser();
             sender = autoUser.getEmail();
@@ -368,42 +426,39 @@ public class BpmNotificationEngine implements BpmNotificationService
         if (!Strings.hasText(recipient)) {
             throw new IllegalArgumentException("Cannot send email: Recipient is null!");
         }
-        Message message = new MimeMessage(mailSession);
-        message.setFrom(new InternetAddress(sender));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-        message.setSubject(subject);
         
-        //body
-        MimeBodyPart messagePart = new MimeBodyPart();
-        messagePart.setText(body);
+        BpmNotification notification = new BpmNotification();
+        notification.setSender(sender);
+        notification.setRecipient(recipient);
+        notification.setSubject(subject);
+        notification.setBody(body);
+        notification.setSendAsHtml(sendAsHtml);
+        notification.setProfileName(profileName);
         
-        Multipart multipart = new MimeMultipart();
-        multipart.addBodyPart(messagePart);
-
-        //zalaczniki
-        int counter = 0;
-        URL url;
-        for (String u : attachments) {
-        	if (!Strings.hasText(u))
-        		continue;
-        	url = new URL(u);
-	        MimeBodyPart attachmentPart = new MimeBodyPart();
-	        URLDataSource urlDs = new URLDataSource(url);
-	        attachmentPart.setDataHandler(new DataHandler(urlDs));
-	        attachmentPart.setFileName("file" + counter++);
-	        multipart.addBodyPart(attachmentPart);
-	        logger.info("Added attachment " + u);
-        }       
+        StringBuilder attachmentsString = new StringBuilder();
+        int attachmentsSize = attachments.size();
+        for(String attachment: attachments)
+        {
+        	attachmentsString.append(attachment);
+        	attachmentsSize--;
+        	
+        	if(attachmentsSize > 0)
+        		attachmentsString.append(",");
+        }
         
-        message.setContent(multipart);
-        message.setSentDate(new Date());
+        notification.setAttachments(attachmentsString.toString());
         
-        logger.info("Sending mail with attaments to " + recipient + " from " + sender);
-        sendMessage(message, mailSession);
+        NotificationsFacade.addNotificationToBeSent(notification);
     }
     
-    private void sendMessage(Message message, javax.mail.Session mailSession) throws Exception 
+    
+    private void sendNotification(BpmNotification notification) throws Exception 
     {
+    	javax.mail.Session mailSession = mailSessionProvider.getSession(notification.getProfileName());
+    	
+    	/* Create javax mail message from notification bean */
+        Message message = createMessageFromNotification(notification, mailSession);
+        
         try 
         {
 	    	/* If smtps is required, force diffrent transport properties */
@@ -433,6 +488,46 @@ public class BpmNotificationEngine implements BpmNotificationService
         {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+    
+    private Message createMessageFromNotification(BpmNotification notification, javax.mail.Session mailSession) throws Exception 
+    {
+        Message message = new MimeMessage(mailSession);
+        message.setFrom(new InternetAddress(notification.getSender()));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(notification.getRecipient()));
+        message.setSubject(notification.getSubject());
+        message.setContent(notification.getBody(), (notification.getSendAsHtml() ? "text/html" : "text/plain") + "; charset=utf-8");
+        message.setSentDate(new Date());
+        
+        //body
+        MimeBodyPart messagePart = new MimeBodyPart();
+        messagePart.setText(notification.getBody());
+        
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messagePart);
+
+        //zalaczniki
+        int counter = 0;
+        URL url;
+        
+        String[] attachments = notification.getAttachments().split(",");
+        
+        for (String u : attachments) {
+        	if (!Strings.hasText(u))
+        		continue;
+        	url = new URL(u);
+	        MimeBodyPart attachmentPart = new MimeBodyPart();
+	        URLDataSource urlDs = new URLDataSource(url);
+	        attachmentPart.setDataHandler(new DataHandler(urlDs));
+	        attachmentPart.setFileName("file" + counter++);
+	        multipart.addBodyPart(attachmentPart);
+	        logger.info("Added attachment " + u);
+        }       
+        
+        message.setContent(multipart);
+        message.setSentDate(new Date());
+        
+        return message;
     }
     
     /** Check is smtps is required */

@@ -90,7 +90,9 @@
                             *;resolution:=optional,
                             pl.net.bluesoft.util.eventbus,
                             pl.net.bluesoft.rnd.pt.utils.template,
-                            pl.net.bluesoft.rnd.processtool.model
+                            pl.net.bluesoft.rnd.processtool.model,
+                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service,
+                            pl.net.bluesoft.rnd.pt.ext.sched.service
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.deadline.DeadlineActivator</Bundle-Activator>

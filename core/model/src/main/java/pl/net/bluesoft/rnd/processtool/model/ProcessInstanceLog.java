@@ -6,6 +6,7 @@ import java.util.Calendar;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -47,21 +48,21 @@ public class ProcessInstanceLog extends PersistentEntity implements Comparable<P
 	private String logType;
 	private String executionId;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="process_state_id")
 	private ProcessStateConfiguration state;
 
 //    @XmlTransient
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="process_instance_id")
 	private ProcessInstance processInstance;
 
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="user_id")
 	private UserData user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="user_substitute_id")
 	private UserData userSubstitute;
     

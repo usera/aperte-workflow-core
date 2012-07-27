@@ -6,8 +6,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
@@ -24,12 +22,20 @@ import pl.net.bluesoft.util.eventbus.EventListener;
  */
 public class Activator implements BundleActivator, EventListener<BpmEvent> {
 
-	BpmNotificationEngine engine = new BpmNotificationEngine();
-	MailEventListener mailEventListener;
+	private BpmNotificationEngine engine;
+	private MailEventListener mailEventListener;
+	private SchedulersActivator schedulerActivator;
 	
 	@Override
-	public void start(BundleContext context) throws Exception {
+	public void start(BundleContext context) throws Exception 
+	{
 		ProcessToolRegistry registry = getRegistry(context);
+		
+		schedulerActivator = new SchedulersActivator(registry);
+		
+		/* Init the bpm notification engine */
+		engine = new BpmNotificationEngine(registry);
+	
 		registry.registerModelExtension(BpmNotificationConfig.class, BpmNotificationTemplate.class, BpmNotificationMailProperties.class);
 		registry.commitModelExtensions();
         registry.registerService(BpmNotificationService.class, engine, new Properties());
@@ -37,6 +43,9 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		
 		mailEventListener = new MailEventListener(engine);
 		registry.getEventBusManager().subscribe(MailEvent.class, mailEventListener);
+		
+		/* Register scheduler for notifications sending */
+		schedulerActivator.scheduleNotificationsSend(engine);
 	}
 
 	@Override
@@ -59,4 +68,5 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
                     e.getUserData(), BpmEvent.Type.NEW_PROCESS == e.getEventType());
         }
 	}
+	
 }
