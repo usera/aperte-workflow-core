@@ -6,10 +6,13 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.template.ProcessToolTemplateErrorException;
@@ -39,11 +42,17 @@ public class MailTemplateProvider implements TemplateLoader
     private Map<String, String> templateCache = new HashMap<String, String>();
     
     /** Refresh config: look for modifictations of templates in database */
-    public void refreshConfig() 
+    @SuppressWarnings("unchecked")
+	public void refreshConfig() 
     {
         Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
         
-        Collection<BpmNotificationTemplate> templates = session.createCriteria(BpmNotificationTemplate.class).list();
+        List<BpmNotificationTemplate> templates = 
+        		(List<BpmNotificationTemplate>)session
+        		.createCriteria(BpmNotificationTemplate.class)
+        		.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+        		.list();
+        
         for (BpmNotificationTemplate t : templates) 
         {
             templateMap.put(t.getTemplateName(), t);
