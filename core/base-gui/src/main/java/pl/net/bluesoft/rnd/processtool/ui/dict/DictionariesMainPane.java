@@ -88,6 +88,7 @@ public class DictionariesMainPane extends VerticalLayout implements ProcessToolB
         titleLabel.setWidth("100%");
 
         processDefinitionSelect = select(getMessage("process.name"), processContainer, "description");
+        processDefinitionSelect.setItemCaptionMode(Select.ITEM_CAPTION_MODE_EXPLICIT);
         processDefinitionSelect.addListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(ValueChangeEvent event) {
@@ -121,10 +122,14 @@ public class DictionariesMainPane extends VerticalLayout implements ProcessToolB
             @Override
             public void callback(ProcessToolContext ctx, ProcessToolBpmSession session) {
                 Collection<ProcessDefinitionConfig> configs = ctx.getProcessDefinitionDAO().getActiveConfigurations();
-                for (ProcessDefinitionConfig config : configs) {
-                    config.setDescription(i18NSource.getMessage(config.getDescription()));
-                }
+                //LOL - it overwrites descriptions in database with language of the first user who logs in :)
+//                for (ProcessDefinitionConfig config : configs) {
+//                    config.setDescription(i18NSource.getMessage(config.getDescription()));
+//                }
                 processContainer.addAll(configs);
+                for (ProcessDefinitionConfig config : processContainer.getItemIds()) {
+                	processDefinitionSelect.setItemCaption(config, i18NSource.getMessage(config.getDescription()));
+              	}
                 ProcessDictionaryProvider pdp = ctx.getProcessDictionaryRegistry().getProcessDictionaryProvider("db");
                 List<ProcessDBDictionary> dictionaries = pdp.fetchAllActiveProcessDictionaries();
                 for (ProcessDBDictionary dict : dictionaries) {

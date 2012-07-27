@@ -53,15 +53,15 @@ public class ProcessInstance extends PersistentEntity {
 
 	private Date createDate;
 
-	@ManyToOne(cascade = {})
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="creator_id")
 	private UserData creator;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="definition_id")
 	private ProcessDefinitionConfig definition;
 
-	@OneToMany(cascade = {CascadeType.ALL})
+	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
 	@JoinColumn(name="process_instance_id")
 	private Set<ProcessInstanceAttribute> processAttributes = new HashSet();
 
@@ -73,7 +73,7 @@ public class ProcessInstance extends PersistentEntity {
 	@JoinColumn(name="parent_id")
 	private Set<ProcessInstance> children = new HashSet();
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="parent_id")
 	private ProcessInstance parent;
 
