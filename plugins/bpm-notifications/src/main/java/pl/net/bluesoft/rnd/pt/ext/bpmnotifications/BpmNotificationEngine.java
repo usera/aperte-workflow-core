@@ -100,6 +100,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
                 if (task != null && cfg.isNotifyTaskAssignee()) {
+                	//TODO: Zmienić na pobieranie ownera ZADANIA, a nie osoby PROCESU (czyli osoby rozliczanej)!!
                     UserData owner = task.getOwner();
                     if (cfg.isSkipNotificationWhenTriggeredByAssignee() &&
                             owner != null &&
@@ -270,6 +271,12 @@ public class BpmNotificationEngine implements BpmNotificationService
         message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
         
+    	logger.info("About to send message: " + 
+    			"\nSubject: " + message.getSubject() + 
+    			"\nContent: " + message.getContent() +
+    			"\n"
+    			);
+        
         sendMessage(message, mailSession);
     }
 
@@ -376,6 +383,12 @@ public class BpmNotificationEngine implements BpmNotificationService
         //body
         MimeBodyPart messagePart = new MimeBodyPart();
         messagePart.setText(body);
+        
+    	logger.info("About to send message: " + 
+    			"\nSubject: " + message.getSubject() + 
+    			"\nContent: " + body +
+    			"\nAttachments: " + attachments.size()
+    			);
         
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(messagePart);
