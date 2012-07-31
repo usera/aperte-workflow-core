@@ -53,6 +53,7 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.IMailSessionProvider
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates.MailTemplateProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
@@ -65,8 +66,6 @@ public class BpmNotificationEngine implements BpmNotificationService
     private static final String PROVIDER_TYPE = "mail.settings.provider.type";
 
     private Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
-
-    private I18NSource messageSource = new DefaultI18NSource();
 
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
@@ -274,7 +273,7 @@ public class BpmNotificationEngine implements BpmNotificationService
             m.put("task", task);
 
             Locale locale = Strings.hasText(cfg.getLocale()) ? new Locale(cfg.getLocale()) : Locale.getDefault();
-            messageSource.setLocale(locale);
+            I18NSource messageSource = I18NSourceFactory.createI18NSource(locale);
             for (ProcessStateConfiguration st : pi.getDefinition().getStates()) {
                 if (task.getTaskName().equals(st.getName())) {
                     m.put("taskName", messageSource.getMessage(st.getDescription()));
