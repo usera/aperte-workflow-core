@@ -20,4 +20,6 @@ public interface BpmNotificationService
 
 	void registerTemplateArgumentProvider(TemplateArgumentProvider provider);
 	void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider);
+
+	void invalidateCache();
 }

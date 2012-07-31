@@ -70,7 +70,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
     private long cacheUpdateTime;
-    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 1000;
+    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 60 * 1000;
     private ProcessToolBpmSession bpmSession;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
@@ -315,7 +315,12 @@ public class BpmNotificationEngine implements BpmNotificationService
 		argumentProviders.add(provider);
 	}
 
-    public synchronized void refreshConfigIfNecessary() {
+	@Override
+	public synchronized void invalidateCache() {
+		cacheUpdateTime = 0;
+	}
+
+	public synchronized void refreshConfigIfNecessary() {
         if (cacheUpdateTime + CONFIG_CACHE_REFRESH_INTERVAL < System.currentTimeMillis()) {
             Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
             configCache = session
