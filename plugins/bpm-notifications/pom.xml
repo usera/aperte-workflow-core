@@ -47,6 +47,12 @@
             <artifactId>freemarker</artifactId>
             <version>2.3.19</version>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -114,6 +120,7 @@
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig,
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties
                         </ProcessTool-Model-Enhancement>
+                        <ProcessTool-I18N-Property>messages</ProcessTool-I18N-Property>
                     </instructions>
                 </configuration>
             </plugin>
