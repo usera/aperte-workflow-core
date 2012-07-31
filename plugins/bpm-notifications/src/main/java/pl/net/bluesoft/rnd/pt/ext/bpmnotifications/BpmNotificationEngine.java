@@ -175,6 +175,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
                 if (task != null && cfg.isNotifyTaskAssignee()) {
+                	//TODO: Zmienić na pobieranie ownera ZADANIA, a nie osoby PROCESU (czyli osoby rozliczanej)!!
                     UserData owner = task.getOwner();
                     if (cfg.isSkipNotificationWhenTriggeredByAssignee() &&
                             owner != null &&
