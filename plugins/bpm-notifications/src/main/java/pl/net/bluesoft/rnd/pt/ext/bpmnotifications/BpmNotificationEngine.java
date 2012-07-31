@@ -67,7 +67,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
     private long cacheUpdateTime;
-    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 1000;
+    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 300 * 1000;
     private ProcessToolBpmSession bpmSession;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
