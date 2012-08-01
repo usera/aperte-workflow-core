@@ -23,6 +23,8 @@ public interface ProcessToolContext  extends ProcessToolBpmConstants {
 
 	ProcessToolRegistry getRegistry();
 	ProcessInstanceDAO getProcessInstanceDAO();
+	
+	UserProcessQueueDAO getUserProcessQueueDAO();
 
     ProcessInstanceFilterDAO getProcessInstanceFilterDAO();
 
