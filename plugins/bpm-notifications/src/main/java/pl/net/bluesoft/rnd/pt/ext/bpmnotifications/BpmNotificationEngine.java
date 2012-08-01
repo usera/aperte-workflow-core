@@ -161,11 +161,11 @@ public class BpmNotificationEngine implements BpmNotificationService
         refreshConfigIfNecessary();
         for (BpmNotificationConfig cfg : configCache) {
             try {
-                if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().matches(cfg.getProcessTypeRegex())) {
+                if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
                     continue;
                 }
                 if (!(
-					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().matches(cfg.getStateRegex())))
+					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
 					||
 					(cfg.isNotifyOnProcessStart() && processStarted)
 				)) {
@@ -174,7 +174,6 @@ public class BpmNotificationEngine implements BpmNotificationService
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
                 if (task != null && cfg.isNotifyTaskAssignee()) {
-                	//TODO: Zmienić na pobieranie ownera ZADANIA, a nie osoby PROCESU (czyli osoby rozliczanej)!!
                     UserData owner = task.getOwner();
                     if (cfg.isSkipNotificationWhenTriggeredByAssignee() &&
                             owner != null &&
@@ -283,9 +282,15 @@ public class BpmNotificationEngine implements BpmNotificationService
 
             m.put("taskUrl", getTaskLink(task, ctx));
         }
+        
+        UserData assignee = new UserData();
+        if(task.getAssignee() != null)
+        	assignee = ctx.getUserDataDAO().loadUserByLogin(task.getAssignee());
+        
         m.put("processVisibleId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
         m.put("process", pi);
         m.put("user", userData);
+        m.put("assignee", assignee);
         m.put("session", bpmSession);
         m.put("context", ctx);
         m.put("config", cfg);
