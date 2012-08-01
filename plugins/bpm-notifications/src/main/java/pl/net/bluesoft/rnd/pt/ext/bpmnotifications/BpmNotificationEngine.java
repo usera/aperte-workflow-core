@@ -125,7 +125,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                     emailsToNotify.addAll(Arrays.asList(cfg.getNotifyEmailAddresses().split(",")));
                 }
 				if (hasText(cfg.getNotifyUserAttributes())) {
-					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes()));
+					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes(), ctx, pi));
 				}
                 if (emailsToNotify.isEmpty()) {
                     logger.info("Despite matched rules, no emails qualify to notify for cfg #" + cfg.getId());
@@ -186,11 +186,14 @@ public class BpmNotificationEngine implements BpmNotificationService
     	
     }
 
-	private Collection<String> extractUserEmails(String notifyUserAttributes) {
-		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
 		Set<String> emails = new HashSet<String>();
 		for (String attribute : notifyUserAttributes.split(",")) {
 			attribute = attribute.trim();
+			if(attribute.matches("#\\{.*\\}")){
+	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
+	        	attribute = (String) ctx.getBpmVariable(pi, loginKey);
+	        }
 			if (hasText(attribute)) {
 				UserData user = ctx.getUserDataDAO().loadUserByLogin(attribute);
 				emails.add(user.getEmail());
