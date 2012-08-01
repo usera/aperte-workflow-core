@@ -35,6 +35,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceSimpleAttribute;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
@@ -85,6 +86,7 @@ public class BpmNotificationEngine implements BpmNotificationService
 
     public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
         refreshConfigIfNecessary();
+        ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
         for (BpmNotificationConfig cfg : configCache) {
             try {
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
@@ -96,6 +98,12 @@ public class BpmNotificationEngine implements BpmNotificationService
 					(cfg.isNotifyOnProcessStart() && processStarted)
 				)) {
                     continue;
+                }
+                if (hasText(cfg.getLastActionRegex())) {
+                	String lastAction = (String) ctx.getBpmVariable(pi, "ACTION");
+                	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
+                        continue;
+                	}
                 }
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
@@ -117,7 +125,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                     emailsToNotify.addAll(Arrays.asList(cfg.getNotifyEmailAddresses().split(",")));
                 }
 				if (hasText(cfg.getNotifyUserAttributes())) {
-					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes()));
+					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes(), ctx, pi));
 				}
                 if (emailsToNotify.isEmpty()) {
                     logger.info("Despite matched rules, no emails qualify to notify for cfg #" + cfg.getId());
@@ -127,7 +135,6 @@ public class BpmNotificationEngine implements BpmNotificationService
                 
                 BpmNotificationTemplate template = templateProvider.getBpmNotificationTemplate(templateName);
 
-                ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
                 Map data = prepareData(task, pi, userData, cfg, ctx);
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
@@ -179,11 +186,14 @@ public class BpmNotificationEngine implements BpmNotificationService
     	
     }
 
-	private Collection<String> extractUserEmails(String notifyUserAttributes) {
-		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
 		Set<String> emails = new HashSet<String>();
 		for (String attribute : notifyUserAttributes.split(",")) {
 			attribute = attribute.trim();
+			if(attribute.matches("#\\{.*\\}")){
+	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
+	        	attribute = (String) ctx.getBpmVariable(pi, loginKey);
+	        }
 			if (hasText(attribute)) {
 				UserData user = ctx.getUserDataDAO().loadUserByLogin(attribute);
 				emails.add(user.getEmail());
