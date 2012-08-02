@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.aperteworkflow.ui.view.ViewEvent;
+
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
@@ -88,7 +90,9 @@ public abstract class AbstractProcessToolSession
     public ProcessInstance createProcessInstance(ProcessDefinitionConfig config,String externalKey, ProcessToolContext ctx,
             String description, String keyword, String source, String internalId)
     {
-    	return createProcessInstance(config, externalKey, ctx, description, keyword, source, internalId, user);
+    	ProcessInstance createdProcessInstance = createProcessInstance(config, externalKey, ctx, description, keyword, source, internalId, user);
+    	broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
+		return createdProcessInstance;
     }
 
     public ProcessInstance createProcessInstance(ProcessDefinitionConfig config,
@@ -144,6 +148,7 @@ public abstract class AbstractProcessToolSession
         log.setUser(creator);
         log.setLogType(ProcessInstanceLog.LOG_TYPE_START_PROCESS);
         //log.setLogType(LogType.START);
+        log.setOwnProcessInstance(pi);
         pi.getRootProcessInstance().addProcessLog(log);
 
         ctx.getProcessInstanceDAO().saveProcessInstance(pi);
@@ -162,7 +167,7 @@ public abstract class AbstractProcessToolSession
         return pi;
     }
 
-    protected void broadcastEvent(final ProcessToolContext ctx, final BpmEvent event) {
+    protected void broadcastEvent(final ProcessToolContext ctx, final Object event) {
         eventBusManager.publish(event);
         if (substitutingUserEventBusManager != null)
             substitutingUserEventBusManager.publish(event);

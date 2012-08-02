@@ -19,6 +19,7 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.aperteworkflow.ui.view.ViewEvent;
 import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 
@@ -37,9 +38,11 @@ import pl.net.bluesoft.util.lang.DateUtil;
 import pl.net.bluesoft.util.lang.TaskWatch;
 import pl.net.bluesoft.util.lang.cquery.func.F;
 
+import com.vaadin.Application;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.ui.AbstractSelect.ItemDescriptionGenerator;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -68,8 +71,10 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private Panel substitutionsPanel;
 	private TaskWatch watch;
 	private Collection<Button> taskButtons = new ArrayList<Button>();
-
+	
+	private boolean refreshRequested; 
 	protected boolean onEvent = false;
+	private EventListener<ViewEvent> viewEventListener;
 
 	public ActivityQueuesPane(ActivityMainPane activityMainPane)
 	{
@@ -81,21 +86,36 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		taskList = new VerticalLayout();
 		addComponent(taskList);
 
-		if(bpmEventListener == null)
-		{
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>()
-			{
+		//listen for BPM events - they usually mean there can be something changed in processes list
+		if(bpmEventListener == null){
+			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>(){
 				@Override
-				public void onEvent(BpmEvent e)
-				{
-					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null)
-					{
-						onEvent = true;
-						refreshData();
-						onEvent = false;
+				public void onEvent(BpmEvent e){
+					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null){
+						synchronized (this) {
+							refreshRequested = true;
+						}
 					}
 				}
 			});
+		}
+		//listen for ViewEvent ACTION_COMPLETE - it means BPM processing is done, so if there were some BPM events before, now is the time to refresh data.
+		if(viewEventListener == null){
+			activityMainPane.getBpmSession().getEventBusManager().subscribe(ViewEvent.class, viewEventListener = new EventListener<ViewEvent>(){
+				@Override
+				public void onEvent(ViewEvent e) {
+					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getType() == ViewEvent.Type.ACTION_COMPLETE){
+						synchronized(this) {
+							if(refreshRequested) {
+								refreshRequested = false;
+								onEvent = true;
+								refreshData();
+								onEvent = false;
+							}
+						}
+					}
+				}
+			});		
 		}
 	}
 
