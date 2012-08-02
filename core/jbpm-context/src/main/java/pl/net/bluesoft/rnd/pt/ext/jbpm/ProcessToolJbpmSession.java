@@ -682,6 +682,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
         }
 
         broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, bpmTask, user));
+        broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
 
         return bpmTask;
     }
