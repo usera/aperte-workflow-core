@@ -65,6 +65,14 @@ public class ProcessDBDictionaryItemExtension extends PersistentEntity implement
         this.value = value;
     }
 
+	public String getStringValue() {
+		return getValue();
+	}
+
+	public void setStringValue(String value) {
+		setValue(value);
+	}
+
     public String getValueType() {
         return valueType;
     }
