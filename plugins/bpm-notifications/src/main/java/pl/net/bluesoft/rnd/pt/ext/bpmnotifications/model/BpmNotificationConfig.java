@@ -24,6 +24,7 @@ public class BpmNotificationConfig extends PersistentEntity {
 	private boolean sendHtml;
     private String locale;
     private boolean notifyOnProcessStart;
+    private boolean onEnteringStep;
 	private String templateArgumentProvider;
 
 	public boolean isNotifyOnProcessStart() {
@@ -136,5 +137,13 @@ public class BpmNotificationConfig extends PersistentEntity {
 
 	public void setLastActionRegex(String lastTransitionRegex) {
 		this.lastActionRegex = lastTransitionRegex;
+	}
+
+	public boolean isOnEnteringStep() {
+		return onEnteringStep;
+	}
+
+	public void setOnEnteringStep(boolean onEnteringStep) {
+		this.onEnteringStep = onEnteringStep;
 	}
 }

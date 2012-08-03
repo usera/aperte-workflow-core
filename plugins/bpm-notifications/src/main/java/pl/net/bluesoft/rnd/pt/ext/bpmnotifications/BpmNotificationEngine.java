@@ -84,11 +84,14 @@ public class BpmNotificationEngine implements BpmNotificationService
     	mailSessionProvider = new DatabaseMailSessionProvider();
     }
 
-    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
+    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted, boolean enteringStep) {
         refreshConfigIfNecessary();
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
         for (BpmNotificationConfig cfg : configCache) {
             try {
+            	if(enteringStep != cfg.isOnEnteringStep()) {
+            		continue;
+            	}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
                     continue;
                 }

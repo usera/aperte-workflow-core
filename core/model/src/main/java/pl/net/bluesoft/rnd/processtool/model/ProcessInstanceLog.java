@@ -53,6 +53,10 @@ public class ProcessInstanceLog extends PersistentEntity implements Comparable<P
 
 //    @XmlTransient
 	@ManyToOne
+	@JoinColumn(name="own_process_instance_id")
+	private ProcessInstance ownProcessInstance;
+
+	@ManyToOne
 	@JoinColumn(name="process_instance_id")
 	private ProcessInstance processInstance;
 
@@ -156,5 +160,15 @@ public class ProcessInstanceLog extends PersistentEntity implements Comparable<P
 	public void setExecutionId(String executionId)
 	{
 		this.executionId = executionId;
+	}
+
+	public ProcessInstance getOwnProcessInstance() {
+		if(ownProcessInstance == null)
+			return processInstance;
+		return ownProcessInstance;
+	}
+
+	public void setOwnProcessInstance(ProcessInstance ownProcessInstance) {
+		this.ownProcessInstance = ownProcessInstance;
 	}
 }
