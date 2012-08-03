@@ -30,8 +30,8 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		ProcessToolRegistry registry = getRegistry(context);
-		registry.registerModelExtension(BpmNotificationConfig.class, BpmNotificationTemplate.class, BpmNotificationMailProperties.class);
-		registry.commitModelExtensions();
+//		registry.registerModelExtension(BpmNotificationConfig.class, BpmNotificationTemplate.class, BpmNotificationMailProperties.class);
+//		registry.commitModelExtensions();
         registry.registerService(BpmNotificationService.class, engine, new Properties());
 		registry.getEventBusManager().subscribe(BpmEvent.class, this);
 		

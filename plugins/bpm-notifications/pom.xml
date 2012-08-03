@@ -70,6 +70,11 @@
                             *;resolution:=optional,
                             pl.net.bluesoft.util.eventbus
                         </Import-Package>
+                        <ProcessTool-Model-Enhancement>
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig,
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate,
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties,
+                        </ProcessTool-Model-Enhancement>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.bpmnotifications.Activator</Bundle-Activator>
                         <Bundle-SymbolicName>pl.net.bluesoft.rnd.pt.ext.bpmnotifications</Bundle-SymbolicName>
