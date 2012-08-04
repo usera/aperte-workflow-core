@@ -92,13 +92,14 @@ public class BpmNotificationEngine implements BpmNotificationService
             	if(enteringStep != cfg.isOnEnteringStep()) {
             		continue;
             	}
+            	if(cfg.isNotifyOnProcessStart() != processStarted) {
+            		continue;
+            	}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
                     continue;
                 }
                 if (!(
 					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
-					||
-					(cfg.isNotifyOnProcessStart() && processStarted)
 				)) {
                     continue;
                 }
