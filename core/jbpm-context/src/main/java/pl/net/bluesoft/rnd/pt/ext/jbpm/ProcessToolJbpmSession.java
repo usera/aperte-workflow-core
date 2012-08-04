@@ -1016,6 +1016,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            ProcessInstanceLog log = addActionLogEntry(action, task, ctx);
            Map<String, Object> vars = new HashMap<String, Object>();
            vars.put("ACTION", action.getBpmName());
+           pi.setSimpleAttribute("ACTION", action.getBpmName());
            List<String> outgoingTransitionNames = getOutgoingTransitionNames(task.getInternalTaskId(), ctx);
 
            ProcessEngine processEngine = getProcessEngine(ctx);
