@@ -103,14 +103,9 @@ public class BpmNotificationEngine implements BpmNotificationService
                     continue;
                 }
                 if (hasText(cfg.getLastActionRegex())) {
-                	try {
-	                	String lastAction = (String) ctx.getBpmVariable(pi, "ACTION");
-	                	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
-	                        continue;
-	                	}
-                	} catch(RuntimeException e) {
-                		logger.log(Level.WARNING, "Failed to load process variable", e);
-                		continue;
+                	String lastAction = pi.getSimpleAttributeValue("ACTION");
+                	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
+                        continue;
                 	}
                 }
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
