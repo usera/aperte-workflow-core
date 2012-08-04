@@ -195,7 +195,18 @@ public class BpmNotificationEngine implements BpmNotificationService
 			attribute = attribute.trim();
 			if(attribute.matches("#\\{.*\\}")){
 	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
-	        	attribute = (String) ctx.getBpmVariable(pi, loginKey);
+	        	ProcessInstance parentPi = pi;
+				while (parentPi != null) {
+		        	try {
+		        		attribute = (String) ctx.getBpmVariable(parentPi, loginKey);
+		        		break;
+		        	} catch(RuntimeException e) {
+		        		parentPi = parentPi.getParent();
+		        	}
+	        	}
+				if(attribute.matches("#\\{.*\\}")) {
+					continue;
+				}
 	        }
 			if (hasText(attribute)) {
 				UserData user = ctx.getUserDataDAO().loadUserByLogin(attribute);
