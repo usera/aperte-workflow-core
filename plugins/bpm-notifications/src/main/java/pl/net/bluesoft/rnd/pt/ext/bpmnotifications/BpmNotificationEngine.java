@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -37,7 +38,6 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
-import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceSimpleAttribute;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
@@ -164,25 +164,33 @@ public class BpmNotificationEngine implements BpmNotificationService
     public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted, boolean enteringStep) {
         refreshConfigIfNecessary();
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+
+		logger.log(Level.INFO, "BpmNotificationEngine processes " + configCache.size() + " rules");
+		
         for (BpmNotificationConfig cfg : configCache) {
             try {
             	if(enteringStep != cfg.isOnEnteringStep()) {
+            		logger.info("Not matched notification #" + cfg.getId() + ": enteringStep=" + enteringStep );
             		continue;
             	}
-            	if(cfg.isNotifyOnProcessStart() != processStarted) {
+            	if(processStarted != cfg.isNotifyOnProcessStart()) {
+            		logger.info("Not matched notification #" + cfg.getId() + ": processStarted=" + processStarted );
             		continue;
             	}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
+            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
                     continue;
                 }
                 if (!(
 					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
 				)) {
+            		logger.info("Not matched notification #" + cfg.getId() + ": task.getTaskName()=" + task.getTaskName() );
                     continue;
                 }
                 if (hasText(cfg.getLastActionRegex())) {
                 	String lastAction = pi.getSimpleAttributeValue("ACTION");
                 	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
+                		logger.info("Not matched notification #" + cfg.getId() + ": lastAction=" + lastAction );
                         continue;
                 	}
                 }
@@ -353,9 +361,15 @@ public class BpmNotificationEngine implements BpmNotificationService
 		cacheUpdateTime = 0;
 	}
 
-	public synchronized void refreshConfigIfNecessary() {
-        if (cacheUpdateTime + CONFIG_CACHE_REFRESH_INTERVAL < System.currentTimeMillis()) 
-        {
+    public synchronized void refreshConfigIfNecessary() {
+        if (cacheUpdateTime + CONFIG_CACHE_REFRESH_INTERVAL < System.currentTimeMillis()) {
+            Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
+            configCache = session
+                    .createCriteria(BpmNotificationConfig.class)
+                    .add(Restrictions.eq("active", true))
+                    .addOrder(Order.asc("id"))
+                    .list();
+
             cacheUpdateTime = System.currentTimeMillis();
             
             registerMailSettingProvider();
