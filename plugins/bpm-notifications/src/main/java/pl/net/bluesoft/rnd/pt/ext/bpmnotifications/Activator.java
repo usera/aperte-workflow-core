@@ -52,13 +52,18 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		return (ProcessToolRegistry) context.getService(ref);
 	}
 
-	public void onEvent(BpmEvent e) {
-		logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
-        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) {
-            boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
-            boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
-			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
-                    e.getUserData(), processStarted, enteringStep);
-        }
+	public void onEvent(BpmEvent event) {
+		String eventString = event.toString();
+		try {
+			logger.log(Level.INFO, "Received " + eventString);
+	        if (Type.ASSIGN_TASK == event.getEventType() || Type.NEW_PROCESS == event.getEventType() || Type.SIGNAL_PROCESS == event.getEventType()) {
+	            boolean processStarted = BpmEvent.Type.NEW_PROCESS == event.getEventType();
+	            boolean enteringStep = Type.ASSIGN_TASK == event.getEventType() || Type.NEW_PROCESS == event.getEventType();
+				engine.onProcessStateChange(event.getTask(), event.getProcessInstance(),
+	                    event.getUserData(), processStarted, enteringStep);
+	        }
+		} catch(Throwable t) {
+			logger.log(Level.INFO, "Exception in BpmNotificationEngine on event " + eventString);
+		}
 	}
 }
