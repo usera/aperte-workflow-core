@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -163,12 +164,19 @@ public abstract class AbstractProcessToolSession
     }
 
     protected void broadcastEvent(final ProcessToolContext ctx, final BpmEvent event) {
+		log.log(Level.INFO, "Broadcasting event " + event.getEventType() + " for task " 
+				+ (event.getProcessInstance() != null ? event.getProcessInstance().getExternalKey() : "")
+				+ "/" + (event.getTask() != null ? event.getTask().getTaskName() : ""));
+//    	log.log(Level.INFO, "Broadcasting event: " + event.getEventType());
         eventBusManager.publish(event);
         if (substitutingUserEventBusManager != null)
             substitutingUserEventBusManager.publish(event);
         ctx.addTransactionCallback(new TransactionFinishedCallback() {
             @Override
             public void onFinished() {
+            	log.log(Level.INFO, "Posting event " + event.getEventType() + " for task " 
+					+ (event.getProcessInstance() != null ? event.getProcessInstance().getExternalKey() : "")
+					+ "/" + (event.getTask() != null ? event.getTask().getTaskName() : ""));
                 ctx.getEventBusManager().post(event);
             }
         });
