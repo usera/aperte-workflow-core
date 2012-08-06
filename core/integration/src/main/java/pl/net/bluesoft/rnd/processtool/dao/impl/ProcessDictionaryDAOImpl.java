@@ -75,7 +75,7 @@ public class ProcessDictionaryDAOImpl extends SimpleHibernateBean<ProcessDBDicti
 
         @Override
         protected void objectMissed(Map<String, ProcessDBDictionary> cache, String objectId) {
-            logger.warning("Object missed: " + objectId + ".");
+            logger.finest("Object missed: " + objectId + ".");
         }
     }
 

@@ -88,32 +88,32 @@ public class BpmNotificationEngine implements BpmNotificationService
         refreshConfigIfNecessary();
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 
-		logger.log(Level.INFO, "BpmNotificationEngine processes " + configCache.size() + " rules");
+//		logger.log(Level.INFO, "BpmNotificationEngine processes " + configCache.size() + " rules");
 		
         for (BpmNotificationConfig cfg : configCache) {
             try {
             	if(enteringStep != cfg.isOnEnteringStep()) {
-            		logger.info("Not matched notification #" + cfg.getId() + ": enteringStep=" + enteringStep );
+//            		logger.info("Not matched notification #" + cfg.getId() + ": enteringStep=" + enteringStep );
             		continue;
             	}
             	if(processStarted != cfg.isNotifyOnProcessStart()) {
-            		logger.info("Not matched notification #" + cfg.getId() + ": processStarted=" + processStarted );
+//            		logger.info("Not matched notification #" + cfg.getId() + ": processStarted=" + processStarted );
             		continue;
             	}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
-            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
+//            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
                     continue;
                 }
                 if (!(
 					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
 				)) {
-            		logger.info("Not matched notification #" + cfg.getId() + ": task.getTaskName()=" + task.getTaskName() );
+//            		logger.info("Not matched notification #" + cfg.getId() + ": task.getTaskName()=" + task.getTaskName() );
                     continue;
                 }
                 if (hasText(cfg.getLastActionRegex())) {
                 	String lastAction = pi.getSimpleAttributeValue("ACTION");
                 	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
-                		logger.info("Not matched notification #" + cfg.getId() + ": lastAction=" + lastAction );
+//                		logger.info("Not matched notification #" + cfg.getId() + ": lastAction=" + lastAction );
                         continue;
                 	}
                 }
