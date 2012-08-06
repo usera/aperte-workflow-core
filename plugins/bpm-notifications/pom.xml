@@ -93,11 +93,14 @@
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service,
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.util,
                             pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates,
-                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions
+                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions,
+                            pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model
                         </Export-Package>
                         <Import-Package>
                             javax.mail;version=!,
                             pl.net.bluesoft.rnd.util.i18n.impl,
+                            javassist.util.proxy,org.hibernate.proxy,
+                            org.osgi.framework,
                             javax.mail.internet;version=!,
                             *;resolution:=optional,
                             pl.net.bluesoft.util.eventbus,
@@ -107,6 +110,11 @@
                             org.osgi.framework,pl.net.bluesoft.rnd.processtool.plugins,
                             pl.net.bluesoft.rnd.processtool.plugins.osgi,
                         </Import-Package>
+                        <ProcessTool-Model-Enhancement>
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig,
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate,
+                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties,
+                        </ProcessTool-Model-Enhancement>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.bpmnotifications.Activator</Bundle-Activator>
                         <Bundle-SymbolicName>pl.net.bluesoft.rnd.pt.ext.bpmnotifications</Bundle-SymbolicName>

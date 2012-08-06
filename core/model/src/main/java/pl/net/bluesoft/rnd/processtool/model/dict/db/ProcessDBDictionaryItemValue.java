@@ -74,6 +74,14 @@ public class ProcessDBDictionaryItemValue extends PersistentEntity implements Pr
         this.value = value;
     }
 
+	public String getStringValue() {
+		return getValue();
+	}
+
+	public void setStringValue(String value) {
+		setValue(value);
+	}
+
     public Date getValidStartDate() {
         return validStartDate;
     }

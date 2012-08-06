@@ -37,6 +37,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceSimpleAttribute;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
@@ -157,19 +158,30 @@ public class BpmNotificationEngine implements BpmNotificationService
     }
     
     
-    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
+    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted, boolean enteringStep) {
         refreshConfigIfNecessary();
+        ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
         for (BpmNotificationConfig cfg : configCache) {
             try {
+            	if(enteringStep != cfg.isOnEnteringStep()) {
+            		continue;
+            	}
+            	if(cfg.isNotifyOnProcessStart() != processStarted) {
+            		continue;
+            	}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
                     continue;
                 }
                 if (!(
 					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
-					||
-					(cfg.isNotifyOnProcessStart() && processStarted)
 				)) {
                     continue;
+                }
+                if (hasText(cfg.getLastActionRegex())) {
+                	String lastAction = pi.getSimpleAttributeValue("ACTION");
+                	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
+                        continue;
+                	}
                 }
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
@@ -191,7 +203,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                     emailsToNotify.addAll(Arrays.asList(cfg.getNotifyEmailAddresses().split(",")));
                 }
 				if (hasText(cfg.getNotifyUserAttributes())) {
-					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes()));
+					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes(), ctx, pi));
 				}
                 if (emailsToNotify.isEmpty()) {
                     logger.info("Despite matched rules, no emails qualify to notify for cfg #" + cfg.getId());
@@ -201,7 +213,6 @@ public class BpmNotificationEngine implements BpmNotificationService
                 
                 BpmNotificationTemplate template = templateProvider.getBpmNotificationTemplate(templateName);
 
-                ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
                 Map data = prepareData(task, pi, userData, cfg, ctx);
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
@@ -253,11 +264,25 @@ public class BpmNotificationEngine implements BpmNotificationService
     	
     }
 
-	private Collection<String> extractUserEmails(String notifyUserAttributes) {
-		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
 		Set<String> emails = new HashSet<String>();
 		for (String attribute : notifyUserAttributes.split(",")) {
 			attribute = attribute.trim();
+			if(attribute.matches("#\\{.*\\}")){
+	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
+	        	ProcessInstance parentPi = pi;
+				while (parentPi != null) {
+		        	try {
+		        		attribute = (String) ctx.getBpmVariable(parentPi, loginKey);
+		        		break;
+		        	} catch(RuntimeException e) {
+		        		parentPi = parentPi.getParent();
+		        	}
+	        	}
+				if(attribute.matches("#\\{.*\\}")) {
+					continue;
+				}
+	        }
 			if (hasText(attribute)) {
 				UserData user = ctx.getUserDataDAO().loadUserByLogin(attribute);
 				emails.add(user.getEmail());

@@ -321,4 +321,9 @@ public class ProcessToolContextImpl implements ProcessToolContext {
         ExecutionService es = getProcessEngine().getExecutionService();
         return es.getVariables(pi.getInternalId(), es.getVariableNames(pi.getInternalId()));
     }
+    
+    public Object getBpmVariable(ProcessInstance pi, String variableName) {
+        ExecutionService es = getProcessEngine().getExecutionService();
+        return es.getVariable(pi.getInternalId(), variableName);
+    }
 }

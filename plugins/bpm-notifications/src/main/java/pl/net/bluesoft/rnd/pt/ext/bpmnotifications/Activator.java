@@ -73,9 +73,11 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 	}
 
 	public void onEvent(BpmEvent e) {
-        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType()) {
-            engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
-                    e.getUserData(), BpmEvent.Type.NEW_PROCESS == e.getEventType());
+        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) {
+            boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
+            boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
+			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
+                    e.getUserData(), processStarted, enteringStep);
         }
 	}
 	
