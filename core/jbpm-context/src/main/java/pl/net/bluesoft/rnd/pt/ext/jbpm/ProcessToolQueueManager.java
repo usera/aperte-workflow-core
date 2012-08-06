@@ -13,7 +13,7 @@ public class ProcessToolQueueManager
 
 	public static void updateQueues(BpmTask userTask)
 	{
-		
+		String processExternalKey = userTask.getProcessInstance().getExternalKey();
 	}
 
 }
