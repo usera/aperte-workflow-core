@@ -44,7 +44,6 @@ import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
