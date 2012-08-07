@@ -18,5 +18,17 @@ import java.util.*;
  */
 public interface UserProcessQueueDAO extends HibernateBean<UserProcessQueue> 
 {
-    long saveUserProcessQueue(UserProcessQueue userProcessQueue);
+	
+	/** Get all users process queue elements by given process id */
+	Collection<UserProcessQueue> getAllUserProcessQueueElementsByProcessId(String processId);
+	
+    /** Methods returns the user process queue element with given id, created by user with given login and
+     * with type = OTHERS_ASSIGNED
+     */
+	UserProcessQueue getUserProcessAssignedToOthers(String processId, String creatorLogin);
+
+    /** Methods returns the user process queue element with given id, created by user with given login and
+     * with type = OWN_ASSIGNED
+     */
+	UserProcessQueue getUserProcessAssignedToHim(String processId, String creatorLogin);
 }

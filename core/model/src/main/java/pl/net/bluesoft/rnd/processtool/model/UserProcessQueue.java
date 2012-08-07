@@ -19,6 +19,7 @@ import javax.persistence.Table;
 @Table(name="pt_user_process_queue")
 public class UserProcessQueue extends PersistentEntity
 {
+
 	/** User login as string */
 	@Column(name="user_login")
 	private String login;
@@ -58,5 +59,44 @@ public class UserProcessQueue extends PersistentEntity
 		this.processId = processId;
 	}
 
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((login == null) ? 0 : login.hashCode());
+		result = prime * result + ((processId == null) ? 0 : processId.hashCode());
+		result = prime * result + ((queueType == null) ? 0 : queueType.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(this == obj)
+			return true;
+		if(obj == null)
+			return false;
+		if(getClass() != obj.getClass())
+			return false;
+		UserProcessQueue other = (UserProcessQueue)obj;
+		if(login == null)
+		{
+			if(other.login != null)
+				return false;
+		}
+		else if(!login.equals(other.login))
+			return false;
+		if(processId == null)
+		{
+			if(other.processId != null)
+				return false;
+		}
+		else if(!processId.equals(other.processId))
+			return false;
+		if(queueType != other.queueType)
+			return false;
+		return true;
+	}
 
 }

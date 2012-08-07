@@ -76,9 +76,15 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		return registry.getRegisteredService(ViewRegistry.class);
 	}
 
-	public void onEvent(BpmEvent e) {
-		logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
-        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) {
+	public void onEvent(BpmEvent e) 
+	{
+		if(Type.NEW_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for process " + e.getProcessInstance().getId());
+		else if(Type.ASSIGN_TASK == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
+		
+        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) 
+        {
             boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
             boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
 			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),

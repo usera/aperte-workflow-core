@@ -12,5 +12,5 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
  */
 public interface IUserProcessQueueManager
 {
-	void updateQueues(ProcessInstance processInstance, BpmTask bpmTask);
+	void onProcessAssigne(ProcessInstance processInstance, BpmTask bpmTask);
 }
