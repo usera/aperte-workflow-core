@@ -20,6 +20,7 @@ import org.aperteworkflow.util.vaadin.UriChangedCallback;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
@@ -30,6 +31,7 @@ import pl.net.bluesoft.rnd.processtool.ui.process.ProcessDataViewComponent;
 import pl.net.bluesoft.rnd.processtool.view.impl.BasicViewController;
 import pl.net.bluesoft.rnd.processtool.view.impl.ComponentPaneRenderer;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.util.eventbus.EventListener;
 import pl.net.bluesoft.util.lang.Strings;
 
 import com.vaadin.Application;
@@ -72,8 +74,26 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		this.i18NSource = i18NSource;
 		this.bpmSession = bpmSession;
 		this.resourceCache = new ResourceCache(application);
+
+		/* Subscribe for the process changes so the user queues can be affected */
+        bpmSession.getEventBusManager().subscribe(BpmEvent.class,new BpmEventListener());
+        
+        
 		setWidth("100%");
 		initLayout();
+	}
+	
+	private class BpmEventListener implements EventListener<BpmEvent>
+	{
+
+		@Override
+		public void onEvent(BpmEvent e)
+		{
+			ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+			ctx.getUserProcessQueueManager().updateQueues(e.getProcessInstance(), e.getTask());
+			
+		}
+		
 	}
 
 	private void initLayout()

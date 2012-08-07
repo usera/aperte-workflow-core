@@ -20,17 +20,17 @@ import javax.persistence.Table;
 public class UserProcessQueue extends PersistentEntity
 {
 	/** User login as string */
-	@Column(columnDefinition="user_login")
+	@Column(name="user_login")
 	private String login;
 
 	/** Type of the queue */
-	@Column(columnDefinition="queue_type")
+	@Column(name="queue_type")
 	@Enumerated(EnumType.STRING)
 	private QueueType queueType;
 	
-	/** Process instance external key */
-	@Column(columnDefinition="process_external_key")
-	private String processExternalKey;
+	/** Process instance id */
+	@Column(name="process_id")
+	private String processId;
 	
 	public String getLogin() {
 		return login;
@@ -48,12 +48,15 @@ public class UserProcessQueue extends PersistentEntity
 		this.queueType = queueType;
 	}
 
-	public String getProcessExternalKey() {
-		return processExternalKey;
+	public String getProcessId()
+	{
+		return processId;
 	}
 
-	public void setProcessExternalKey(String processExternalKey) {
-		this.processExternalKey = processExternalKey;
+	public void setProcessId(String processId)
+	{
+		this.processId = processId;
 	}
+
 
 }

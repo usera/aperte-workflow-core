@@ -1106,8 +1106,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
                userTask = t;
            }
            
-           ProcessToolQueueManager.updateQueues(userTask);
-           
            return userTask;
        }
 

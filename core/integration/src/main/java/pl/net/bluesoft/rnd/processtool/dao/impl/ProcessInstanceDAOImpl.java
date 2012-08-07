@@ -170,6 +170,7 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         searchProvider.updateIndex(searchData);
         logger.finest("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
                 + "attributes)  took " + (System.currentTimeMillis()-time) + " ms");
+        
 		return processInstance.getId();
 	}
 

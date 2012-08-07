@@ -36,6 +36,7 @@ import pl.net.bluesoft.rnd.processtool.model.config.ProcessToolAutowire;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessToolSequence;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessToolSetting;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
+import pl.net.bluesoft.rnd.processtool.userqueues.IUserProcessQueueManager;
 import pl.net.bluesoft.util.eventbus.EventBusManager;
 import pl.net.bluesoft.util.lang.Formats;
 
@@ -51,7 +52,7 @@ public class ProcessToolContextImpl implements ProcessToolContext {
     private ProcessDictionaryRegistry processDictionaryRegistry;
     private ProcessEngine processEngine;
     private ProcessToolContextFactory factory;
-
+    private IUserProcessQueueManager userProcessQueueManager;
 
     private Map<String, String> autowiringCache;
     private Map<Class<? extends HibernateBean>, HibernateBean> daoCache = new HashMap<Class<? extends HibernateBean>, HibernateBean>();
@@ -65,6 +66,7 @@ public class ProcessToolContextImpl implements ProcessToolContext {
         this.factory = factory;
         this.processEngine = processEngine;
         this.autowiringCache = getRegistry().getCache(ProcessToolAutowire.class.getName());
+        this.userProcessQueueManager = new UserProcessQueueManager(hibernateSession, getUserProcessQueueDAO());
         processEngine.setHibernateSession(hibernateSession);
 
         transaction = hibernateSession.beginTransaction();
@@ -326,4 +328,10 @@ public class ProcessToolContextImpl implements ProcessToolContext {
         ExecutionService es = getProcessEngine().getExecutionService();
         return es.getVariable(pi.getInternalId(), variableName);
     }
+
+	@Override
+	public IUserProcessQueueManager getUserProcessQueueManager()
+	{
+		return userProcessQueueManager;
+	}
 }
