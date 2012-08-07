@@ -16,6 +16,7 @@
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
             <version>2.1.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.aperteworkflow</groupId>
@@ -41,7 +42,6 @@
             <version>2.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.aperteworkflow</groupId>
             <artifactId>scheduler-integration</artifactId>
@@ -90,7 +90,9 @@
                             *;resolution:=optional,
                             pl.net.bluesoft.util.eventbus,
                             pl.net.bluesoft.rnd.pt.utils.template,
-                            pl.net.bluesoft.rnd.processtool.model
+                            pl.net.bluesoft.rnd.processtool.model,
+                            pl.net.bluesoft.rnd.pt.ext.sched.service,
+                            org.quartz
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.deadline.DeadlineActivator</Bundle-Activator>
