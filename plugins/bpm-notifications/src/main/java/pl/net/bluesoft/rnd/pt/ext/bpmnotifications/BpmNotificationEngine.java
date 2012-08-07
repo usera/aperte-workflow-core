@@ -39,7 +39,6 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
@@ -67,12 +66,10 @@ public class BpmNotificationEngine implements BpmNotificationService
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
     private long cacheUpdateTime;
-    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 1000;
+    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 300 * 1000;
     private ProcessToolBpmSession bpmSession;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
-
-    private Map<String, Properties> persistentMailProperties = new HashMap<String, Properties>();
     
     private IMailSessionProvider mailSessionProvider;
     private MailTemplateProvider templateProvider;
@@ -335,57 +332,6 @@ public class BpmNotificationEngine implements BpmNotificationService
             templateProvider.refreshConfig();
             mailSessionProvider.refreshConfig();
 
-            persistentMailProperties = new HashMap<String, Properties>();
-            List<BpmNotificationMailProperties> properties = session.createCriteria(BpmNotificationMailProperties.class).list();
-            for (BpmNotificationMailProperties bnmp : properties) 
-            {
-                if (hasText(bnmp.getProfileName())) 
-                {
-                    Properties prop = new Properties();
-                    
-                    if(bnmp.isDebug())
-                    {
-                    	logger.info(" mail.smtp.host = "+bnmp.getSmtpHost() +
-                    		"\n mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort() +
-                    		"\n mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass() +
-                    		"\n mail.smtp.auth = "+bnmp.isSmtpAuth() +
-                    		"\n mail.smtp.port = "+bnmp.getSmtpPort() +
-                    		"\n mail.smtp.user = "+bnmp.getSmtpUser() +
-                    		"\n mail.debug = "+bnmp.isDebug() +
-                    		"\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
-                    }
-                    
-                    if(bnmp.getSmtpHost() != null)
-                    	prop.put("mail.smtp.host",  bnmp.getSmtpHost());
-                    
-                    if(bnmp.getSmtpSocketFactoryPort() != null)
-                    	prop.put("mail.smtp.socketFactory.port", bnmp.getSmtpSocketFactoryPort());
-                    
-                    if(bnmp.getSmtpSocketFactoryClass() != null)
-                    	prop.put("mail.smtp.socketFactory.class", bnmp.getSmtpSocketFactoryClass());
-                    
-
-                    prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
-                    
-                    if(bnmp.getSmtpPort() != null)
-                    	prop.put("mail.smtp.port", bnmp.getSmtpPort());
-                    
-                    if(bnmp.getSmtpUser() != null)
-                    	prop.put("mail.smtp.user", bnmp.getSmtpUser());
-                    
-                    if(bnmp.getSmtpPassword() != null)
-                    	prop.put("mail.smtp.password", bnmp.getSmtpPassword());
-                    
-                    prop.put("mail.debug", getStringValueFromBoolean(bnmp.isDebug()));
-                    prop.put("mail.smtp.starttls.enable", getStringValueFromBoolean(bnmp.isStarttls()));
-                    
-                    persistentMailProperties.put(bnmp.getProfileName(), prop);
-                }
-                else {
-                    logger.log(Level.WARNING, "Unable to determine profile name for mail config with id: " + bnmp.getId());
-                }
-            }
-
             bpmSession = ProcessToolContext.Util.getThreadProcessToolContext().getProcessToolSessionFactory().createAutoSession();
         }
 
@@ -487,11 +433,14 @@ public class BpmNotificationEngine implements BpmNotificationService
         }
     }
     
-    /** Check is smtps is required */
+    /** Check if tranport protocol is set to smtps */
     private boolean isSmtpsRequired(javax.mail.Session mailSession)
     {
-    	//TODO to implement
-    	return false;
+		Properties emailPrtoperties = mailSession.getProperties();
+		String transportProtocol = emailPrtoperties.getProperty("mail.transport.protocol");
+		
+		return "smtps".equals(transportProtocol);
+		
     }
 
 	@Override
