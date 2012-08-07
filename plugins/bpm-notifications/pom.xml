@@ -64,11 +64,12 @@
                         <Import-Package>
                             javax.mail;version=!,
                             pl.net.bluesoft.rnd.util.i18n.impl,
+                            org.quartz,
                             javassist.util.proxy,org.hibernate.proxy,
                             org.osgi.framework,
                             javax.mail.internet;version=!,
                             *;resolution:=optional,
-                            pl.net.bluesoft.util.eventbus
+                            pl.net.bluesoft.util.eventbus,
                         </Import-Package>
                         <ProcessTool-Model-Enhancement>
                         	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig,
