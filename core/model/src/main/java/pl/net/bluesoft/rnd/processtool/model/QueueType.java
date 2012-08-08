@@ -17,7 +17,7 @@ public enum QueueType
     /** User created task in finished state */
     OWN_FINISHED, 
     /** Others task, assigned to current user */
-    OTHERS_ASSIGNED  ;
+    OTHERS_ASSIGNED;
 
     public static QueueType fromString(String name) {
         return Strings.hasText(name) ? valueOf(name.toUpperCase()) : null;

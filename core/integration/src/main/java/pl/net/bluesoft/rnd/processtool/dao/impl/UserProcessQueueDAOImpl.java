@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.processtool.dao.impl;
 
 import java.util.Collection;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
@@ -18,6 +19,15 @@ import pl.net.bluesoft.rnd.processtool.model.UserProcessQueue;
  */
 public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueue> implements UserProcessQueueDAO 
 {
+	
+	@Override
+	public UserProcessQueue getUserProcessQueueByTaskId(String taskId, String assigneLogin) 
+	{
+        return (UserProcessQueue)session.createCriteria(UserProcessQueue.class)
+                .add(Restrictions.eq("taskId", taskId))
+                .add(Restrictions.eq("login", assigneLogin))
+                .uniqueResult();
+	}
 
 	public UserProcessQueueDAOImpl(Session session)
 	{
@@ -36,13 +46,23 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
 		return getUserProcessQueueElement(processId, creatorLogin, QueueType.OWN_ASSIGNED);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<UserProcessQueue> getAllUserProcessQueueElementsByProcessId(String processId)
+	public UserProcessQueue getUserProcessAssignedFromOthers(String processId,String assigne) 
 	{
-        return (Collection<UserProcessQueue>)session.createCriteria(UserProcessQueue.class)
-                .add(Restrictions.eq("processId", processId))
-                .list();
+		return getUserProcessQueueElement(processId, assigne, QueueType.OTHERS_ASSIGNED);
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public Collection<UserProcessQueue> getAllUserProcessQueueElements(String processId, QueueType... types) 
+	{
+		Criteria criteria = session.createCriteria(UserProcessQueue.class)
+                .add(Restrictions.eq("processId", processId));
+		
+		if(types.length > 0)
+			criteria.add(Restrictions.in("queueType", types));
+		
+		return (Collection<UserProcessQueue>)criteria.list();
 	}
 	
 	private UserProcessQueue getUserProcessQueueElement(String processId, String creatorLogin, QueueType type)
@@ -53,6 +73,8 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
                 .add(Restrictions.eq("queueType", type))
                 .uniqueResult();
 	}
+
+
 
 
 

@@ -355,7 +355,7 @@ public class ProcessInstance extends PersistentEntity {
 		this.parent = parent;
 	}
 	
-	/** Metoda checks if the process is in running or new state */
+	/** Method checks if the process is in running or new state */
 	public boolean isProcessRunning()
 	{
 		if(getStatus() == null)

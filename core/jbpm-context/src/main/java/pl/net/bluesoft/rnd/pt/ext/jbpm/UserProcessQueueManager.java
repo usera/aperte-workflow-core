@@ -29,31 +29,68 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 	}
 	
 
-	public void onProcessAssigne(ProcessInstance processInstance, BpmTask bpmTask)
+	public void onTaskAssigne(BpmTask bpmTask)
 	{
 		/* Check if process is reassigned to its creator */
-		boolean isProcessAssiegnedToCreator = isProcessAssiegnedToCreator(processInstance, bpmTask);
-		
-		String processId = processInstance.getId().toString();
-		//String creatorLogin = bpmTask.getCreator();
-		//Collection<UserProcessQueue> processQueueElements = queueDao.getAllUserProcessQueueElementsByProcessId(processId);
-		
+		boolean isProcessAssiegnedToCreator = isProcessAssiegnedToCreator(bpmTask);
 		
 		if(isProcessAssiegnedToCreator)
-		{
-			processMineAssignedToMe(processInstance, bpmTask);
-		}
+			processTaskAssigneToOwnerQueue(bpmTask);
 		else
+			processTaskAssigneToOthers(bpmTask);
+	}
+	
+	@Override
+	public void onTaskFinished(BpmTask bpmTask) 
+	{
+		String taskId = bpmTask.getInternalTaskId();
+		
+		/* Check if process is reassigned to its creator */
+		boolean isProcessAssiegnedToCreator = isProcessAssiegnedToCreator(bpmTask);
+		
+		UserProcessQueue userProcesQueue = queueDao.getUserProcessQueueByTaskId(taskId, bpmTask.getCreator());
+		
+		if(userProcesQueue != null)
+			queueDao.delete(userProcesQueue);
+		
+		/** If taks was assigned to someone else, there is also queue element assigned to him to delete */
+		if(!isProcessAssiegnedToCreator)
 		{
-			/* Create new one with type "mine assigned to others" or if the "assigned to me" exists, reaarange it to new queue */
-			processMineAssignedToOthers(processInstance, bpmTask);
+			UserProcessQueue otherUserProcessQueue = queueDao.getUserProcessQueueByTaskId(taskId, bpmTask.getAssignee());
+			
+			if(otherUserProcessQueue != null)
+				queueDao.delete(userProcesQueue);
 		}
+		
+	}
+	
+	@Override
+	public void onProcessFinished(ProcessInstance processInstance, BpmTask bpmTask) 
+	{
+		/* Get all queue elements for given process id and delete them */
+		String processId = processInstance.getId().toString();
+		String creatorLogin = bpmTask.getCreator();
+		
+		/* Create new queue element that is stored as finished process */
+		UserProcessQueue finishedProcess = new UserProcessQueue();
+		finishedProcess.setLogin(creatorLogin);
+		finishedProcess.setProcessId(processId);
+		finishedProcess.setQueueType(QueueType.OWN_FINISHED);
+		
+		queueDao.saveOrUpdate(finishedProcess);
+	}
+
+
+	@Override
+	public void onProcessHalted(ProcessInstance processInstance, BpmTask task) 
+	{
+		//deleteProcessAllocations(processInstance);
+		
 	}
 	
 	/** Method checks if process should be in "mine assigned to others" queue */
-	private boolean isProcessAssiegnedToCreator(ProcessInstance processInstance, BpmTask bpmTask)
+	private boolean isProcessAssiegnedToCreator(BpmTask bpmTask)
 	{
-		String processId = processInstance.getId().toString();
 		String assigneeLogin = bpmTask.getAssignee();
 		String creatorLogin = bpmTask.getCreator();
 		
@@ -61,80 +98,49 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		return assigneeLogin == null || creatorLogin.equals(assigneeLogin);
 	}
 	
-//	
-//	/** Delete process from mine assigned to me queue, if it exists */
-//	private void deleteMineAssignedToMe(Collection<UserProcessQueue> processQueueElements, String creatorLogin)
-//	{
-//		for(UserProcessQueue processQueueElement: processQueueElements)
-//		{
-//			/* Process is assigned to its creator and its type is "mine assigned to me" */
-//			if(processQueueElement.getLogin().equals(creatorLogin) && processQueueElement.getQueueType().equals(QueueType.OWN_ASSIGNED))
-//				queueDao.delete(processQueueElement);
-//		}
-//	}
-//	
-//	/** Delete process from mine assigned to others queue, if it exists */
-//	private void deleteMineAssignedToMe(Collection<UserProcessQueue> processQueueElements, String creatorLogin)
-//	{
-//		for(UserProcessQueue processQueueElement: processQueueElements)
-//		{
-//			/* Process is assigned to its creator and its type is "mine assigned to me" */
-//			if(processQueueElement.getLogin().equals(creatorLogin) && processQueueElement.getQueueType().equals(QueueType.OWN_ASSIGNED))
-//				queueDao.delete(processQueueElement);
-//		}
-//	}
-	
-	private void processMineAssignedToOthers(ProcessInstance processInstance, BpmTask bpmTask)
+	private void deleteProcessAllocations(ProcessInstance processInstance)
 	{
+		/* Get all queue elements for given process id and delete them */
 		String processId = processInstance.getId().toString();
-		String creatorLogin = bpmTask.getCreator();
+		Collection<UserProcessQueue> processQueueElements = queueDao.getAllUserProcessQueueElements(processId);
 		
-		UserProcessQueue mineProcessAssignedToMe = queueDao.getUserProcessAssignedToHim(processId,creatorLogin);
-		UserProcessQueue mineProcessAssignedToOthers = queueDao.getUserProcessAssignedToOthers(processId,creatorLogin);
+		/* Delete all elements from queue */
+		queueDao.delete(processQueueElements);
+	}
+	
+	/** Assign process to its owner queue */
+	private void processTaskAssigneToOwnerQueue(BpmTask bpmTask)
+	{
+		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId().toString(), bpmTask.getAssignee(), QueueType.OWN_ASSIGNED);
+	}
+	
+	/** Assign owner process to someone else. Create queue element to owner "mine assigned to others"
+	 * and element to other person queue "others assigned to me" */
+	private void processTaskAssigneToOthers(BpmTask bpmTask)
+	{
+		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId().toString(), bpmTask.getCreator(), QueueType.OWN_IN_PROGRESS);
+		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId().toString(), bpmTask.getAssignee(), QueueType.OTHERS_ASSIGNED);
+	}
+	
+	private void processTaskAssigne(String taskId, String processId, String assigneLogin, QueueType type)
+	{
+		UserProcessQueue userProcessQueue = queueDao.getUserProcessQueueByTaskId(taskId, assigneLogin);
 		
 		/* The queue element for given process exists with type "mine assiegned to me". Change its type and save */
-		if(mineProcessAssignedToMe != null)
+		if(userProcessQueue != null)
 		{
-			mineProcessAssignedToMe.setQueueType(QueueType.OTHERS_ASSIGNED);
-			queueDao.saveOrUpdate(mineProcessAssignedToMe);
+			userProcessQueue.setQueueType(type);
 		}
 		/* Otherwise, create new process queue with correct type */
-		else if(mineProcessAssignedToOthers == null)
+		else 
 		{
-			mineProcessAssignedToOthers = new UserProcessQueue();
-			mineProcessAssignedToOthers.setLogin(creatorLogin);
-			mineProcessAssignedToOthers.setProcessId(processId);
-			mineProcessAssignedToOthers.setQueueType(QueueType.OTHERS_ASSIGNED);
-			
-			queueDao.saveOrUpdate(mineProcessAssignedToOthers);
+			userProcessQueue = new UserProcessQueue();
+			userProcessQueue.setLogin(assigneLogin);
+			userProcessQueue.setProcessId(processId);
+			userProcessQueue.setTaskId(taskId);
+			userProcessQueue.setQueueType(type);
 		}
-	}
-	
-	private void processMineAssignedToMe(ProcessInstance processInstance, BpmTask bpmTask)
-	{
-		String processId = processInstance.getId().toString();
-		String creatorLogin = bpmTask.getCreator();
 		
-		UserProcessQueue mineProcessAssignedToOthers = queueDao.getUserProcessAssignedToOthers(processId,creatorLogin);
-		UserProcessQueue mineProcessAssignedToMe = queueDao.getUserProcessAssignedToHim(processId,creatorLogin);
-		
-		/* The queue element for given process exists with type "mine assiegned to others". Change its type and save */
-		if(mineProcessAssignedToOthers != null)
-		{
-			mineProcessAssignedToOthers.setQueueType(QueueType.OWN_ASSIGNED);
-			queueDao.saveOrUpdate(mineProcessAssignedToOthers);
-		}
-		/* Otherwise, create new process queue with correct type */
-		else if(mineProcessAssignedToMe == null)
-		{
-			mineProcessAssignedToMe = new UserProcessQueue();
-			mineProcessAssignedToMe.setLogin(creatorLogin);
-			mineProcessAssignedToMe.setProcessId(processId);
-			mineProcessAssignedToMe.setQueueType(QueueType.OWN_ASSIGNED);
-			
-			queueDao.saveOrUpdate(mineProcessAssignedToMe);
-		}
+		queueDao.saveOrUpdate(userProcessQueue);
 	}
-
-
 }

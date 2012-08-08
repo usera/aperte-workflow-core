@@ -9,12 +9,25 @@ import java.io.Serializable;
 /**
  * BPM event, e.g. new instance or user action
  *
- * @author tlipski@bluesoft.net.pl
+ * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
  */
 public class BpmEvent implements Serializable {
 
 	public enum Type {
-		NEW_PROCESS, SIGNAL_PROCESS, ASSIGN_TASK, END_PROCESS
+		NEW_PROCESS, 
+		SIGNAL_PROCESS, 
+		
+		/** Task has been assigned to new person */
+		ASSIGN_TASK, 
+		
+		/** Task has been finished */
+		TASK_FINISHED,
+		
+		/** Event published when process is halted for example when subprocess has been created */
+		PROCESS_HALTED, 
+		
+		/** Process is marked as FINISHED and no other actions will be performed */
+		END_PROCESS
 	}
 
 	private Type eventType;

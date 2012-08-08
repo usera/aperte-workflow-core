@@ -19,7 +19,6 @@ import javax.persistence.Table;
 @Table(name="pt_user_process_queue")
 public class UserProcessQueue extends PersistentEntity
 {
-
 	/** User login as string */
 	@Column(name="user_login")
 	private String login;
@@ -32,6 +31,10 @@ public class UserProcessQueue extends PersistentEntity
 	/** Process instance id */
 	@Column(name="process_id")
 	private String processId;
+	
+	/** Task id */
+	@Column(name="task_id")
+	private String taskId;
 	
 	public String getLogin() {
 		return login;
@@ -59,44 +62,37 @@ public class UserProcessQueue extends PersistentEntity
 		this.processId = processId;
 	}
 
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((login == null) ? 0 : login.hashCode());
-		result = prime * result + ((processId == null) ? 0 : processId.hashCode());
-		result = prime * result + ((queueType == null) ? 0 : queueType.hashCode());
+		result = prime * result + ((taskId == null) ? 0 : taskId.hashCode());
 		return result;
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
-		if(this == obj)
+	public boolean equals(Object obj) {
+		if (this == obj)
 			return true;
-		if(obj == null)
+		if (obj == null)
 			return false;
-		if(getClass() != obj.getClass())
+		if (getClass() != obj.getClass())
 			return false;
-		UserProcessQueue other = (UserProcessQueue)obj;
-		if(login == null)
-		{
-			if(other.login != null)
+		UserProcessQueue other = (UserProcessQueue) obj;
+		if (taskId == null) {
+			if (other.taskId != null)
 				return false;
-		}
-		else if(!login.equals(other.login))
-			return false;
-		if(processId == null)
-		{
-			if(other.processId != null)
-				return false;
-		}
-		else if(!processId.equals(other.processId))
-			return false;
-		if(queueType != other.queueType)
+		} else if (!taskId.equals(other.taskId))
 			return false;
 		return true;
 	}
-
 }

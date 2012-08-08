@@ -79,6 +79,9 @@ public abstract class AbstractProcessToolSession
     	newSubprocessInstance.setParent(parentProcessInstance);  	
     	parentProcessInstance.getChildren().add(newSubprocessInstance);
     	
+    	/** Inform about parent process halt */
+        broadcastEvent(ctx, new BpmEvent(Type.PROCESS_HALTED, parentProcessInstance, parentProcessInstance.getCreator()));
+    	
     	return newSubprocessInstance;
 	}
 

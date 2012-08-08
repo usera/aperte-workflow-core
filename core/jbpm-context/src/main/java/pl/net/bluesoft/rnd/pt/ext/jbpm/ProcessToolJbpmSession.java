@@ -1033,10 +1033,14 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
                }
            }, taskIdsBeforeCompletion);
 
-           if (outgoingTransitionNames.size() == 1)
+           
+           
+          if (outgoingTransitionNames.size() == 1)
               processEngine.getTaskService().completeTask(task.getInternalTaskId(), outgoingTransitionNames.get(0), vars); //BPMN2.0 style, decision is taken on the XOR gateway
           else
               processEngine.getTaskService().completeTask(task.getInternalTaskId(), action.getBpmName(), vars);
+          
+          broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.TASK_FINISHED, task, user));
 
           String s = getProcessState(pi, ctx);
           
@@ -1048,7 +1052,9 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
           if (startsSubprocess == false && s == null && pi.getRunning() && !isProcessRunning(pi.getInternalId(), ctx)) {
               pi.setRunning(false);
           }
-          ctx.getProcessInstanceDAO().saveProcessInstance(pi);
+          
+          
+          
            if (log.getUserSubstitute() == null)
                broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.SIGNAL_PROCESS, bpmTask, user));
            else
@@ -1058,9 +1064,34 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
                String processStatus = action.getAssignProcessStatus();
                ProcessStatus ps = processStatus.length() == 1 ? ProcessStatus.fromChar(processStatus.charAt(0)) : ProcessStatus.fromString(processStatus);
                pi.setStatus(ps);
-           } else {
-               pi.setStatus(isProcessRunning(pi.getInternalId(), ctx) || startsSubprocess ? ProcessStatus.RUNNING : ProcessStatus.FINISHED);
+           } 
+           else 
+           {
+        	   boolean isProcessRunning = pi.isProcessRunning();
+        	   //boolean isProcessRunning = isProcessRunning(pi.getInternalId(), ctx);
+        	   
+        	   /* Process is not running and no new suprocesses are created, so process should
+        	    * be finished by now
+        	    */
+        	   if(!isProcessRunning && !startsSubprocess)
+        	   {
+        		   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.END_PROCESS, bpmTask, user));
+        		   pi.setStatus(ProcessStatus.FINISHED);
+        	   }
+        	   
+        	   /* Process is running or is halted, but new subprocess are created */
+        	   else if(!isProcessRunning && startsSubprocess)  
+        	   {
+        		   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.PROCESS_HALTED, bpmTask, user));
+        		   pi.setStatus(ProcessStatus.RUNNING);
+        	   }
+        	   else 
+        	   {
+        		   pi.setStatus(ProcessStatus.RUNNING);
+        	   }
            }
+           
+           ctx.getProcessInstanceDAO().saveProcessInstance(pi);
 
            BpmTask userTask = null;
            BpmTask autoSkipTask = null;

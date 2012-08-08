@@ -12,5 +12,17 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
  */
 public interface IUserProcessQueueManager
 {
-	void onProcessAssigne(ProcessInstance processInstance, BpmTask bpmTask);
+	/** Actions performed at process assignation change */
+	void onTaskAssigne(BpmTask task);
+	
+	/** Perform action on task finished */
+	void onTaskFinished(BpmTask task);
+	
+	/** Actions performed after process finalization */
+	void onProcessFinished(ProcessInstance processInstance, BpmTask bpmTask);
+
+	/** Actions performed after process halt becouse of new subprocess creation */
+	void onProcessHalted(ProcessInstance processInstance, BpmTask task);
+
+
 }

@@ -89,10 +89,19 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		@Override
 		public void onEvent(BpmEvent e)
 		{
-//			ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-//			
-//			if(e.getEventType().equals(BpmEvent.Type.ASSIGN_TASK))
-//				ctx.getUserProcessQueueManager().onProcessAssigne(e.getProcessInstance(), e.getTask());
+			ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+			
+			if(e.getEventType().equals(BpmEvent.Type.ASSIGN_TASK))
+				ctx.getUserProcessQueueManager().onTaskAssigne(e.getTask());
+			
+			if(e.getEventType().equals(BpmEvent.Type.TASK_FINISHED))
+				ctx.getUserProcessQueueManager().onTaskFinished(e.getTask());
+			
+			else if(e.getEventType().equals(BpmEvent.Type.PROCESS_HALTED))
+				ctx.getUserProcessQueueManager().onProcessHalted(e.getProcessInstance(), e.getTask());
+			
+			else if(e.getEventType().equals(BpmEvent.Type.END_PROCESS))
+				ctx.getUserProcessQueueManager().onProcessFinished(e.getProcessInstance(), e.getTask());
 			
 		}
 		
