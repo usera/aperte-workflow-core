@@ -143,7 +143,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
 
        @Override
        public BpmTask getPastEndTask(ProcessInstanceLog log, ProcessToolContext ctx) {
-           final ProcessInstance pi = log.getProcessInstance();
+           final ProcessInstance pi = log.getOwnProcessInstance();
            String endTaskName = findEndActivityName(pi, ctx);
            if (Strings.hasText(endTaskName)) {
                MutableBpmTask t = new MutableBpmTask();
@@ -160,7 +160,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
        @Override
        public BpmTask getPastOrActualTask(final ProcessInstanceLog log, ProcessToolContext ctx) {
            final UserData user = log.getUser();
-           final ProcessInstance pi = log.getProcessInstance();
+           final ProcessInstance pi = log.getOwnProcessInstance();
            final Calendar minDate = log.getEntryDate();
            final Set<String> taskNames = new HashSet<String>();
            if (log.getState() != null && Strings.hasText(log.getState().getName())) {
@@ -675,7 +675,8 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
         log.setUser(findOrCreateUser(user, ctx));
         log.setAdditionalInfo(pq.getDescription());
         log.setExecutionId(task.getExecutionId());
-        pi.addProcessLog(log);
+        log.setOwnProcessInstance(pi);
+        pi.getRootProcessInstance().addProcessLog(log);
 
         if (!ProcessStatus.RUNNING.equals(pi.getStatus())) {
             pi.setStatus(ProcessStatus.RUNNING);
@@ -1017,6 +1018,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            ProcessInstanceLog log = addActionLogEntry(action, task, ctx);
            Map<String, Object> vars = new HashMap<String, Object>();
            vars.put("ACTION", action.getBpmName());
+           pi.setSimpleAttribute("ACTION", action.getBpmName());
            List<String> outgoingTransitionNames = getOutgoingTransitionNames(task.getInternalTaskId(), ctx);
 
            ProcessEngine processEngine = getProcessEngine(ctx);
@@ -1107,6 +1109,8 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            }
 
            broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
+           
+           ProcessToolQueueManager.updateQueues(userTask);
            
            return userTask;
        }
@@ -1283,6 +1287,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
         log.setUser(findOrCreateUser(user, ctx));
         log.setUserSubstitute(getSubstitutingUser(ctx));
         log.setExecutionId(task.getExecutionId());
+        log.setOwnProcessInstance(task.getProcessInstance());
         task.getProcessInstance().getRootProcessInstance().addProcessLog(log);
         return log;
     }

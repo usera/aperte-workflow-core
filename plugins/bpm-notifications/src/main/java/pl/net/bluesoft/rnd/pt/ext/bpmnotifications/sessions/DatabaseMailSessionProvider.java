@@ -12,9 +12,6 @@ import java.util.logging.Logger;
 
 import javax.mail.PasswordAuthentication;
 
-import org.hibernate.Session;
-
-import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 
@@ -100,6 +97,9 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
                 		"\n mail.smtp.port = "+bnmp.getSmtpPort() +
                 		"\n mail.smtp.user = "+bnmp.getSmtpUser() +
                 		"\n mail.debug = "+bnmp.isDebug() +
+                		"\n ail.transport.protocol = "+bnmp.getTransportProtocol() +
+                		"\n ssl.SocketFactory.provider = "+bnmp.getSslSocketFactoryClass() +
+                		"\n mail.smtp.auth.plain.disable = "+bnmp.isDisablePlainAuth() +
                 		"\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
                 }
                 
@@ -112,20 +112,25 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
                 if(bnmp.getSmtpSocketFactoryClass() != null)
                 	prop.put("mail.smtp.socketFactory.class", bnmp.getSmtpSocketFactoryClass());
                 
-
-                prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
-                
                 if(bnmp.getSmtpPort() != null)
                 	prop.put("mail.smtp.port", bnmp.getSmtpPort());
                 
                 if(bnmp.getSmtpUser() != null)
                 	prop.put("mail.smtp.user", bnmp.getSmtpUser());
                 
+                if(bnmp.getTransportProtocol() != null)
+                	prop.put("mail.smtp.user", bnmp.getTransportProtocol());
+                
+                if(bnmp.getSslSocketFactoryClass() != null)
+                	prop.put("ssl.SocketFactory.provider", bnmp.getSslSocketFactoryClass());
+                
                 if(bnmp.getSmtpPassword() != null)
                 	prop.put("mail.smtp.password", bnmp.getSmtpPassword());
                 
                 prop.put("mail.debug", getStringValueFromBoolean(bnmp.isDebug()));
+                prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
                 prop.put("mail.smtp.starttls.enable", getStringValueFromBoolean(bnmp.isStarttls()));
+                prop.put("mail.smtp.auth.plain.disable", getStringValueFromBoolean(bnmp.isDisablePlainAuth()));
                 
                 persistentMailProperties.put(bnmp.getProfileName(), prop);
             }

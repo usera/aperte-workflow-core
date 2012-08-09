@@ -43,19 +43,33 @@ public class TSLSendNotificationTests extends AperteDataSourceTestCase
 	
 	public void test_1()
 	{
-		Properties props = new Properties();
-
+		final String userName = "axa-mail";
+		final String password = "Blue105";
 		
-		props.put("mail.transport.protocol", "smtp"); 
-		props.put("mail.debug", "true"); 
-		props.put("mail.smtp.starttls.enable", "false");
-		props.put("mail.smtp.host", "bluesoft.home.pl");
+		Properties props = new Properties();
+		props.put("mail.transport.protocol", "smtp");
+		props.put("mail.smtp.host", "192.168.2.12");
+		props.put("mail.smtp.starttls.enable", "true");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.user", "axa-mail");
-		props.put("mail.smtp.port", "465");
-		props.put("mail.smtp.password", "esod2011");
-		props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-		props.put("mail.smtp.socketFactory.port", "465");
+		props.put("mail.smtp.user", userName);
+		props.put("mail.smtp.password", password);
+		props.put("mail.smtp.port", "588");
+		props.put("mail.smtp.auth.plain.disable", "true");
+		
+//		props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+//		props.put("ssl.SocketFactory.provider", "javax.net.ssl.SSLSocketFactory");
+		props.put("mail.smtp.socketFactory.class", "pl.net.bluesoft.rnd.pt.ext.bpmnotifications.socket.ExchangeSSLSocketFactory");
+		props.put("ssl.SocketFactory.provider", "pl.net.bluesoft.rnd.pt.ext.bpmnotifications.socket.ExchangeSSLSocketFactory");
+//		props.put("mail.transport.protocol", "smtp"); 
+//		props.put("mail.debug", "true"); 
+//		props.put("mail.smtp.starttls.enable", "false");
+//		props.put("mail.smtp.host", "bluesoft.home.pl");
+//		props.put("mail.smtp.auth", "true");
+//		props.put("mail.smtp.user", "axa-mail");
+//		props.put("mail.smtp.port", "465");
+//		props.put("mail.smtp.password", "esod2011");
+//		props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+//		props.put("mail.smtp.socketFactory.port", "465");
 
 		try
 		{
@@ -63,19 +77,30 @@ public class TSLSendNotificationTests extends AperteDataSourceTestCase
 			{
 				public PasswordAuthentication getPasswordAuthentication()
 				{
-				return new PasswordAuthentication("axa-mail", "esod2011");
+				return new PasswordAuthentication(userName, password);
 				}
 			};
 			
 			Session session = Session.getInstance(props, auth);
 			session.setDebug(true);
 	
-			MimeMessage msg = new MimeMessage(session);
+			MimeMessage msg  = new MimeMessage(session);
 			msg.setText("test");
 			msg.setSubject("test");
 			msg.setFrom(new InternetAddress("axa-mail@bluesoft.net.pl"));
 			msg.addRecipient(Message.RecipientType.TO, new InternetAddress("mpawlak@bluesoft.net.pl"));
-			Transport.send(msg);
+			
+			
+    		String secureHost = props.getProperty("mail.smtp.host");
+    		String securePort = props.getProperty("mail.smtp.port");
+			
+    		Transport.send(msg);
+    		
+//            Transport transport = session.getTransport("smtp");
+//            transport.connect(secureHost, Integer.parseInt(securePort), userName, userPassword);
+//            transport.sendMessage(msg, msg.getAllRecipients());
+//            transport.close();
+
 		}
 		catch (Exception mex)
 		{

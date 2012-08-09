@@ -67,7 +67,6 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
     private StringBuffer monitorInfo = new StringBuffer();
 
-    
     private static class BundleInfo {
         private Long lastModified;
         private Long installDuration;

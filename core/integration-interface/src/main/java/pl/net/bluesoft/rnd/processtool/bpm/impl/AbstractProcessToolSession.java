@@ -8,9 +8,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.aperteworkflow.ui.view.ViewEvent;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
@@ -90,9 +89,7 @@ public abstract class AbstractProcessToolSession
     public ProcessInstance createProcessInstance(ProcessDefinitionConfig config,String externalKey, ProcessToolContext ctx,
             String description, String keyword, String source, String internalId)
     {
-    	ProcessInstance createdProcessInstance = createProcessInstance(config, externalKey, ctx, description, keyword, source, internalId, user);
-    	broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
-		return createdProcessInstance;
+    	return createProcessInstance(config, externalKey, ctx, description, keyword, source, internalId, user);
     }
 
     public ProcessInstance createProcessInstance(ProcessDefinitionConfig config,
@@ -148,7 +145,6 @@ public abstract class AbstractProcessToolSession
         log.setUser(creator);
         log.setLogType(ProcessInstanceLog.LOG_TYPE_START_PROCESS);
         //log.setLogType(LogType.START);
-        log.setOwnProcessInstance(pi);
         pi.getRootProcessInstance().addProcessLog(log);
 
         ctx.getProcessInstanceDAO().saveProcessInstance(pi);
@@ -167,13 +163,20 @@ public abstract class AbstractProcessToolSession
         return pi;
     }
 
-    protected void broadcastEvent(final ProcessToolContext ctx, final Object event) {
+    protected void broadcastEvent(final ProcessToolContext ctx, final BpmEvent event) {
+		log.log(Level.INFO, "Broadcasting event " + event.getEventType() + " for task " 
+				+ (event.getProcessInstance() != null ? event.getProcessInstance().getExternalKey() : "")
+				+ "/" + (event.getTask() != null ? event.getTask().getTaskName() : ""));
+//    	log.log(Level.INFO, "Broadcasting event: " + event.getEventType());
         eventBusManager.publish(event);
         if (substitutingUserEventBusManager != null)
             substitutingUserEventBusManager.publish(event);
         ctx.addTransactionCallback(new TransactionFinishedCallback() {
             @Override
             public void onFinished() {
+            	log.log(Level.INFO, "Posting event " + event.getEventType() + " for task " 
+					+ (event.getProcessInstance() != null ? event.getProcessInstance().getExternalKey() : "")
+					+ "/" + (event.getTask() != null ? event.getTask().getTaskName() : ""));
                 ctx.getEventBusManager().post(event);
             }
         });

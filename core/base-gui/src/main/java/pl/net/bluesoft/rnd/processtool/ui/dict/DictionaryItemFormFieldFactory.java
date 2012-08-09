@@ -37,7 +37,7 @@ public class DictionaryItemFormFieldFactory extends DefaultFieldFactory {
         }
         BeanItem<ProcessDBDictionaryItem> beanItem = (BeanItem<ProcessDBDictionaryItem>) item;
         ProcessDBDictionaryItem bean = beanItem.getBean();
-        Field field = "values".equals(propertyId) ? new DictionaryItemValuesField(application, source, bean.getValueType())
+        Field field = "dbValues".equals(propertyId) ? new DictionaryItemValuesField(application, source, bean.getValueType())
                 : new TextField(source.getMessage("dict.item." + propertyId));
         field.setWidth("100%");
         if (isPropertyEditable(propertyId)) {

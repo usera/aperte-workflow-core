@@ -266,6 +266,7 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         criteria.createAlias("processInstance", "pi");
         criteria.createAlias("pi.definition", "def");
         criteria.createAlias("pi.creator", "crtr");
+        criteria.createAlias("ownProcessInstance", "ownPi");
         criteria.createAlias("user", "u");
         criteria.createAlias("userSubstitute", "us", CriteriaSpecification.LEFT_JOIN);
 
@@ -294,7 +295,8 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
                 .add(Projections.property("def.description"), "processInstance.definition.description")
                 .add(Projections.property("def.comment"), "processInstance.definition.comment")
                 .add(Projections.property("crtr.firstName"), "processInstance.creator.firstName")
-                .add(Projections.property("crtr.lastName"), "processInstance.creator.lastName");
+                .add(Projections.property("crtr.lastName"), "processInstance.creator.lastName")
+                .add(Projections.property("ownPi.id"), "ownProcessInstance.id");
 
         criteria.setProjection(pl);
 

@@ -13,6 +13,7 @@ public class BpmNotificationConfig extends PersistentEntity {
     private String profileName;
 	private String processTypeRegex;
     private String stateRegex;
+    private String lastActionRegex;
 	private boolean notifyTaskAssignee;
     @Column(name = "skipNotification")
 	private boolean skipNotificationWhenTriggeredByAssignee;
@@ -23,6 +24,7 @@ public class BpmNotificationConfig extends PersistentEntity {
 	private boolean sendHtml;
     private String locale;
     private boolean notifyOnProcessStart;
+    private boolean onEnteringStep;
 	private String templateArgumentProvider;
 
 	public boolean isNotifyOnProcessStart() {
@@ -127,5 +129,21 @@ public class BpmNotificationConfig extends PersistentEntity {
 
 	public void setTemplateArgumentProvider(String templateArgumentProvider) {
 		this.templateArgumentProvider = templateArgumentProvider;
+	}
+
+	public String getLastActionRegex() {
+		return lastActionRegex;
+	}
+
+	public void setLastActionRegex(String lastTransitionRegex) {
+		this.lastActionRegex = lastTransitionRegex;
+	}
+
+	public boolean isOnEnteringStep() {
+		return onEnteringStep;
+	}
+
+	public void setOnEnteringStep(boolean onEnteringStep) {
+		this.onEnteringStep = onEnteringStep;
 	}
 }
