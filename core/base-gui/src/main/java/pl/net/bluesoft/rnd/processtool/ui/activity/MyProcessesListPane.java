@@ -8,6 +8,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.TaskState;
 import pl.net.bluesoft.rnd.processtool.model.processdata.ProcessDeadline;
 import pl.net.bluesoft.rnd.processtool.ui.tasks.TaskTableItem;
@@ -45,8 +46,9 @@ public class MyProcessesListPane extends ProcessListPane {
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
         tfi.setName(getMessage("activity.assigned.tasks"));
         tfi.addOwner(getBpmSession().getUser(ctx));
+        tfi.setFilterOwner(getBpmSession().getUser(ctx));
         tfi.getNotCreators().add(getBpmSession().getUser(ctx));
-        tfi.addState(TaskState.OPEN);
+        tfi.setQueueType(QueueType.OWN_ASSIGNED);
         return tfi;
     }
 
@@ -131,4 +133,10 @@ public class MyProcessesListPane extends ProcessListPane {
     protected boolean getDataPaneUsesSpacing() {
         return false;
     }
+
+	public void setType(QueueType type) 
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

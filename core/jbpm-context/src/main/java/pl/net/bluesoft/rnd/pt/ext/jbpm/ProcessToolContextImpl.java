@@ -114,10 +114,6 @@ public class ProcessToolContextImpl implements ProcessToolContext {
     }
 
 
-//    public <T> T inTransaction(HibernateTransactionCallback<T> htc) {
-//        return htc.doInTransaction(hibernateSession);
-//
-//     }
     @Override
     public ProcessDictionaryRegistry getProcessDictionaryRegistry() {
         if (processDictionaryRegistry == null) {

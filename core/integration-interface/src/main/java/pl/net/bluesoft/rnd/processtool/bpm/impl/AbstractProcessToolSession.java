@@ -155,13 +155,18 @@ public abstract class AbstractProcessToolSession
         List<BpmEvent> events = new ArrayList<BpmEvent>();
         events.add(new BpmEvent(Type.NEW_PROCESS, pi, creator));
 
-        for (BpmTask task : findProcessTasks(pi, ctx)) {
+        for (BpmTask task : findProcessTasks(pi, ctx)) 
+        {
             events.add(new BpmEvent(Type.ASSIGN_TASK, task, creator));
+            
+    		/* Inform queue manager about task assigne */
+    		ctx.getUserProcessQueueManager().onTaskAssigne(task);
         }
 
         for (BpmEvent event : events) {
             broadcastEvent(ctx, event);
         }
+        
 
         return pi;
     }

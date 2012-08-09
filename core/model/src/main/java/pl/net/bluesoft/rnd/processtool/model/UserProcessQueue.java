@@ -6,6 +6,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Index;
+
 /**
  * The entity represents one process instance which is attached 
  * to specified user's queue. The entity is being used during
@@ -17,6 +19,10 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name="pt_user_process_queue")
+
+@org.hibernate.annotations.Table(appliesTo="pt_user_process_queue", indexes={
+		@Index(name = "idx_user_login_queue_type",columnNames={"user_login", "queue_type"})})
+
 public class UserProcessQueue extends PersistentEntity
 {
 	/** User login as string */
@@ -30,11 +36,12 @@ public class UserProcessQueue extends PersistentEntity
 	
 	/** Process instance id */
 	@Column(name="process_id")
-	private String processId;
+	private Long processId;
 	
 	/** Task id */
+	@Index(name="idx_task_id")
 	@Column(name="task_id")
-	private String taskId;
+	private Long taskId;
 	
 	public String getLogin() {
 		return login;
@@ -52,21 +59,21 @@ public class UserProcessQueue extends PersistentEntity
 		this.queueType = queueType;
 	}
 
-	public String getProcessId()
+	public Long getProcessId()
 	{
 		return processId;
 	}
 
-	public void setProcessId(String processId)
+	public void setProcessId(Long processId)
 	{
 		this.processId = processId;
 	}
 
-	public String getTaskId() {
+	public Long getTaskId() {
 		return taskId;
 	}
 
-	public void setTaskId(String taskId) {
+	public void setTaskId(Long taskId) {
 		this.taskId = taskId;
 	}
 

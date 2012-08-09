@@ -36,7 +36,7 @@ public class TasksFilterBox extends VerticalLayout {
 	private String filterExpression;
 	private Form advancedForm;
 	private Button advancedTrigger;
-	private ProcessInstanceFilter filter = new ProcessInstanceFilter();
+	private ProcessInstanceFilter filter;
 	private List<ItemSetChangeListener> listeners = new LinkedList<ItemSetChangeListener>();
 	private ProcessListPane parent;
 	private int limit;
@@ -128,7 +128,11 @@ public class TasksFilterBox extends VerticalLayout {
 		addComponent(filterNameSave);
 	}
 
-	private void saveFilter() {
+	private void saveFilter() 
+	{
+		if(filter == null)
+			return;
+		
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		filter.setGenericQuery(filterExpression);
 		filter.setName((String) filterNameField.getValue());
@@ -177,10 +181,14 @@ public class TasksFilterBox extends VerticalLayout {
 		}
 	}
 
-	public ResultsPageWrapper<BpmTask> getBpmTasks(int offset) {
+	public ResultsPageWrapper<BpmTask> getBpmTasks(int offset) 
+	{
+		if(filter == null)
+			new ResultsPageWrapper<BpmTask>();
+		
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		filter.setGenericQuery(filterExpression);
-		return parent.getActivityMainPane().getBpmSession().findProcessTasks(filter, offset, limit, ctx);
+		return parent.getActivityMainPane().getBpmSession().findProcessTasks(filter, ctx);
 	}
 
 	public interface ItemSetChangeListener {

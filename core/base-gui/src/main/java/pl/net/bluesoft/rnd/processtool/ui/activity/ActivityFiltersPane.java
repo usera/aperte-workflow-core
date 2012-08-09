@@ -76,7 +76,7 @@ public class ActivityFiltersPane extends Panel implements VaadinUtility.Refresha
 		for (final ProcessInstanceFilter filter : filters) {
 //			HorizontalLayout task = new HorizontalLayout();
 			Button taskName = new Button(filter.getName());			
-			ResultsPageWrapper<BpmTask> tasks = bpmSession.findProcessTasks(filter, 0, 0, processToolContextFromThread);
+			ResultsPageWrapper<BpmTask> tasks = bpmSession.findProcessTasks(filter, processToolContextFromThread);
 			taskName.setCaption(taskName.getCaption() + " (" + tasks.getTotal() + ")");
 			if(tasks.getTotal() == 0)
 				taskName.addStyleName("v-disabled");

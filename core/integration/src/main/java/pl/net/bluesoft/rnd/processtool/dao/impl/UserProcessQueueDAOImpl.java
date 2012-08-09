@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.dao.UserProcessQueueDAO;
@@ -21,7 +22,7 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
 {
 	
 	@Override
-	public UserProcessQueue getUserProcessQueueByTaskId(String taskId, String assigneLogin) 
+	public UserProcessQueue getUserProcessQueueByTaskId(Long taskId, String assigneLogin) 
 	{
         return (UserProcessQueue)session.createCriteria(UserProcessQueue.class)
                 .add(Restrictions.eq("taskId", taskId))
@@ -35,26 +36,26 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
 	}
 
 	@Override
-	public UserProcessQueue getUserProcessAssignedToOthers(String processId, String creatorLogin)
+	public UserProcessQueue getUserProcessAssignedToOthers(Long processId, String creatorLogin)
 	{
 		return getUserProcessQueueElement(processId, creatorLogin, QueueType.OTHERS_ASSIGNED);
 	}
 	
 	@Override
-	public UserProcessQueue getUserProcessAssignedToHim(String processId, String creatorLogin)
+	public UserProcessQueue getUserProcessAssignedToHim(Long processId, String creatorLogin)
 	{
 		return getUserProcessQueueElement(processId, creatorLogin, QueueType.OWN_ASSIGNED);
 	}
 	
 	@Override
-	public UserProcessQueue getUserProcessAssignedFromOthers(String processId,String assigne) 
+	public UserProcessQueue getUserProcessAssignedFromOthers(Long processId,String assigne) 
 	{
 		return getUserProcessQueueElement(processId, assigne, QueueType.OTHERS_ASSIGNED);
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<UserProcessQueue> getAllUserProcessQueueElements(String processId, QueueType... types) 
+	public Collection<UserProcessQueue> getAllUserProcessQueueElements(Long processId, QueueType... types) 
 	{
 		Criteria criteria = session.createCriteria(UserProcessQueue.class)
                 .add(Restrictions.eq("processId", processId));
@@ -65,13 +66,25 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
 		return (Collection<UserProcessQueue>)criteria.list();
 	}
 	
-	private UserProcessQueue getUserProcessQueueElement(String processId, String creatorLogin, QueueType type)
+	private UserProcessQueue getUserProcessQueueElement(Long processId, String creatorLogin, QueueType type)
 	{
         return (UserProcessQueue)session.createCriteria(UserProcessQueue.class)
                 .add(Restrictions.eq("processId", processId))
                 .add(Restrictions.eq("login", creatorLogin))
                 .add(Restrictions.eq("queueType", type))
                 .uniqueResult();
+	}
+
+	@Override
+	public int getQueueLength(String userLogin, QueueType type) 
+	{
+		Criteria criteria = session.createCriteria(UserProcessQueue.class)
+                .add(Restrictions.eq("login", userLogin))
+                .add(Restrictions.eq("queueType", type))
+                .setProjection(Projections.rowCount());
+		
+		Long taskCount = (Long)criteria.uniqueResult();
+		return taskCount.intValue();
 	}
 
 

@@ -74,37 +74,10 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		this.i18NSource = i18NSource;
 		this.bpmSession = bpmSession;
 		this.resourceCache = new ResourceCache(application);
-
-		/* Subscribe for the process changes so the user queues can be affected */
-        bpmSession.getEventBusManager().subscribe(BpmEvent.class,new BpmEventListener());
         
         
 		setWidth("100%");
 		initLayout();
-	}
-	
-	private class BpmEventListener implements EventListener<BpmEvent>
-	{
-
-		@Override
-		public void onEvent(BpmEvent e)
-		{
-			ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-			
-			if(e.getEventType().equals(BpmEvent.Type.ASSIGN_TASK))
-				ctx.getUserProcessQueueManager().onTaskAssigne(e.getTask());
-			
-			if(e.getEventType().equals(BpmEvent.Type.TASK_FINISHED))
-				ctx.getUserProcessQueueManager().onTaskFinished(e.getTask());
-			
-			else if(e.getEventType().equals(BpmEvent.Type.PROCESS_HALTED))
-				ctx.getUserProcessQueueManager().onProcessHalted(e.getProcessInstance(), e.getTask());
-			
-			else if(e.getEventType().equals(BpmEvent.Type.END_PROCESS))
-				ctx.getUserProcessQueueManager().onProcessFinished(e.getProcessInstance(), e.getTask());
-			
-		}
-		
 	}
 
 	private void initLayout()
