@@ -693,6 +693,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
         if (!installableBundlePaths.isEmpty()) {
             LOGGER.warning("UNABLE TO INSTALL BUNDLES: " + installableBundlePaths.toString());
+            LOGGER.warning("ERROR SUMMARY:\n" + getMonitorInfo().toString());
         }
     }
 
