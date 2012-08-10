@@ -23,20 +23,33 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 	
     private Logger logger = Logger.getLogger(Activator.class.getName());
 
-	BpmNotificationEngine engine = new BpmNotificationEngine();
+    private BpmNotificationEngine engine;
 	MailEventListener mailEventListener;
+	private SchedulersActivator schedulerActivator;
 	
 	@Override
-	public void start(BundleContext context) throws Exception {
+	public void start(BundleContext context) throws Exception 
+	{
 		ProcessToolRegistry registry = getRegistry(context);
-//		registry.registerModelExtension(BpmNotificationConfig.class, BpmNotificationTemplate.class, BpmNotificationMailProperties.class);
-//		registry.commitModelExtensions();
+		
+		
+		schedulerActivator = new SchedulersActivator(registry);
+		
+		/* Init the bpm notification engine */
+		engine = new BpmNotificationEngine(registry);
+		
         registry.registerService(BpmNotificationService.class, engine, new Properties());
 		registry.getEventBusManager().subscribe(BpmEvent.class, this);
 		
 		mailEventListener = new MailEventListener(engine);
 		registry.getEventBusManager().subscribe(MailEvent.class, mailEventListener);
+		
+		/* Register scheduler for notifications sending */
+		schedulerActivator.scheduleNotificationsSend(engine);
+	
 	}
+	
+	
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -52,18 +65,20 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		return (ProcessToolRegistry) context.getService(ref);
 	}
 
-	public void onEvent(BpmEvent event) {
-		String eventString = event.toString();
-		try {
-			logger.log(Level.INFO, "Received " + eventString);
-	        if (Type.ASSIGN_TASK == event.getEventType() || Type.NEW_PROCESS == event.getEventType() || Type.SIGNAL_PROCESS == event.getEventType()) {
-	            boolean processStarted = BpmEvent.Type.NEW_PROCESS == event.getEventType();
-	            boolean enteringStep = Type.ASSIGN_TASK == event.getEventType() || Type.NEW_PROCESS == event.getEventType();
-				engine.onProcessStateChange(event.getTask(), event.getProcessInstance(),
-	                    event.getUserData(), processStarted, enteringStep);
-	        }
-		} catch(Throwable t) {
-			logger.log(Level.INFO, "Exception in BpmNotificationEngine on event " + eventString);
-		}
+
+	public void onEvent(BpmEvent e) 
+	{
+		if(Type.NEW_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for process " + e.getProcessInstance().getId());
+		else if(Type.ASSIGN_TASK == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
+		
+        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) 
+        {
+            boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
+            boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
+			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
+                    e.getUserData(), processStarted, enteringStep);
+        }
 	}
 }

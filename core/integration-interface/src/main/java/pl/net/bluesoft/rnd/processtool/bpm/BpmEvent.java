@@ -1,19 +1,18 @@
 package pl.net.bluesoft.rnd.processtool.bpm;
 
+import pl.net.bluesoft.rnd.processtool.event.IEvent;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
-
-import java.io.Serializable;
 
 /**
  * BPM event, e.g. new instance or user action
  *
  * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
  */
-public class BpmEvent implements Serializable {
+public class BpmEvent implements IEvent {
 
-	public enum Type {
+	public enum Type implements TypeMarker{
 		NEW_PROCESS, 
 		SIGNAL_PROCESS, 
 		

@@ -36,11 +36,9 @@ import pl.net.bluesoft.util.lang.DateUtil;
 import pl.net.bluesoft.util.lang.TaskWatch;
 import pl.net.bluesoft.util.lang.cquery.func.F;
 
-import com.vaadin.Application;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.ui.AbstractSelect.ItemDescriptionGenerator;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -70,13 +68,11 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private TaskWatch watch;
 	private Collection<Button> taskButtons = new ArrayList<Button>();
 	
-<<<<<<< HEAD
 	/** Filter factory */
 	private ProcessInstanceFilterFactory filterFactory;
 
-=======
 	private boolean refreshRequested; 
->>>>>>> 1ef2c0fa870c6b04bc7803409886e31ca1b0d67a
+
 	protected boolean onEvent = false;
 	private EventListener<ViewEvent> viewEventListener;
 
@@ -111,7 +107,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			activityMainPane.getBpmSession().getEventBusManager().subscribe(ViewEvent.class, viewEventListener = new EventListener<ViewEvent>(){
 				@Override
 				public void onEvent(ViewEvent e) {
-					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getType() == ViewEvent.Type.ACTION_COMPLETE){
+					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getEventType().equals(ViewEvent.Type.ACTION_COMPLETE)){
 						synchronized(this) {
 							if(refreshRequested) {
 								refreshRequested = false;
