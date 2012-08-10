@@ -11,6 +11,9 @@ import com.vaadin.ui.VerticalLayout;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import org.aperteworkflow.ui.view.ViewController;
+import org.aperteworkflow.ui.view.ViewEvent;
+import org.aperteworkflow.ui.view.ViewEvent.Type;
+
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import org.aperteworkflow.util.vaadin.EventHandler;
 import org.aperteworkflow.util.vaadin.GenericVaadinPortlet2BpmApplication;
@@ -27,6 +30,7 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
     private Label titleLabel;
 
     private Application application;
+	private ProcessToolBpmSession bpmSession;
 
     public ProcessDataViewComponent(Application application, I18NSource messageSource, ViewController viewController) {
         this.application = application;
@@ -61,6 +65,7 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
                         public void onEvent() {
                             setShowExitWarning(application, false);
                             VaadinUtility.unregisterClosingWarning(application.getMainWindow());
+                            bpmSession.getEventBusManager().post(new ViewEvent(Type.ACTION_COMPLETE));
                             viewController.displayPreviousView();
                         }
                     };
@@ -92,6 +97,7 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
     public void attachProcessDataPane(BpmTask task, ProcessToolBpmSession bpmSession) {
         removeAllComponents();
         titleLabel = new Label();
+        this.bpmSession = bpmSession;
         ProcessDataPane pdp = new ProcessDataPane(application, bpmSession, messageSource, task, new ProcessDataDisplayContext() {
             @Override
             public void hide() {

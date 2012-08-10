@@ -25,6 +25,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.aperteworkflow.bpm.graph.GraphElement;
 import org.aperteworkflow.bpm.graph.StateNode;
 import org.aperteworkflow.bpm.graph.TransitionArc;
+import org.aperteworkflow.ui.view.ViewEvent;
 import org.hibernate.Query;
 import org.jbpm.api.Execution;
 import org.jbpm.api.ExecutionService;
@@ -1056,6 +1057,8 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
                t.setProcessInstance(processInstance);
                userTask = t;
            }
+
+           broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
            
            return userTask;
        }
