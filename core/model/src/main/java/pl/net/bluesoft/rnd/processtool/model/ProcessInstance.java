@@ -380,4 +380,9 @@ public class ProcessInstance extends PersistentEntity {
 		
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return "ProcessInstance [externalKey=" + getExternalKey() + ", internalId=" + internalId + "]";
+	}
 }

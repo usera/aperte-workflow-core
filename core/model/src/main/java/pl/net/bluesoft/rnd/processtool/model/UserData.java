@@ -283,4 +283,9 @@ public class UserData extends UserAttributesSupport {
     public String getFilteredName() {
 		return firstName + " " + lastName + " (" + login + ")";
 	}
+
+	@Override
+	public String toString() {
+		return "UserData [login=" + login + ", getRealName()=" + getRealName() + "]";
+	}
 }

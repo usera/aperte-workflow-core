@@ -75,4 +75,9 @@ public class BpmEvent implements Serializable {
 	public void setUserData(UserData userData) {
 		this.userData = userData;
 	}
+
+	@Override
+	public String toString() {
+		return "BpmEvent [eventType=" + eventType + ", processInstance=" + processInstance + ", task=" + task + ", userData=" + userData + "]";
+	}
 }
