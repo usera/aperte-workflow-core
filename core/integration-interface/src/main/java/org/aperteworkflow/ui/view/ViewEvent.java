@@ -1,10 +1,10 @@
 package org.aperteworkflow.ui.view;
 
-import java.io.Serializable;
+import pl.net.bluesoft.rnd.processtool.event.IEvent;
 
-public class ViewEvent implements Serializable {
+public class ViewEvent implements IEvent {
 	
-	public enum Type {
+	public enum Type implements TypeMarker {
 		ACTION_COMPLETE
 	}
 	
@@ -15,7 +15,7 @@ public class ViewEvent implements Serializable {
 		this.type = type;
 	}
 
-	public Type getType() {
+	public Type getEventType() {
 		return type;
 	}
 

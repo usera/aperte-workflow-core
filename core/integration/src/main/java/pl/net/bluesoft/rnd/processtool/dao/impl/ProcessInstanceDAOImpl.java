@@ -170,6 +170,7 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         searchProvider.updateIndex(searchData);
         logger.finest("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
                 + "attributes)  took " + (System.currentTimeMillis()-time) + " ms");
+        
 		return processInstance.getId();
 	}
 
@@ -444,10 +445,6 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
 
             if (filter.getCreators() != null && !filter.getCreators().isEmpty()) {
                 criteria = criteria.add(Restrictions.in("creator", filter.getCreators()));
-            }
-
-            if (filter.getNotCreators() != null && !filter.getNotCreators().isEmpty()) {
-                criteria = criteria.add(Restrictions.not(Restrictions.in("creator", filter.getNotCreators())));
             }
 
             if (filter.getUpdatedAfter() != null) {

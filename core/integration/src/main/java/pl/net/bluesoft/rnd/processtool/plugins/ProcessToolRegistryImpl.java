@@ -1,19 +1,52 @@
 package pl.net.bluesoft.rnd.processtool.plugins;
 
+import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
+import static pl.net.bluesoft.util.lang.Strings.hasText;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import javax.transaction.UserTransaction;
+
 import org.aperteworkflow.search.SearchProvider;
-import org.aperteworkflow.ui.view.ViewRegistry;
-import org.aperteworkflow.ui.view.impl.DefaultViewRegistryImpl;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContextFactory;
 import pl.net.bluesoft.rnd.processtool.ReturningProcessToolContextCallback;
-import pl.net.bluesoft.rnd.processtool.dao.*;
-import pl.net.bluesoft.rnd.processtool.dao.impl.*;
+import pl.net.bluesoft.rnd.processtool.dao.ProcessDefinitionDAO;
+import pl.net.bluesoft.rnd.processtool.dao.ProcessDictionaryDAO;
+import pl.net.bluesoft.rnd.processtool.dao.ProcessInstanceDAO;
+import pl.net.bluesoft.rnd.processtool.dao.ProcessInstanceFilterDAO;
+import pl.net.bluesoft.rnd.processtool.dao.UserDataDAO;
+import pl.net.bluesoft.rnd.processtool.dao.UserProcessQueueDAO;
+import pl.net.bluesoft.rnd.processtool.dao.UserSubstitutionDAO;
+import pl.net.bluesoft.rnd.processtool.dao.impl.ProcessDefinitionDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.ProcessDictionaryDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.ProcessInstanceDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.ProcessInstanceFilterDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.UserDataDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.UserProcessQueueDAOImpl;
+import pl.net.bluesoft.rnd.processtool.dao.impl.UserSubstitutionDAOImpl;
 import pl.net.bluesoft.rnd.processtool.dict.DictionaryLoader;
 import pl.net.bluesoft.rnd.processtool.dict.exception.DictionaryLoadingException;
 import pl.net.bluesoft.rnd.processtool.dict.xml.ProcessDictionaries;
@@ -37,21 +70,6 @@ import pl.net.bluesoft.util.cache.Caches;
 import pl.net.bluesoft.util.eventbus.EventBusManager;
 import pl.net.bluesoft.util.lang.FormatUtil;
 import pl.net.bluesoft.util.lang.Strings;
-
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
-import javax.transaction.UserTransaction;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
-import static pl.net.bluesoft.util.lang.Strings.hasText;
 
 /**
  * @author tlipski@bluesoft.net.pl
@@ -447,6 +465,12 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
 	public ProcessDefinitionDAO getProcessDefinitionDAO(Session hibernateSession) {
 		return new ProcessDefinitionDAOImpl(hibernateSession);
 	}
+	
+	@Override
+	public UserProcessQueueDAO getUserProcessQueueDAO(Session hibernateSession)
+	{
+		return new UserProcessQueueDAOImpl(hibernateSession);
+	} 
 
 	@Override
 	public boolean registerModelExtension(Class<?>... cls) {
@@ -597,33 +621,6 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
         return null;
 	}
 
-//    public void registerDictionaries(InputStream dictionariesStream) {
-//        if (dictionariesStream == null) {
-//            return;
-//        }
-//
-//        ProcessDictionaries dictionaries = (ProcessDictionaries) DictionaryLoader.getInstance().unmarshall(dictionariesStream);
-//        String processBpmKey = dictionaries.getProcessBpmDefinitionKey();
-//        if (!StringUtil.hasText(processBpmKey)) {
-//            throw new RuntimeException("No process name specified in the dictionaries XML");
-//        }
-//        Session session = sessionFactory.openSession();
-//        try {
-//            Transaction tx = session.beginTransaction();
-//            ProcessDefinitionConfig definitionConfig = getProcessDefinitionDAO(session).getActiveConfigurationByKey(processBpmKey);
-//            if (definitionConfig == null) {
-//                throw new RuntimeException("No active definition config with BPM key: " + processBpmKey);
-//            }
-//            ProcessDictionaryDAO dao = getProcessDictionaryDAO(session);
-//            List<ProcessDBDictionary> processDBDictionaries = DictionaryLoader.getDictionariesFromXML(dictionaries);
-//            dao.createOrUpdateDictionaries(definitionConfig, processDBDictionaries, dictionaries.getOverwrite() != null
-//                    && dictionaries.getOverwrite());
-//            tx.commit();
-//        }
-//        finally {
-//            session.close();
-//        }
-//    }
     @Override
        public void registerTaskItemProvider(Class<?> cls) {
            AliasName annotation = cls.getAnnotation(AliasName.class);
@@ -888,5 +885,7 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
         public <K, V> void registerCache(String cacheName, Map<K, V> cache) {
             caches.put(cacheName, cache);
             logger.warning("Registered cache named: " + cacheName);
-        } 
+        }
+
+
 }

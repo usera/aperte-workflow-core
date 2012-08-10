@@ -6,6 +6,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.TaskState;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.rnd.processtool.ui.tasks.TaskTableItem;
@@ -62,10 +63,12 @@ public class QueueListPane extends ProcessListPane {
     @Override
     protected ProcessInstanceFilter getDefaultFilter() {
         ProcessInstanceFilter tfi = new ProcessInstanceFilter();
+        ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+        tfi.setFilterOwner(getBpmSession().getUser(ctx));
         if (queue != null) {
             tfi.addQueue(queue.getName());
         }
-        tfi.addState(TaskState.OPEN);
+        tfi.setQueueType(QueueType.OWN_ASSIGNED);
         return tfi;
     }
 }

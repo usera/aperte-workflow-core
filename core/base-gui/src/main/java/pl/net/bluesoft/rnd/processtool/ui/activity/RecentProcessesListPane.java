@@ -4,6 +4,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.TaskState;
 
 import java.util.Calendar;
@@ -35,7 +36,7 @@ public class RecentProcessesListPane extends MyProcessesListPane {
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		tfi.addOwner(getBpmSession().getUser(ctx));
 		tfi.setUpdatedAfter(minDate.getTime());
-		tfi.addState(TaskState.OPEN);
+		tfi.setQueueType(QueueType.OWN_ASSIGNED);
 		return tfi;
 	}
 }

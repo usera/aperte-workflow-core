@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -28,7 +29,11 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	private Date notUpdatedAfter;
 	private String genericQuery;
 	private String name;
-	private Boolean processEnded;
+	
+	/** Type of the queue */
+	@Column(name="queue_type")
+	@Enumerated(EnumType.STRING)
+	private QueueType queueType;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "filter_owner_id")
@@ -39,25 +44,12 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	private Set<UserData> owners = new HashSet<UserData>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "pt_pi_filters_not_owners", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "owner_id"))
-	private Set<UserData> notOwners = new HashSet<UserData>();
-
-	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "pt_pi_filters_creats", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "creator_id"))
 	private Set<UserData> creators = new HashSet<UserData>();
-
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "pt_pi_filters_not_creats", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "creator_id"))
-	private Set<UserData> notCreators = new HashSet<UserData>();
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "pt_pi_filters_queues", joinColumns = @JoinColumn(name = "filter_id"))
 	private Set<String> queues = new HashSet<String>();
-
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "pt_pi_filters_states", joinColumns = @JoinColumn(name = "filter_id"))
-	@Enumerated(value = EnumType.STRING)
-	private Set<TaskState> states = new HashSet<TaskState>();
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "pt_pi_filters_tasks", joinColumns = @JoinColumn(name = "filter_id"))
@@ -149,19 +141,6 @@ public class ProcessInstanceFilter extends PersistentEntity {
 		this.genericQuery = genericQuery;
 	}
 
-	public Set<TaskState> getStates() {
-		return states;
-		//	    return null;
-	}
-
-	public void setStates(Set<TaskState> states) {
-		this.states = states;
-	}
-
-	public void addState(TaskState state) {
-		states.add(state);
-	}
-
 	public Set<UserData> getCreators() {
 		return creators;
 	}
@@ -185,35 +164,12 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public Set<UserData> getNotOwners() {
-		return notOwners;
-	}
-
-	public void setNotOwners(Set<UserData> notOwners) {
-		this.notOwners = notOwners;
-	}
-
-	public Set<UserData> getNotCreators() {
-		return notCreators;
-	}
-
-	public void setNotCreators(Set<UserData> notCreators) {
-		this.notCreators = notCreators;
-	}
 	
-	public boolean isProcessEnded()
-	{
-		return processEnded != null && processEnded;
+	public QueueType getQueueType() {
+		return queueType;
 	}
 
-	public Boolean getProcessEnded()
-	{
-		return processEnded;
-	}
-
-	public void setProcessEnded(Boolean processEnded)
-	{
-		this.processEnded = processEnded;
+	public void setQueueType(QueueType queueType) {
+		this.queueType = queueType;
 	}
 }

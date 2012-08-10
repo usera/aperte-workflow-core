@@ -106,8 +106,7 @@
                             pl.net.bluesoft.util.eventbus,
                             org.quartz,
                             pl.net.bluesoft.rnd.pt.ext.sched.service,
-                            javassist.util.proxy,org.hibernate.proxy,
-                            org.osgi.framework,pl.net.bluesoft.rnd.processtool.plugins,
+                            pl.net.bluesoft.rnd.processtool.plugins,
                             pl.net.bluesoft.rnd.processtool.plugins.osgi,
                         </Import-Package>
                         <ProcessTool-Model-Enhancement>

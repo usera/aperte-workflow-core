@@ -1,6 +1,21 @@
 package pl.net.bluesoft.rnd.processtool.ui.activity;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
+import org.aperteworkflow.util.vaadin.VaadinUtility;
+
+import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
+import pl.net.bluesoft.rnd.processtool.filters.FilterChangedEvent;
+import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
+import pl.net.bluesoft.rnd.processtool.model.BpmTask;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
+import pl.net.bluesoft.rnd.processtool.ui.tasks.TaskTableItem;
+import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import com.vaadin.Application;
 import com.vaadin.data.util.BeanItem;
@@ -13,20 +28,6 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.BaseTheme;
 
-import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
-import pl.net.bluesoft.rnd.processtool.filters.FilterChangedEvent;
-import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
-import pl.net.bluesoft.rnd.processtool.model.BpmTask;
-import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
-import pl.net.bluesoft.rnd.processtool.ui.tasks.TaskTableItem;
-import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-import org.aperteworkflow.util.vaadin.VaadinUtility;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 public class TasksFilterBox extends VerticalLayout {
 	private I18NSource i18NSource;
 	private ProcessToolBpmSession session;
@@ -36,7 +37,7 @@ public class TasksFilterBox extends VerticalLayout {
 	private String filterExpression;
 	private Form advancedForm;
 	private Button advancedTrigger;
-	private ProcessInstanceFilter filter = new ProcessInstanceFilter();
+	private ProcessInstanceFilter filter;
 	private List<ItemSetChangeListener> listeners = new LinkedList<ItemSetChangeListener>();
 	private ProcessListPane parent;
 	private int limit;
@@ -128,7 +129,11 @@ public class TasksFilterBox extends VerticalLayout {
 		addComponent(filterNameSave);
 	}
 
-	private void saveFilter() {
+	private void saveFilter() 
+	{
+		if(filter == null)
+			return;
+		
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		filter.setGenericQuery(filterExpression);
 		filter.setName((String) filterNameField.getValue());
@@ -155,7 +160,7 @@ public class TasksFilterBox extends VerticalLayout {
 		}
 	}
 
-	private void fillTaskList(List<BpmTask> userTasks) {
+	private void fillTaskList(Collection<BpmTask> userTasks) {
 		for (BpmTask task : userTasks) {
 			processInstances.add(new TaskTableItem(task));
 		}
@@ -177,10 +182,14 @@ public class TasksFilterBox extends VerticalLayout {
 		}
 	}
 
-	public ResultsPageWrapper<BpmTask> getBpmTasks(int offset) {
+	public ResultsPageWrapper<BpmTask> getBpmTasks(int offset) 
+	{
+		if(filter == null)
+			new ResultsPageWrapper<BpmTask>();
+		
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		filter.setGenericQuery(filterExpression);
-		return parent.getActivityMainPane().getBpmSession().findProcessTasks(filter, offset, limit, ctx);
+		return parent.getActivityMainPane().getBpmSession().findProcessTasks(filter, ctx);
 	}
 
 	public interface ItemSetChangeListener {

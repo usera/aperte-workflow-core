@@ -35,7 +35,6 @@ import org.jbpm.api.NewDeployment;
 import org.jbpm.api.ProcessDefinition;
 import org.jbpm.api.ProcessEngine;
 import org.jbpm.api.RepositoryService;
-import org.jbpm.api.TaskQuery;
 import org.jbpm.api.TaskService;
 import org.jbpm.api.cmd.Command;
 import org.jbpm.api.cmd.Environment;
@@ -71,13 +70,14 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceLog;
 import pl.net.bluesoft.rnd.processtool.model.ProcessStatus;
-import pl.net.bluesoft.rnd.processtool.model.TaskState;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateAction;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.MutableBpmTask;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
+import pl.net.bluesoft.rnd.pt.ext.jbpm.query.BpmTaskFilterQuery;
 import pl.net.bluesoft.util.lang.Lang;
 import pl.net.bluesoft.util.lang.Mapcar;
 import pl.net.bluesoft.util.lang.Predicate;
@@ -90,8 +90,8 @@ import pl.net.bluesoft.util.lang.Transformer;
  * @author tlipski@bluesoft.net.pl
  * @author amichalak@bluesoft.net.pl
  */
-public class ProcessToolJbpmSession extends AbstractProcessToolSession {
-
+public class ProcessToolJbpmSession extends AbstractProcessToolSession 
+{
     private static final String AUTO_SKIP_TASK_NAME_PREFIX = "AUTO_SKIP";
 	private static final String AUTO_SKIP_ACTION_NAME = "AUTO_SKIP";
 	protected Logger log = Logger.getLogger(ProcessToolJbpmSession.class.getName());
@@ -230,7 +230,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
    		List<BpmTask> recentTasks = new ArrayList<BpmTask>();
    		UserData user = getUser(ctx);
    		ResultsPageWrapper<ProcessInstance> recentInstances = ctx.getProcessInstanceDAO().getRecentProcesses(user, minDate, offset, limit);
-   		List<ProcessInstance> instances = recentInstances.getResults();
+   		Collection<ProcessInstance> instances = recentInstances.getResults();
    		for (ProcessInstance pi : instances) {
    			List<BpmTask> tasks = findProcessTasks(pi, user.getLogin(), ctx);
    			if (tasks.isEmpty()) {
@@ -313,119 +313,63 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
    		return count;
    	}
    	
+	@Override
+	public int findUserTasksCount(QueueType type, String userLogin, ProcessToolContext ctx) 
+	{
+		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, type);
+	}
    	
-   	@Override
-   	public ResultsPageWrapper<BpmTask> findProcessTasks(final ProcessInstanceFilter filter, final Integer offset, final Integer limit,
-   	                                                    final ProcessToolContext ctx) 
+   	
+	public ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx)
+	{
+		return findProcessTasks(filter, ctx, 0);
+	}
+   	
+	public ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int maxResults)
    	{
-   		if(filter.getStates().isEmpty())
-   			filter.getStates().add(TaskState.OPEN);
+   		/* Initialize query */
+   		BpmTaskFilterQuery taskFilterQuery = new BpmTaskFilterQuery(ctx);
+   		taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
+   		taskFilterQuery.addQueueTypeCondition(filter.getQueueType());
    		
-   		/* Create process engine query using universal query */
-   		ProcessEngineQuery<HistoryTaskInstanceImpl> processEngineQuery = prepareTaskQuery(filter);
+   		/* Set limit for max results count */
+   		taskFilterQuery.setMaxResultsLimit(maxResults);
    		
-   		if(user != null)
-   			processEngineQuery.setAuthenticationUserLogin(user.getLogin());
+   		/* Add external conditions for process instance filter */
+   		addExternalConditions(taskFilterQuery, filter);
    		
-   		Collection<HistoryTaskInstanceImpl> tasks = processEngineQuery.executeQuery(ctx);
-
-   		return getBpmTaskFromProcessEngineTasks(ctx, filter, offset, limit, tasks);
+		/* BpmTasks */
+		Collection<BpmTask> result = taskFilterQuery.getBpmTasks();
+   		
+   		return new ResultsPageWrapper<BpmTask>(result, result.size());
+   	}
+   	
+   	/** Add additional conditions to query from process instance filter */
+   	private void addExternalConditions(BpmTaskFilterQuery taskFilterQuery,ProcessInstanceFilter filter)
+   	{
+   		/* Prepare data for owner lists and not owner list */
+   		Collection<String> ownerNames = new HashSet<String>();
+   		for(UserData userData: filter.getOwners())
+   			ownerNames.add(userData.getLogin());
+   		
+   		/* Add condition for task names if any exists */
+   		if(!filter.getTaskNames().isEmpty())
+   			taskFilterQuery.addTaskNamesCondtition(filter.getTaskNames());
+   		
+   		/* Add conidtion for created before date */
+   		if(filter.getCreatedBefore() != null)
+   			taskFilterQuery.addCreatedBeforeCondition(filter.getCreatedBefore());
+   		
+   		/* Add conidtion for created after date */
+   		if(filter.getCreatedAfter() != null)
+   			taskFilterQuery.addCreatedAfterCondition(filter.getCreatedAfter());
+   		
+   		/* Add condition for owner */
+   		if(!ownerNames.isEmpty())
+   			taskFilterQuery.addOwnerLoginsCondtition(ownerNames);
    	}
    	
    	
-   	private ResultsPageWrapper<BpmTask> getBpmTaskFromProcessEngineTasks(final ProcessToolContext ctx, final ProcessInstanceFilter filter, 
-   			final Integer offset, final Integer limit,Collection<HistoryTaskInstanceImpl> tasks)
-   	{
-   		Map<String, List<HistoryTaskInstanceImpl>> tasksByProcessId = pl.net.bluesoft.util.lang.Collections.group(tasks, new Transformer<HistoryTaskInstanceImpl, String>() {
-            @Override
-            public String transform(HistoryTaskInstanceImpl task) {
-                Execution exec = getProcessEngine(ctx).getExecutionService().findExecutionById(task.getExecutionId());
-                if (exec != null)
-                    return exec.getProcessInstance().getId();
-                else
-                    return task.getExecutionId();
-
-            }
-        });
-
-		ResultsPageWrapper<ProcessInstance> instancesWrapper = ctx.getProcessInstanceDAO()
-				.getProcessInstanceByInternalIdMapWithFilter(tasksByProcessId.keySet(), filter, offset, limit);
-		
-		/* Create map to speed up search for process instance with particular internal id */
-		final Map<String, ProcessInstance> instances = new HashMap<String,ProcessInstance>();
-		
-		for(ProcessInstance processInstance: instancesWrapper.getResults())
-			instances.put(processInstance.getInternalId(),processInstance);
-
-
-		/* Rezultat zapytania */
-		final List<BpmTask> result = new ArrayList<BpmTask>();
-		
-		
-		for (final String processId : tasksByProcessId.keySet()) 
-		{
-			List<HistoryTaskInstanceImpl> processTasks = tasksByProcessId.get(processId);
-			result.addAll(new Mapcar<HistoryTaskInstanceImpl, BpmTask>(processTasks) 
-			{
-				@Override
-				public BpmTask lambda(HistoryTaskInstanceImpl task) 
-				{
-					ProcessInstance pi = instances.get(processId);
-					if (pi == null) 
-					{
-						return null;
-					}
-					
-					/* Jeżeli filtrowalismy po zamknietych zadaniach, to odfiltrujemy 
-					 * taski, ktore:
-					 * - sa podprocesami (maja parenta)
-					 * - odpowiadajacy im proces jest w stanie RUNNING lub NEW
-					 */
-					if(filter.isProcessEnded())
-					{
-						/* Czy task jest skorelowany z procesem, ktory
-						 * jest podprocesem innego
-						 */
-						if(pi.getParent() != null)
-							return null;
-							
-						/* Czy skorelowany z taskiem proces jest
-						 * w stanie running
-						 */
-						if(pi.isProcessRunning())
-							return null;
-					}
-					/* Jeżeli szukamy procesów aktywnych, nie pokazujemy 
-					 * procesów głównych, jeżeli działają podprocesy 
-					 */
-					else
-					{
-						/* Jeżeli proces ma dzieci, i chociaż jeden 
-						 * z subprocesów jest w stanie running, to nei 
-						 * wyświetlaj procesu głównego
-						 */
-						if(!pi.getChildren().isEmpty())
-						{
-							for(ProcessInstance subProcess: pi.getChildren())
-								if(subProcess.isProcessRunning())
-									return null;
-						}
-					}
-					
-					
-					return collectTaskFromActivity(task, pi, ctx);
-				}
-			}.go());
-		}
-		java.util.Collections.sort(result, new Comparator<BpmTask>() {
-			@Override
-			public int compare(BpmTask o1, BpmTask o2) {
-				return o2.getCreateDate().compareTo(o1.getCreateDate());
-			}
-		});
-
-		return new ResultsPageWrapper<BpmTask>(result, result.size());
-   	}
    	
    	/** Prepare hql query using given filter */
    	private ProcessEngineQuery<HistoryTaskInstanceImpl> prepareTaskQuery(ProcessInstanceFilter filter)
@@ -436,10 +380,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
    		Collection<String> ownerNames = new HashSet<String>();
    		for(UserData userData: filter.getOwners())
    			ownerNames.add(userData.getLogin());
-   		
-   		Collection<String> notOwnerNames = new HashSet<String>();
-   		for(UserData userData: filter.getNotOwners())
-   			notOwnerNames.add(userData.getLogin());
 
    		
    		/* Prepare hql statement */
@@ -466,7 +406,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
 		hql.append(" act.historyProcessInstance = proc ");
 		hql.append(" and act.historyTask = task ");
 		
-		if(filter.isProcessEnded())
+		if(filter.getQueueType().equals(QueueType.OWN_FINISHED))
 			hql.append(" and proc.state = 'ended' ");
 		else
 			hql.append(" and proc.state = 'active' ");
@@ -474,27 +414,11 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
 		StringBuffer hqltmp = new StringBuffer();
 		hqltmp.append(" NOT EXISTS (SELECT 1 FROM ").append(HistoryTaskInstanceImpl.class.getName()).append(" as act1 WHERE act.historyProcessInstance = act1.historyProcessInstance AND act1.dbid > act.dbid) ");
 
-		if(filter.getStates().contains(TaskState.OPEN))
-		{
-			if(filter.getStates().contains(TaskState.CLOSED) || filter.getStates().contains(TaskState.COMPLETED)){
-				hql.append(" AND (task.state IS NULL OR (task.state = :state AND ").append(hqltmp).append(" )) ");
-			} 
-			else {
-				hql.append(" AND task.state IS NULL ");
-			}
-		} 
-		else if(filter.getStates().contains(TaskState.CLOSED)){
-			hql.append(" AND (task.state = :state AND ").append(hqltmp).append(" )");
-		}
-
 		if (!filter.getTaskNames().isEmpty()) {
 			hql.append(" AND act.activityName IN (:taskNames) ");
 		}
 		if (!ownerNames.isEmpty()) {
 			hql.append(" AND task.assignee IN (:ownerIds) ");
-		}
-		if (!notOwnerNames.isEmpty()) {
-			hql.append(" AND (task.assignee NOT IN (:notOwnerIds) OR task.assignee IS NULL) ");
 		}
 
 		hql.append("order by task.id DESC");
@@ -509,11 +433,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
 		if (!ownerNames.isEmpty()) 
 			processEngineQuery.addListParameter("ownerIds", ownerNames);
 		
-		if (!notOwnerNames.isEmpty()) 
-			processEngineQuery.addListParameter("notOwnerIds", notOwnerNames);
-		
-		if (filter.getStates().contains(TaskState.CLOSED)) 
-			processEngineQuery.addParameter("state", Task.STATE_COMPLETED);
 		
 		if (!filter.getTaskNames().isEmpty()) 
 			processEngineQuery.addListParameter("taskNames", filter.getTaskNames());
@@ -683,7 +602,9 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
         }
 
         broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, bpmTask, user));
-        broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
+        
+		/* Inform queue manager about task assigne */
+		ctx.getUserProcessQueueManager().onTaskAssigne(bpmTask);
 
         return bpmTask;
     }
@@ -754,25 +675,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
    		t.setInternalTaskId(task.getId());
    		t.setExecutionId(task.getExecutionId());
    		t.setCreateDate(task.getCreateTime());
-   		t.setFinished(false);
-   		return t;
-   	}
-
-   	private BpmTask collectTaskFromActivity(HistoryTaskInstanceImpl task, ProcessInstance pi, ProcessToolContext ctx) {
-   		MutableBpmTask t = new MutableBpmTask();
-   		t.setProcessInstance(pi);
-   		t.setAssignee(task.getHistoryTask().getAssignee());
-   		UserData ud = ctx.getUserDataDAO().loadUserByLogin(task.getHistoryTask().getAssignee());
-   		if (ud == null) {
-   			ud = new UserData();
-   			ud.setLogin(task.getHistoryTask().getAssignee());
-   		}
-   		t.setOwner(ud);
-   		t.setTaskName(task.getActivityName());
-   		t.setInternalTaskId(task.getHistoryTask().getId());
-   		t.setExecutionId(task.getExecutionId());
-   		t.setCreateDate(task.getStartTime());
-   		t.setFinishDate(task.getEndTime());
    		t.setFinished(false);
    		return t;
    	}
@@ -1009,48 +911,59 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
    	}
 
    	@Override
-       public BpmTask performAction(ProcessStateAction action, BpmTask task, ProcessToolContext ctx) {
+    public BpmTask performAction(ProcessStateAction action, BpmTask task, ProcessToolContext ctx) 
+   	{
            BpmTask bpmTask = getTaskData(task.getInternalTaskId(), ctx);
-           if (bpmTask == null || bpmTask.isFinished()) {
+           
+           if (bpmTask == null || bpmTask.isFinished()) 
                return bpmTask;
-           }
-           ProcessInstance pi = bpmTask.getProcessInstance();
+           
+           ProcessInstance processInstance = bpmTask.getProcessInstance();
            ProcessInstanceLog log = addActionLogEntry(action, task, ctx);
            Map<String, Object> vars = new HashMap<String, Object>();
            vars.put("ACTION", action.getBpmName());
-           pi.setSimpleAttribute("ACTION", action.getBpmName());
+           processInstance.setSimpleAttribute("ACTION", action.getBpmName());
            List<String> outgoingTransitionNames = getOutgoingTransitionNames(task.getInternalTaskId(), ctx);
 
            ProcessEngine processEngine = getProcessEngine(ctx);
 
-           Task processInstance = processEngine.getTaskService().getTask(task.getInternalTaskId());
-           String executionId = processInstance.getExecutionId();
+           Task bpmTaskInstance = processEngine.getTaskService().getTask(task.getInternalTaskId());
+           String executionId = bpmTaskInstance.getExecutionId();
 
 
            Set<String> taskIdsBeforeCompletion = new HashSet<String>();
-           pl.net.bluesoft.util.lang.Collections.collect(findProcessTasks(pi, ctx), new Transformer<BpmTask, String>() {
+           pl.net.bluesoft.util.lang.Collections.collect(findProcessTasks(processInstance, ctx), new Transformer<BpmTask, String>() {
                @Override
                public String transform(BpmTask obj) {
                    return obj.getInternalTaskId();
                }
            }, taskIdsBeforeCompletion);
 
-           if (outgoingTransitionNames.size() == 1)
+           
+           
+          if (outgoingTransitionNames.size() == 1)
               processEngine.getTaskService().completeTask(task.getInternalTaskId(), outgoingTransitionNames.get(0), vars); //BPMN2.0 style, decision is taken on the XOR gateway
           else
               processEngine.getTaskService().completeTask(task.getInternalTaskId(), action.getBpmName(), vars);
+          
+          broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.TASK_FINISHED, task, user));
+          
+		   /* Inform queue manager about task finish and process state change */
+		   ctx.getUserProcessQueueManager().onTaskFinished(task);
 
-          String s = getProcessState(pi, ctx);
+          String processState = getProcessState(processInstance, ctx);
           
           /* Check if new subProcess is created */
-          boolean startsSubprocess = updateSubprocess(pi, executionId, ctx);
+          boolean startsSubprocess = updateSubprocess(processInstance, executionId, ctx);
 
-          fillProcessAssignmentData(processEngine, pi, ctx);
-          pi.setState(s);
-          if (startsSubprocess == false && s == null && pi.getRunning() && !isProcessRunning(pi.getInternalId(), ctx)) {
-              pi.setRunning(false);
+          fillProcessAssignmentData(processEngine, processInstance, ctx);
+          processInstance.setState(processState);
+          if (startsSubprocess == false && processState == null && processInstance.getRunning() && !isProcessRunning(processInstance.getInternalId(), ctx)) {
+              processInstance.setRunning(false);
           }
-          ctx.getProcessInstanceDAO().saveProcessInstance(pi);
+          
+          
+          
            if (log.getUserSubstitute() == null)
                broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.SIGNAL_PROCESS, bpmTask, user));
            else
@@ -1059,32 +972,69 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            if (Strings.hasText(action.getAssignProcessStatus())) {
                String processStatus = action.getAssignProcessStatus();
                ProcessStatus ps = processStatus.length() == 1 ? ProcessStatus.fromChar(processStatus.charAt(0)) : ProcessStatus.fromString(processStatus);
-               pi.setStatus(ps);
-           } else {
-               pi.setStatus(isProcessRunning(pi.getInternalId(), ctx) || startsSubprocess ? ProcessStatus.RUNNING : ProcessStatus.FINISHED);
+               processInstance.setStatus(ps);
+           } 
+           else 
+           {
+        	   boolean isProcessRunning = processInstance.isProcessRunning();
+        	   //boolean isProcessRunning = isProcessRunning(pi.getInternalId(), ctx);
+        	   
+        	   /* Process is not running and no new suprocesses are created, so process should
+        	    * be finished by now
+        	    */
+        	   if(!isProcessRunning && !startsSubprocess)
+        	   {
+        		   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.END_PROCESS, bpmTask, user));
+        		  
+        		   /* Inform queue manager about process ending */
+        		   ctx.getUserProcessQueueManager().onProcessFinished(processInstance, bpmTask);
+        		   
+        		   processInstance.setStatus(ProcessStatus.FINISHED);
+        	   }
+        	   
+        	   /* Process is running or is halted, but new subprocess are created */
+        	   else if(!isProcessRunning && startsSubprocess)  
+        	   {
+        		   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.PROCESS_HALTED, bpmTask, user));
+        		   
+        		   /* Inform queue manager about process halt */
+        		   ctx.getUserProcessQueueManager().onProcessHalted(processInstance, bpmTask);
+        		   
+        		   processInstance.setStatus(ProcessStatus.RUNNING);
+        	   }
+        	   else 
+        	   {
+        		   processInstance.setStatus(ProcessStatus.RUNNING);
+        	   }
            }
+           
+           ctx.getProcessInstanceDAO().saveProcessInstance(processInstance);
 
            BpmTask userTask = null;
            BpmTask autoSkipTask = null;
 
            List<BpmTask> tasksAfterCompletion = null;
-           if(startsSubprocess && pi.getChildren() != null) {
-	           for(ProcessInstance child : pi.getChildren()) {
+           if(startsSubprocess && processInstance.getChildren() != null) {
+	           for(ProcessInstance child : processInstance.getChildren()) {
 	        	   tasksAfterCompletion = findProcessTasks(child, ctx);
 	        	   if(tasksAfterCompletion != null && tasksAfterCompletion.size() > 0)
 	        		   break;
 	           }
            }
            if(tasksAfterCompletion == null || tasksAfterCompletion.size() == 0) {
-               tasksAfterCompletion = findProcessTasks(pi, ctx);
+               tasksAfterCompletion = findProcessTasks(processInstance, ctx);
            }
-           if(pi.getParent() != null && (tasksAfterCompletion == null || tasksAfterCompletion.size() == 0)) {
-               tasksAfterCompletion = findProcessTasks(pi.getParent(), ctx);
+           if(processInstance.getParent() != null && (tasksAfterCompletion == null || tasksAfterCompletion.size() == 0)) {
+               tasksAfterCompletion = findProcessTasks(processInstance.getParent(), ctx);
            }
            if(tasksAfterCompletion != null) {
 	           for (BpmTask createdTask : tasksAfterCompletion) {
-	               if (!taskIdsBeforeCompletion.contains(createdTask.getInternalTaskId())) {
+	               if (!taskIdsBeforeCompletion.contains(createdTask.getInternalTaskId())) 
+	               {
 	                   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, createdTask, user));
+	                   
+	        		   /* Inform queue manager about task assigne */
+	        		   ctx.getUserProcessQueueManager().onTaskAssigne(createdTask);
 	               }
 	               if (Lang.equals(user.getId(), createdTask.getOwner().getId())) {
 	                   userTask = createdTask;
@@ -1104,13 +1054,11 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession {
            if (userTask == null) {
                MutableBpmTask t = new MutableBpmTask(task);
                t.setFinished(true);
-               t.setProcessInstance(pi);
+               t.setProcessInstance(processInstance);
                userTask = t;
            }
 
            broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
-           
-           ProcessToolQueueManager.updateQueues(userTask);
            
            return userTask;
        }

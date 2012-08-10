@@ -4,7 +4,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.aperteworkflow.ui.view.ViewRegistry;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -14,10 +13,6 @@ import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.event.MailEvent;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.event.MailEventListener;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet.BpmAdminPortletRender;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.util.eventbus.EventListener;
 
@@ -28,8 +23,8 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 	
     private Logger logger = Logger.getLogger(Activator.class.getName());
 
-	private BpmNotificationEngine engine;
-	private MailEventListener mailEventListener;
+    private BpmNotificationEngine engine;
+	MailEventListener mailEventListener;
 	private SchedulersActivator schedulerActivator;
 	
 	@Override
@@ -37,13 +32,12 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 	{
 		ProcessToolRegistry registry = getRegistry(context);
 		
+		
 		schedulerActivator = new SchedulersActivator(registry);
 		
 		/* Init the bpm notification engine */
 		engine = new BpmNotificationEngine(registry);
-	
-		registry.registerModelExtension(BpmNotificationConfig.class, BpmNotificationTemplate.class, BpmNotificationMailProperties.class);
-		registry.commitModelExtensions();
+		
         registry.registerService(BpmNotificationService.class, engine, new Properties());
 		registry.getEventBusManager().subscribe(BpmEvent.class, this);
 		
@@ -52,9 +46,10 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		
 		/* Register scheduler for notifications sending */
 		schedulerActivator.scheduleNotificationsSend(engine);
-
-		getViewRegistry(registry).registerGenericPortletViewRenderer("admin", BpmAdminPortletRender.INSTANCE);
+	
 	}
+	
+	
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -63,8 +58,6 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		registry.getEventBusManager().unsubscribe(BpmEvent.class, this);
 		registry.getEventBusManager().unsubscribe(MailEvent.class, mailEventListener);
 		mailEventListener = null;
-
-		getViewRegistry(registry).unregisterGenericPortletViewRenderer("admin", BpmAdminPortletRender.INSTANCE);
 	}
 
 	private ProcessToolRegistry getRegistry(BundleContext context) {
@@ -72,18 +65,20 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		return (ProcessToolRegistry) context.getService(ref);
 	}
 
-	private ViewRegistry getViewRegistry(ProcessToolRegistry registry) {
-		return registry.getRegisteredService(ViewRegistry.class);
-	}
 
-	public void onEvent(BpmEvent e) {
-		logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
-        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) {
+	public void onEvent(BpmEvent e) 
+	{
+		if(Type.NEW_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for process " + e.getProcessInstance().getId());
+		else if(Type.ASSIGN_TASK == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType())
+			logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
+		
+        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) 
+        {
             boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
             boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
 			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
                     e.getUserData(), processStarted, enteringStep);
         }
 	}
-	
 }
