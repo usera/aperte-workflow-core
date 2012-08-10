@@ -269,8 +269,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			liferaySubstitutedUser.getRoleNames().addAll(substitutedUser.getRoleNames());
 
 			ProcessInstanceFilter substAssignedTasks = filterFactory.createOtherUserTaskForSubstitutedUser(liferaySubstitutedUser);
-			
-			substAssignedTasks.getNotCreators().clear();
 
 			container.addItem(substAssignedTasks);
 

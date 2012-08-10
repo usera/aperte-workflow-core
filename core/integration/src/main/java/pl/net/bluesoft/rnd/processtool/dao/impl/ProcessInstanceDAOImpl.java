@@ -447,10 +447,6 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
                 criteria = criteria.add(Restrictions.in("creator", filter.getCreators()));
             }
 
-            if (filter.getNotCreators() != null && !filter.getNotCreators().isEmpty()) {
-                criteria = criteria.add(Restrictions.not(Restrictions.in("creator", filter.getNotCreators())));
-            }
-
             if (filter.getUpdatedAfter() != null) {
                 criteria = criteria
                         .createCriteria("processLogs")

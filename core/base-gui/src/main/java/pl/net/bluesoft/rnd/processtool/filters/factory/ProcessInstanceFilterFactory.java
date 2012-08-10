@@ -91,13 +91,9 @@ public class ProcessInstanceFilterFactory
 		
 		if(creator != null)
 			pif.getCreators().add(creator);
-		else
-			pif.getNotCreators().add(owner);
 
 		if(owner != null)
 			pif.getOwners().add(owner);
-		else if(!type.equals(QueueType.OWN_FINISHED))
-			pif.getNotOwners().add(creator);
 
 		return pif;
 	}

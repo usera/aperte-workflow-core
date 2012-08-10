@@ -44,16 +44,8 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	private Set<UserData> owners = new HashSet<UserData>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "pt_pi_filters_not_owners", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "owner_id"))
-	private Set<UserData> notOwners = new HashSet<UserData>();
-
-	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "pt_pi_filters_creats", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "creator_id"))
 	private Set<UserData> creators = new HashSet<UserData>();
-
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "pt_pi_filters_not_creats", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "creator_id"))
-	private Set<UserData> notCreators = new HashSet<UserData>();
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "pt_pi_filters_queues", joinColumns = @JoinColumn(name = "filter_id"))
@@ -171,22 +163,6 @@ public class ProcessInstanceFilter extends PersistentEntity {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public Set<UserData> getNotOwners() {
-		return notOwners;
-	}
-
-	public void setNotOwners(Set<UserData> notOwners) {
-		this.notOwners = notOwners;
-	}
-
-	public Set<UserData> getNotCreators() {
-		return notCreators;
-	}
-
-	public void setNotCreators(Set<UserData> notCreators) {
-		this.notCreators = notCreators;
 	}
 	
 	public QueueType getQueueType() {

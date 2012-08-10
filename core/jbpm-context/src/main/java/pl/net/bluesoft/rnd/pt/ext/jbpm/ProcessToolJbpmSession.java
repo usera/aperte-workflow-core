@@ -26,7 +26,6 @@ import org.aperteworkflow.bpm.graph.GraphElement;
 import org.aperteworkflow.bpm.graph.StateNode;
 import org.aperteworkflow.bpm.graph.TransitionArc;
 import org.hibernate.Query;
-import org.hibernate.SQLQuery;
 import org.jbpm.api.Execution;
 import org.jbpm.api.ExecutionService;
 import org.jbpm.api.HistoryService;
@@ -77,6 +76,7 @@ import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateAction;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.MutableBpmTask;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
+import pl.net.bluesoft.rnd.pt.ext.jbpm.query.BpmTaskFilterQuery;
 import pl.net.bluesoft.util.lang.Lang;
 import pl.net.bluesoft.util.lang.Mapcar;
 import pl.net.bluesoft.util.lang.Predicate;
@@ -91,11 +91,6 @@ import pl.net.bluesoft.util.lang.Transformer;
  */
 public class ProcessToolJbpmSession extends AbstractProcessToolSession 
 {
-	private static final String GET_BPM_TASKS_QUERY = 
-			"select distinct(task.*), process.* " +
-			"from pt_user_process_queue queue, jbpm4_hist_actinst task, pt_process_instance process " +
-			"where queue.task_id = task.htask_ and process.id = queue.process_id and queue.user_login = :userLogin and queue.queue_type = :queueType";
-
     private static final String AUTO_SKIP_TASK_NAME_PREFIX = "AUTO_SKIP";
 	private static final String AUTO_SKIP_ACTION_NAME = "AUTO_SKIP";
 	protected Logger log = Logger.getLogger(ProcessToolJbpmSession.class.getName());
@@ -234,7 +229,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		List<BpmTask> recentTasks = new ArrayList<BpmTask>();
    		UserData user = getUser(ctx);
    		ResultsPageWrapper<ProcessInstance> recentInstances = ctx.getProcessInstanceDAO().getRecentProcesses(user, minDate, offset, limit);
-   		List<ProcessInstance> instances = recentInstances.getResults();
+   		Collection<ProcessInstance> instances = recentInstances.getResults();
    		for (ProcessInstance pi : instances) {
    			List<BpmTask> tasks = findProcessTasks(pi, user.getLogin(), ctx);
    			if (tasks.isEmpty()) {
@@ -329,86 +324,51 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 		return findProcessTasks(filter, ctx, 0);
 	}
    	
-   	@SuppressWarnings("unchecked")
 	public ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int maxResults)
    	{
-   		/* Prepare simple query, the speed is main goal so we do not use hql */
-   		SQLQuery query = prepareSqlQuery(filter, ctx);
+   		/* Initialize query */
+   		BpmTaskFilterQuery taskFilterQuery = new BpmTaskFilterQuery(ctx);
+   		taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
+   		taskFilterQuery.addQueueTypeCondition(filter.getQueueType());
    		
-   		if(maxResults > 0)
-   			query.setMaxResults(maxResults);
+   		/* Set limit for max results count */
+   		taskFilterQuery.setMaxResultsLimit(maxResults);
    		
-   		List<Object[]> queueResults = query.list();
+   		/* Add external conditions for process instance filter */
+   		addExternalConditions(taskFilterQuery, filter);
    		
 		/* BpmTasks */
-		final List<BpmTask> result = new ArrayList<BpmTask>();
-   		
-		/* Every row is one queue element with jbpm task as first column and process instance as second */
-   		for(Object[] resultRow: queueResults)
-   		{
-   			
-   			HistoryTaskInstanceImpl taskInstance = (HistoryTaskInstanceImpl)resultRow[0];
-   			ProcessInstance processInstance = (ProcessInstance)resultRow[1];
-   			
-   			/* Map process and jbpm task to system's bpm task */
-   			BpmTask task = collectTaskFromActivity(taskInstance, processInstance, ctx);
-   			
-   			result.add(task);
-   		}
+		Collection<BpmTask> result = taskFilterQuery.getBpmTasks();
    		
    		return new ResultsPageWrapper<BpmTask>(result, result.size());
    	}
    	
-   	private SQLQuery prepareSqlQuery(ProcessInstanceFilter filter, ProcessToolContext ctx)
+   	/** Add additional conditions to query from process instance filter */
+   	private void addExternalConditions(BpmTaskFilterQuery taskFilterQuery,ProcessInstanceFilter filter)
    	{
-   		StringBuilder customQuery = new StringBuilder(GET_BPM_TASKS_QUERY);
-   		
    		/* Prepare data for owner lists and not owner list */
    		Collection<String> ownerNames = new HashSet<String>();
    		for(UserData userData: filter.getOwners())
    			ownerNames.add(userData.getLogin());
    		
-   		Collection<String> notOwnerNames = new HashSet<String>();
-   		for(UserData userData: filter.getNotOwners())
-   			notOwnerNames.add(userData.getLogin());
-   		
    		/* Add condition for task names if any exists */
    		if(!filter.getTaskNames().isEmpty())
-   			customQuery.append(" and task.activity_name_ in :taskNames ");
+   			taskFilterQuery.addTaskNamesCondtition(filter.getTaskNames());
    		
-   		/* Add conidtion for created before */
+   		/* Add conidtion for created before date */
    		if(filter.getCreatedBefore() != null)
-   			customQuery.append(" and task.activity_name_ in :taskNames ");
+   			taskFilterQuery.addCreatedBeforeCondition(filter.getCreatedBefore());
+   		
+   		/* Add conidtion for created after date */
+   		if(filter.getCreatedAfter() != null)
+   			taskFilterQuery.addCreatedAfterCondition(filter.getCreatedAfter());
    		
    		/* Add condition for owner */
    		if(!ownerNames.isEmpty())
-   			customQuery.append(" and queue.user_login IN (:ownerIds) ");
-   		
-   		/* Add condition for not owner */
-   		if(!notOwnerNames.isEmpty())
-   			customQuery.append(" AND (queue.user_login NOT IN (:notOwnerIds)) ");
-   		
-   		
-   		SQLQuery query = ctx.getHibernateSession().createSQLQuery(customQuery.toString())
-   				.addEntity("task", HistoryTaskInstanceImpl.class)
-   				.addEntity("process", ProcessInstance.class);
-   		
-   		/* Add parameters, first parameter is user login which is owner of queue element, and second is
-   		 * type of the queue */
-   		query.setString("userLogin", filter.getFilterOwner().getLogin());
-   		query.setString("queueType", filter.getQueueType().toString());
-   		
-   		if(!filter.getTaskNames().isEmpty())
-   			query.setParameterList("taskNames", filter.getTaskNames());
-   		
-   		if(!ownerNames.isEmpty())
-   			query.setParameterList("ownerIds", ownerNames);
-   		
-   		if(!notOwnerNames.isEmpty())
-   			query.setParameterList("notOwnerIds", notOwnerNames);
-   		
-   		return query;
+   			taskFilterQuery.addOwnerLoginsCondtition(ownerNames);
    	}
+   	
+   	
    	
    	/** Prepare hql query using given filter */
    	private ProcessEngineQuery<HistoryTaskInstanceImpl> prepareTaskQuery(ProcessInstanceFilter filter)
@@ -419,10 +379,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		Collection<String> ownerNames = new HashSet<String>();
    		for(UserData userData: filter.getOwners())
    			ownerNames.add(userData.getLogin());
-   		
-   		Collection<String> notOwnerNames = new HashSet<String>();
-   		for(UserData userData: filter.getNotOwners())
-   			notOwnerNames.add(userData.getLogin());
 
    		
    		/* Prepare hql statement */
@@ -463,9 +419,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 		if (!ownerNames.isEmpty()) {
 			hql.append(" AND task.assignee IN (:ownerIds) ");
 		}
-		if (!notOwnerNames.isEmpty()) {
-			hql.append(" AND (task.assignee NOT IN (:notOwnerIds) OR task.assignee IS NULL) ");
-		}
 
 		hql.append("order by task.id DESC");
 		
@@ -479,8 +432,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 		if (!ownerNames.isEmpty()) 
 			processEngineQuery.addListParameter("ownerIds", ownerNames);
 		
-		if (!notOwnerNames.isEmpty()) 
-			processEngineQuery.addListParameter("notOwnerIds", notOwnerNames);
 		
 		if (!filter.getTaskNames().isEmpty()) 
 			processEngineQuery.addListParameter("taskNames", filter.getTaskNames());
@@ -723,25 +674,6 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		t.setInternalTaskId(task.getId());
    		t.setExecutionId(task.getExecutionId());
    		t.setCreateDate(task.getCreateTime());
-   		t.setFinished(false);
-   		return t;
-   	}
-
-   	private BpmTask collectTaskFromActivity(HistoryTaskInstanceImpl task, ProcessInstance pi, ProcessToolContext ctx) {
-   		MutableBpmTask t = new MutableBpmTask();
-   		t.setProcessInstance(pi);
-   		t.setAssignee(task.getHistoryTask().getAssignee());
-   		UserData ud = ctx.getUserDataDAO().loadUserByLogin(task.getHistoryTask().getAssignee());
-   		if (ud == null) {
-   			ud = new UserData();
-   			ud.setLogin(task.getHistoryTask().getAssignee());
-   		}
-   		t.setOwner(ud);
-   		t.setTaskName(task.getActivityName());
-   		t.setInternalTaskId(task.getHistoryTask().getId());
-   		t.setExecutionId(task.getExecutionId());
-   		t.setCreateDate(task.getStartTime());
-   		t.setFinishDate(task.getEndTime());
    		t.setFinished(false);
    		return t;
    	}

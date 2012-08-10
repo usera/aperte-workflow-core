@@ -75,7 +75,7 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		finishedProcess.setLogin(creatorLogin);
 		finishedProcess.setProcessId(processId);
 		finishedProcess.setQueueType(QueueType.OWN_FINISHED);
-		
+		finishedProcess.setTaskId(Long.parseLong(bpmTask.getInternalTaskId()));
 		queueDao.saveOrUpdate(finishedProcess);
 	}
 
