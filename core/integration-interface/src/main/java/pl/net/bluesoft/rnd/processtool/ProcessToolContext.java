@@ -57,6 +57,7 @@ public interface ProcessToolContext  extends ProcessToolBpmConstants {
 
     public boolean isActive();
     public Map<String, Object> getBpmVariables(ProcessInstance pi);
+    public Object getBpmVariable(ProcessInstance pi, String variableName);
 
 	public static class Util {
         private static ThreadLocal<ProcessToolContext> current = new ThreadLocal<ProcessToolContext>();

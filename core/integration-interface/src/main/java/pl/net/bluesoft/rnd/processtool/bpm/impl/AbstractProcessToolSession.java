@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -144,6 +145,7 @@ public abstract class AbstractProcessToolSession
         log.setUser(creator);
         log.setLogType(ProcessInstanceLog.LOG_TYPE_START_PROCESS);
         //log.setLogType(LogType.START);
+        log.setOwnProcessInstance(pi);
         pi.getRootProcessInstance().addProcessLog(log);
 
         ctx.getProcessInstanceDAO().saveProcessInstance(pi);

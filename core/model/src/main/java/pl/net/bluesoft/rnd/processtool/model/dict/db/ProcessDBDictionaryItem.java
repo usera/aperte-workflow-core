@@ -52,6 +52,14 @@ public class ProcessDBDictionaryItem extends PersistentEntity
         this.key = key;
     }
 
+	public String getStringKey() {
+		return getKey();
+	}
+
+	public void setStringKey(String key) {
+		setKey(key);
+	}
+
     public String getValueType() {
         return valueType;
     }
@@ -68,10 +76,22 @@ public class ProcessDBDictionaryItem extends PersistentEntity
         this.values = values;
     }
 
+	public Set<ProcessDBDictionaryItemValue> getDbValues() {
+		return getValues();
+	}
+
+	public void setDbValues(Set<ProcessDBDictionaryItemValue> values) {
+		setValues(values);
+	}
+
     @Override
     public Collection<ProcessDictionaryItemValue<String>> values() {
         return new HashSet<ProcessDictionaryItemValue<String>>(values);
     }
+
+	public Collection<ProcessDictionaryItemValue<String>> dbValues() {
+		return values();
+	}
 
     @Override
     public void addValue(ProcessDictionaryItemValue<String> value) {

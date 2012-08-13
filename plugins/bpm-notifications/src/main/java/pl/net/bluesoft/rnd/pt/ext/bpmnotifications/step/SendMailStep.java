@@ -42,7 +42,7 @@ public class SendMailStep implements ProcessToolProcessStep {
         if (!Strings.hasText(processId))
         	processId = step.getProcessInstance().getInternalId();
 		
-		UserData user = findUser(recipient, ctx);
+		UserData user = findUser(recipient, ctx, step.getProcessInstance());
 		
         data.put("processId", processId);
 		data.put("processVisibleId", processId);
@@ -75,10 +75,18 @@ public class SendMailStep implements ProcessToolProcessStep {
 		return null;
 	}
 
-	private UserData findUser(String recipient, ProcessToolContext ctx) {
+	private UserData findUser(String recipient, ProcessToolContext ctx, ProcessInstance pi) {
 		if (recipient == null) {
 			return null;
 		}
+		recipient = recipient.trim();
+		if(recipient.matches("#\\{.*\\}")){
+        	String loginKey = recipient.replaceAll("#\\{(.*)\\}", "$1");
+        	recipient = (String) ctx.getBpmVariable(pi, loginKey);
+    		if (recipient == null) {
+    			return null;
+    		}
+        }
 		return ctx.getUserDataDAO().loadUserByLogin(recipient);
 	}
 }

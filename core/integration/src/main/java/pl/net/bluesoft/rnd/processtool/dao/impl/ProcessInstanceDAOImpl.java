@@ -164,11 +164,11 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         }
         searchData.addSearchAttribute("__AWF__running", String.valueOf(processInstance.getRunning()), true);
 
-        logger.warning("Prepare data for Lucene index update for" + processInstance + " took "
+        logger.finest("Prepare data for Lucene index update for" + processInstance + " took "
                 + (System.currentTimeMillis()-time) + " ms");
         time = System.currentTimeMillis();
         searchProvider.updateIndex(searchData);
-        logger.warning("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
+        logger.finest("Lucene index update for " + processInstance + " (" + searchData.getSearchAttributes().size()
                 + "attributes)  took " + (System.currentTimeMillis()-time) + " ms");
 		return processInstance.getId();
 	}
@@ -266,6 +266,7 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
         criteria.createAlias("processInstance", "pi");
         criteria.createAlias("pi.definition", "def");
         criteria.createAlias("pi.creator", "crtr");
+        criteria.createAlias("ownProcessInstance", "ownPi");
         criteria.createAlias("user", "u");
         criteria.createAlias("userSubstitute", "us", CriteriaSpecification.LEFT_JOIN);
 
@@ -294,7 +295,8 @@ public class ProcessInstanceDAOImpl extends SimpleHibernateBean<ProcessInstance>
                 .add(Projections.property("def.description"), "processInstance.definition.description")
                 .add(Projections.property("def.comment"), "processInstance.definition.comment")
                 .add(Projections.property("crtr.firstName"), "processInstance.creator.firstName")
-                .add(Projections.property("crtr.lastName"), "processInstance.creator.lastName");
+                .add(Projections.property("crtr.lastName"), "processInstance.creator.lastName")
+                .add(Projections.property("ownPi.id"), "ownProcessInstance.id");
 
         criteria.setProjection(pl);
 

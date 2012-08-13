@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -38,7 +39,6 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
@@ -66,12 +66,10 @@ public class BpmNotificationEngine implements BpmNotificationService
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
     private long cacheUpdateTime;
-    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 1000;
+    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 300 * 1000;
     private ProcessToolBpmSession bpmSession;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
-
-    private Map<String, Properties> persistentMailProperties = new HashMap<String, Properties>();
     
     private IMailSessionProvider mailSessionProvider;
     private MailTemplateProvider templateProvider;
@@ -83,19 +81,38 @@ public class BpmNotificationEngine implements BpmNotificationService
     	mailSessionProvider = new DatabaseMailSessionProvider();
     }
 
-    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted) {
+    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted, boolean enteringStep) {
         refreshConfigIfNecessary();
+        ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+
+//		logger.log(Level.INFO, "BpmNotificationEngine processes " + configCache.size() + " rules");
+		
         for (BpmNotificationConfig cfg : configCache) {
             try {
-                if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().matches(cfg.getProcessTypeRegex())) {
+            	if(enteringStep != cfg.isOnEnteringStep()) {
+//            		logger.info("Not matched notification #" + cfg.getId() + ": enteringStep=" + enteringStep );
+            		continue;
+            	}
+            	if(processStarted != cfg.isNotifyOnProcessStart()) {
+//            		logger.info("Not matched notification #" + cfg.getId() + ": processStarted=" + processStarted );
+            		continue;
+            	}
+                if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
+//            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
                     continue;
                 }
                 if (!(
-					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().matches(cfg.getStateRegex())))
-					||
-					(cfg.isNotifyOnProcessStart() && processStarted)
+					(!hasText(cfg.getStateRegex()) || (task != null && task.getTaskName().toLowerCase().matches(cfg.getStateRegex().toLowerCase())))
 				)) {
+//            		logger.info("Not matched notification #" + cfg.getId() + ": task.getTaskName()=" + task.getTaskName() );
                     continue;
+                }
+                if (hasText(cfg.getLastActionRegex())) {
+                	String lastAction = pi.getSimpleAttributeValue("ACTION");
+                	if (lastAction == null || !lastAction.toLowerCase().matches(cfg.getLastActionRegex().toLowerCase())) {
+//                		logger.info("Not matched notification #" + cfg.getId() + ": lastAction=" + lastAction );
+                        continue;
+                	}
                 }
                 logger.info("Matched notification #" + cfg.getId() + " for process state change #" + pi.getInternalId());
                 List<String> emailsToNotify = new LinkedList<String>();
@@ -117,7 +134,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                     emailsToNotify.addAll(Arrays.asList(cfg.getNotifyEmailAddresses().split(",")));
                 }
 				if (hasText(cfg.getNotifyUserAttributes())) {
-					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes()));
+					emailsToNotify.addAll(extractUserEmails(cfg.getNotifyUserAttributes(), ctx, pi));
 				}
                 if (emailsToNotify.isEmpty()) {
                     logger.info("Despite matched rules, no emails qualify to notify for cfg #" + cfg.getId());
@@ -127,7 +144,6 @@ public class BpmNotificationEngine implements BpmNotificationService
                 
                 BpmNotificationTemplate template = templateProvider.getBpmNotificationTemplate(templateName);
 
-                ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
                 Map data = prepareData(task, pi, userData, cfg, ctx);
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
@@ -179,11 +195,25 @@ public class BpmNotificationEngine implements BpmNotificationService
     	
     }
 
-	private Collection<String> extractUserEmails(String notifyUserAttributes) {
-		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
 		Set<String> emails = new HashSet<String>();
 		for (String attribute : notifyUserAttributes.split(",")) {
 			attribute = attribute.trim();
+			if(attribute.matches("#\\{.*\\}")){
+	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
+	        	ProcessInstance parentPi = pi;
+				while (parentPi != null) {
+		        	try {
+		        		attribute = (String) ctx.getBpmVariable(parentPi, loginKey);
+		        		break;
+		        	} catch(RuntimeException e) {
+		        		parentPi = parentPi.getParent();
+		        	}
+	        	}
+				if(attribute.matches("#\\{.*\\}")) {
+					continue;
+				}
+	        }
 			if (hasText(attribute)) {
 				UserData user = ctx.getUserDataDAO().loadUserByLogin(attribute);
 				emails.add(user.getEmail());
@@ -226,9 +256,15 @@ public class BpmNotificationEngine implements BpmNotificationService
 
             m.put("taskUrl", getTaskLink(task, ctx));
         }
+        
+        UserData assignee = new UserData();
+        if(task.getAssignee() != null)
+        	assignee = ctx.getUserDataDAO().loadUserByLogin(task.getAssignee());
+        
         m.put("processVisibleId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
         m.put("process", pi);
         m.put("user", userData);
+        m.put("assignee", assignee);
         m.put("session", bpmSession);
         m.put("context", ctx);
         m.put("config", cfg);
@@ -270,6 +306,12 @@ public class BpmNotificationEngine implements BpmNotificationService
         message.setContent(body, (sendHtml ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
         
+    	logger.info("About to send message: " + 
+    			"\nSubject: " + message.getSubject() + 
+    			"\nContent: " + message.getContent() +
+    			"\n"
+    			);
+        
         sendMessage(message, mailSession);
     }
 
@@ -279,6 +321,7 @@ public class BpmNotificationEngine implements BpmNotificationService
             configCache = session
                     .createCriteria(BpmNotificationConfig.class)
                     .add(Restrictions.eq("active", true))
+                    .addOrder(Order.asc("id"))
                     .list();
 
             cacheUpdateTime = System.currentTimeMillis();
@@ -288,57 +331,6 @@ public class BpmNotificationEngine implements BpmNotificationService
             /* Refresh config for providers */
             templateProvider.refreshConfig();
             mailSessionProvider.refreshConfig();
-
-            persistentMailProperties = new HashMap<String, Properties>();
-            List<BpmNotificationMailProperties> properties = session.createCriteria(BpmNotificationMailProperties.class).list();
-            for (BpmNotificationMailProperties bnmp : properties) 
-            {
-                if (hasText(bnmp.getProfileName())) 
-                {
-                    Properties prop = new Properties();
-                    
-                    if(bnmp.isDebug())
-                    {
-                    	logger.info(" mail.smtp.host = "+bnmp.getSmtpHost() +
-                    		"\n mail.smtp.socketFactory.port = "+bnmp.getSmtpSocketFactoryPort() +
-                    		"\n mail.smtp.socketFactory.class = "+bnmp.getSmtpSocketFactoryClass() +
-                    		"\n mail.smtp.auth = "+bnmp.isSmtpAuth() +
-                    		"\n mail.smtp.port = "+bnmp.getSmtpPort() +
-                    		"\n mail.smtp.user = "+bnmp.getSmtpUser() +
-                    		"\n mail.debug = "+bnmp.isDebug() +
-                    		"\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
-                    }
-                    
-                    if(bnmp.getSmtpHost() != null)
-                    	prop.put("mail.smtp.host",  bnmp.getSmtpHost());
-                    
-                    if(bnmp.getSmtpSocketFactoryPort() != null)
-                    	prop.put("mail.smtp.socketFactory.port", bnmp.getSmtpSocketFactoryPort());
-                    
-                    if(bnmp.getSmtpSocketFactoryClass() != null)
-                    	prop.put("mail.smtp.socketFactory.class", bnmp.getSmtpSocketFactoryClass());
-                    
-
-                    prop.put("mail.smtp.auth", getStringValueFromBoolean(bnmp.isSmtpAuth()));
-                    
-                    if(bnmp.getSmtpPort() != null)
-                    	prop.put("mail.smtp.port", bnmp.getSmtpPort());
-                    
-                    if(bnmp.getSmtpUser() != null)
-                    	prop.put("mail.smtp.user", bnmp.getSmtpUser());
-                    
-                    if(bnmp.getSmtpPassword() != null)
-                    	prop.put("mail.smtp.password", bnmp.getSmtpPassword());
-                    
-                    prop.put("mail.debug", getStringValueFromBoolean(bnmp.isDebug()));
-                    prop.put("mail.smtp.starttls.enable", getStringValueFromBoolean(bnmp.isStarttls()));
-                    
-                    persistentMailProperties.put(bnmp.getProfileName(), prop);
-                }
-                else {
-                    logger.log(Level.WARNING, "Unable to determine profile name for mail config with id: " + bnmp.getId());
-                }
-            }
 
             bpmSession = ProcessToolContext.Util.getThreadProcessToolContext().getProcessToolSessionFactory().createAutoSession();
         }
@@ -376,6 +368,12 @@ public class BpmNotificationEngine implements BpmNotificationService
         //body
         MimeBodyPart messagePart = new MimeBodyPart();
         messagePart.setText(body);
+        
+    	logger.info("About to send message: " + 
+    			"\nSubject: " + message.getSubject() + 
+    			"\nContent: " + body +
+    			"\nAttachments: " + attachments.size()
+    			);
         
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(messagePart);
@@ -435,11 +433,14 @@ public class BpmNotificationEngine implements BpmNotificationService
         }
     }
     
-    /** Check is smtps is required */
+    /** Check if tranport protocol is set to smtps */
     private boolean isSmtpsRequired(javax.mail.Session mailSession)
     {
-    	//TODO to implement
-    	return false;
+		Properties emailPrtoperties = mailSession.getProperties();
+		String transportProtocol = emailPrtoperties.getProperty("mail.transport.protocol");
+		
+		return "smtps".equals(transportProtocol);
+		
     }
 
 	@Override
