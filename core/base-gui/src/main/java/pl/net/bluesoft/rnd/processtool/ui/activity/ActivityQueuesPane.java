@@ -534,7 +534,10 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 		long processCount = q.getProcessCount();
 		String desc = getMessage(q.getDescription());
-		Button qb = new Button(desc + " (" + processCount + ")");
+		/* The name of the queue */
+		String queueName = activityMainPane.getI18NSource().getMessage("user.queue.name."+q.getName(), "");
+		
+		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
 		qb.setDescription(desc);
 		qb.setStyleName(BaseTheme.BUTTON_LINK);
 		qb.setEnabled(processCount > 0);
