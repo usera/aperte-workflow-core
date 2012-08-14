@@ -1,28 +1,39 @@
 package org.aperteworkflow.util.liferay;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import org.aperteworkflow.util.liferay.exceptions.RoleNotFoundException;
+
+import pl.net.bluesoft.rnd.processtool.model.UserAttribute;
+import pl.net.bluesoft.rnd.processtool.model.UserData;
+import pl.net.bluesoft.util.lang.Collections;
+import pl.net.bluesoft.util.lang.Predicate;
+
 import com.liferay.portal.NoSuchUserException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserGroup;
+import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
+import com.liferay.portal.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
-import pl.net.bluesoft.rnd.processtool.model.UserAttribute;
-import pl.net.bluesoft.rnd.processtool.model.UserData;
-import pl.net.bluesoft.rnd.processtool.model.UserRole;
-import pl.net.bluesoft.util.lang.Collections;
-import pl.net.bluesoft.util.lang.Mapcar;
-import pl.net.bluesoft.util.lang.Predicate;
-
-import java.util.*;
-import java.util.logging.Logger;
 
 /**
- * Utility methods for integration with Liferay.
+ * Facade for all Liferay operations
  *
- * @author tlipski@bluesoft.net.pl
+ * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
  */
 public class LiferayBridge {
     private static final Logger logger = Logger.getLogger(LiferayBridge.class.getName());
@@ -208,29 +219,84 @@ public class LiferayBridge {
         return users;
     }
 
-    public static List<UserData> getUsersByRole(final String roleName) {
-        try {
-            List<User> liferayUsers = UserLocalServiceUtil.getUsers(0, UserLocalServiceUtil.getUsersCount());
-            return new Mapcar<User, UserData>(liferayUsers) {
-                @Override
-                public UserData lambda(User x) {
-                    try {
-                        for (Role role : x.getRoles()) {
-                            if (role.getName().equals(roleName)) {
-                                return convertLiferayUser(x);
-                            }
-                        }
-                    }
-                    catch (SystemException e) {
-                        throw new LiferayBridgeException(e);
-                    }
-                    return null;
-                }
-            }.go();
+    /** Get all users with given role name. The role must be assigned directly to user
+     * or to user group which contains users
+     */
+    public static List<UserData> getUsersByRole(String roleName) 
+    {
+        try 
+        {
+        	/* Search for role with given name */
+        	Role role = getRoleByName(roleName);
+        	
+        	List<User> liferayUsers = new ArrayList<User>();
+        	
+        	/* Get users with directly assigned role */
+        	liferayUsers.addAll(UserLocalServiceUtil.getRoleUsers(role.getRoleId()));
+        	
+        	/* Get user groups with assigned role */
+        	List<Group> liferayGroups = GroupLocalServiceUtil.getRoleGroups(role.getRoleId());
+        	
+	
+        	for(Group liferayGroup: liferayGroups)
+        	{    		
+        		/* Get all users from selected group. ClassPK is the id of the UserGroup instance
+        		 * Group is something diffrent then UserGroup and there are no users in Group */
+        		List<User> groupUsers = UserLocalServiceUtil.getUserGroupUsers(liferayGroup.getClassPK());
+        		
+        		/* If there is no user from group in liferay users list yet, add him */
+        		for(User groupLiferayUser: groupUsers)
+        			if(!liferayUsers.contains(groupLiferayUser))
+        				liferayUsers.add(groupLiferayUser);
+        	}
+        	
+        	
+        	List<UserData> userDatas = new ArrayList<UserData>();
+        	
+        	/* Map all liferay users to aperte users */
+        	for(User liferayUser: liferayUsers)
+        		userDatas.add(convertLiferayUser(liferayUser));
+        	
+        	
+        	return userDatas;
         }
-        catch (SystemException e) {
+        catch (SystemException e) 
+        {
             throw new LiferayBridgeException(e);
-        }
+        } 
+        catch (RoleNotFoundException ex) 
+        {
+        	throw new LiferayBridgeException(ex);
+		} 
+    }
+    
+    /** Find Liferay role by given name. The role is searched in all company ids */
+    public static Role getRoleByName(String roleName) throws RoleNotFoundException
+    {
+    	try
+    	{
+    		/* Search for role in all companies. There is commonly only one company in system */
+	        long[] companyIds = PortalUtil.getCompanyIds();
+	        for (int i = 0; i < companyIds.length; ++i) 
+	        {
+	        	long companyId = companyIds[i];
+	        	Role role = RoleLocalServiceUtil.getRole(companyId, roleName);
+	        	
+	        	if(role != null)
+	        		return role;
+	        }
+	        
+	        /* No role with given name found, throw exception */
+	        throw new RoleNotFoundException("No role found with given name: "+roleName);
+    	}
+    	catch (PortalException e) 
+    	{
+    		throw new RoleNotFoundException("Error during role ["+roleName+"]", e);
+		} 
+    	catch (SystemException e) 
+    	{
+    		throw new RoleNotFoundException("Error during role ["+roleName+"]", e);
+		}
     }
     
     public static boolean createRoleIfNotExists(String roleName, String description) {
