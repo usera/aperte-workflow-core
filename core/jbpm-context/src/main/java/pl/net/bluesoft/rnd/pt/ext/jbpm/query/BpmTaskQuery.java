@@ -24,7 +24,7 @@ public class BpmTaskQuery
 {
 	/** Main query to get task with correlated processes from user process queue */
 	public static final String GET_BPM_TASKS_QUERY = 
-			"select distinct(task.*), process.* " +
+			"select DISTINCT task.*, process.* " +
 			"from pt_user_process_queue queue, jbpm4_hist_actinst task, pt_process_instance process " +
 			"where queue.task_id = task.htask_ and process.id = queue.process_id ";
 	
