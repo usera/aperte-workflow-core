@@ -12,7 +12,7 @@
     <packaging>bundle</packaging>
 
     <dependencies>
-        <dependency>
+	    <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
             <version>2.1.1</version>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
-            <version>1.4</version>
+            <version>1.4.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -47,7 +47,7 @@
             <artifactId>freemarker</artifactId>
             <version>2.3.19</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin</artifactId>
             <version>${vaadin.version}</version>
@@ -63,23 +63,6 @@
                 <version>2.2</version>
                 <configuration>
                     <useDefaultManifestFile>true</useDefaultManifestFile>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.1</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <doCheck>false</doCheck>
-                    <doUpdate>false</doUpdate>
                 </configuration>
             </plugin>
             <plugin>
@@ -109,11 +92,6 @@
                             pl.net.bluesoft.rnd.processtool.plugins,
                             pl.net.bluesoft.rnd.processtool.plugins.osgi,
                         </Import-Package>
-                        <ProcessTool-Model-Enhancement>
-                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig,
-                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate,
-                        	pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties,
-                        </ProcessTool-Model-Enhancement>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.bpmnotifications.Activator</Bundle-Activator>
                         <Bundle-SymbolicName>pl.net.bluesoft.rnd.pt.ext.bpmnotifications</Bundle-SymbolicName>
