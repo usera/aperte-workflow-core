@@ -9,6 +9,7 @@ import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.liferay.PortalBridge;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolGuiCallback;
@@ -77,8 +78,7 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
     public void handleRenderRequest(RenderRequest request, RenderResponse response, Window window) {
         showKeysString = PortalBridge.getCurrentRequestParameter("showKeys");
         locale = request.getLocale();
-        i18NSource = new DefaultI18NSource();
-        i18NSource.setLocale(locale);
+        i18NSource = I18NSourceFactory.createI18NSource(locale);
         user = PortalBridge.getLiferayUser(request);
         userRoles = user != null ? user.getRoleNames() : Collections.<String>emptyList();
         if (locale == null) {

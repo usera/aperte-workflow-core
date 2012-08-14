@@ -8,13 +8,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
+import pl.net.bluesoft.rnd.processtool.event.IEvent;
 import pl.net.bluesoft.rnd.processtool.event.ProcessToolEventBusManager;
 import pl.net.bluesoft.rnd.processtool.hibernate.TransactionFinishedCallback;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
@@ -78,6 +78,9 @@ public abstract class AbstractProcessToolSession
     	/** Corelate parent process with it's new child process */ 
     	newSubprocessInstance.setParent(parentProcessInstance);  	
     	parentProcessInstance.getChildren().add(newSubprocessInstance);
+    	
+    	/** Inform about parent process halt */
+        broadcastEvent(ctx, new BpmEvent(Type.PROCESS_HALTED, parentProcessInstance, parentProcessInstance.getCreator()));
     	
     	return newSubprocessInstance;
 	}
@@ -150,21 +153,26 @@ public abstract class AbstractProcessToolSession
 
         ctx.getProcessInstanceDAO().saveProcessInstance(pi);
 
-        List<BpmEvent> events = new ArrayList<BpmEvent>();
+        Collection<IEvent> events = new ArrayList<IEvent>();
         events.add(new BpmEvent(Type.NEW_PROCESS, pi, creator));
 
-        for (BpmTask task : findProcessTasks(pi, ctx)) {
+        for (BpmTask task : findProcessTasks(pi, ctx)) 
+        {
             events.add(new BpmEvent(Type.ASSIGN_TASK, task, creator));
+            
+    		/* Inform queue manager about task assigne */
+    		ctx.getUserProcessQueueManager().onTaskAssigne(task);
         }
 
-        for (BpmEvent event : events) {
+        for (IEvent event : events) {
             broadcastEvent(ctx, event);
         }
+        
 
         return pi;
     }
 
-    protected void broadcastEvent(final ProcessToolContext ctx, final BpmEvent event) {
+    protected void broadcastEvent(final ProcessToolContext ctx, final IEvent event) {
         eventBusManager.publish(event);
         if (substitutingUserEventBusManager != null)
             substitutingUserEventBusManager.publish(event);

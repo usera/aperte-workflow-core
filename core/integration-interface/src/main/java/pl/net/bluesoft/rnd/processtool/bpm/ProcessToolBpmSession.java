@@ -73,6 +73,8 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
     BpmTask getPastEndTask(ProcessInstanceLog log, ProcessToolContext ctx);
 
     BpmTask refreshTaskData(BpmTask task, ProcessToolContext ctx);
+    
+    int findUserTasksCount(QueueType type, String userLogin, ProcessToolContext ctx);
 
     List<BpmTask> findUserTasks(ProcessInstance processInstance, ProcessToolContext ctx);
 
@@ -83,8 +85,12 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
     List<BpmTask> findProcessTasks(ProcessInstance pi, String userLogin, ProcessToolContext ctx);
 
     List<BpmTask> findProcessTasks(ProcessInstance pi, String userLogin, Set<String> taskNames, ProcessToolContext ctx);
-
-    ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, Integer offset, Integer limit, ProcessToolContext ctx);
+    
+    /** Find tasks from user process queue with given queue type and login in filter instance */
+    ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx);
+    
+    /** Find tasks from user process queue with given queue type and login in filter instance with given max results limit */
+    ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int maxResults);
 
     ResultsPageWrapper<BpmTask> findRecentTasks(Calendar minDate, Integer offset, Integer limit, ProcessToolContext ctx);
 

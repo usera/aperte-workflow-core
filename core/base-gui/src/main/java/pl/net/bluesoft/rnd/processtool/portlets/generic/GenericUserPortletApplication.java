@@ -10,6 +10,8 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.processtool.ui.generic.GenericUserPortletPanel;
 import pl.net.bluesoft.rnd.processtool.ui.generic.GenericUserPortletSettingsPanel;
+import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 
 import javax.portlet.PortletMode;
@@ -59,8 +61,7 @@ public class GenericUserPortletApplication extends GenericVaadinPortlet2BpmAppli
 		}
 		else if (portletMode.equals(PortletMode.EDIT)) {
 			locale = renderRequest.getLocale();
-			i18NSource = new DefaultI18NSource();
-			i18NSource.setLocale(locale);
+			I18NSource i18NSource = I18NSourceFactory.createI18NSource(locale);
 			final GenericUserPortletSettingsPanel editPane = new GenericUserPortletSettingsPanel(
 					i18NSource, getSelectedViewKeys(), getRegisteredViews());
 			editPane.addListener(new GenericUserPortletSettingsPanel.SaveListener() {

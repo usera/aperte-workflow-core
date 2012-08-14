@@ -252,8 +252,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
         if (bundleHelper.hasHeaderValues(PROCESS_DEPLOYMENT)) {
             handleProcessDeployment(eventType, bundleHelper, registry);
-            /* Uzupełnij role, //TODO do odkomentowania po 23.07.2012 */
-            //handleProcessRoles(eventType, bundleHelper, registry);
+            handleProcessRoles(eventType, bundleHelper, registry);
         }
 
         if (bundleHelper.hasHeaderValues(GLOBAL_DICTIONARY)) {
@@ -803,6 +802,10 @@ public class PluginHelper implements PluginManager, SearchProvider {
                 if (bundle != null) {
                     try {
                         processBundleExtensions(bundle, Bundle.ACTIVE);
+                        
+                        bundle.start();
+                        LOGGER.info("STARTED: " + it);
+                        
                         it.remove();
                         installed = true;
                     }
@@ -830,8 +833,6 @@ public class PluginHelper implements PluginManager, SearchProvider {
             bundle = felix.getBundleContext().installBundle("file://" + path.replace('\\','/'), new FileInputStream(path));
             bundle.update(new FileInputStream(path));
             LOGGER.info("INSTALLED: " + path);
-            bundle.start();
-            LOGGER.info("STARTED: " + path);
         }
         catch (Throwable e) {
             LOGGER.warning("BLOCKING: " + path);
@@ -867,6 +868,10 @@ public class PluginHelper implements PluginManager, SearchProvider {
                 if (bundle != null) {
                     try {
                         processBundleExtensions(bundle, Bundle.ACTIVE);
+                        
+                        bundle.start();
+                        LOGGER.info("STARTED: " + dep);
+                        
                         installableBundlePaths.remove(dep);
                     }
                     catch (ClassNotFoundException e) {
@@ -1043,7 +1048,11 @@ public class PluginHelper implements PluginManager, SearchProvider {
             }
             fileRef = dest;
             LOGGER.info("Installing bundle: " + dest.getAbsolutePath());
-            installBundle(dest.getAbsolutePath());
+            Bundle bundle = installBundle(dest.getAbsolutePath());
+            
+            bundle.start();
+            LOGGER.info("STARTED: " + dest.getAbsolutePath());
+            
             fileRef = null;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to deploy plugin " + filename, e);

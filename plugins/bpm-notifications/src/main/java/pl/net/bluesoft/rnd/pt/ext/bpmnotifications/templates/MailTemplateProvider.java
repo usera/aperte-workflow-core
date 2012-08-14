@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.template.ProcessToolTemplateErrorException;

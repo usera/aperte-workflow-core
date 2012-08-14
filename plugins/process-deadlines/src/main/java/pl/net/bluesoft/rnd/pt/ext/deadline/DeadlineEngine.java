@@ -25,6 +25,7 @@ import pl.net.bluesoft.rnd.pt.ext.deadline.model.DeadlineNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.sched.service.ProcessToolSchedulerService;
 import pl.net.bluesoft.rnd.pt.utils.template.TemplateProcessor;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.util.lang.Collections;
 import pl.net.bluesoft.util.lang.Predicate;
@@ -40,8 +41,6 @@ public class DeadlineEngine implements ProcessToolTemplateLoader {
 
     private ProcessToolRegistry registry;
     private TemplateProcessor templateProcessor;
-
-    private I18NSource messageSource = new DefaultI18NSource();
 
     private Properties pluginProperties;
 
@@ -211,7 +210,7 @@ public class DeadlineEngine implements ProcessToolTemplateLoader {
                 String defaultLocale = pluginProperties.getProperty("default.locale");
 
                 Locale locale = Strings.hasText(defaultLocale) ? new Locale(defaultLocale) : Locale.getDefault();
-                messageSource.setLocale(locale);
+                I18NSource messageSource = I18NSourceFactory.createI18NSource(locale);
                 ProcessStateConfiguration st = ctx.getProcessDefinitionDAO().getProcessStateConfiguration(task);
                 String taskName = messageSource.getMessage(st.getDescription());
 

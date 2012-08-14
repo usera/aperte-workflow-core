@@ -7,7 +7,6 @@ import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,17 +18,17 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.aperteworkflow.ui.view.ViewEvent;
 import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
-import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
+import pl.net.bluesoft.rnd.processtool.filters.factory.ProcessInstanceFilterFactory;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
-import pl.net.bluesoft.rnd.processtool.model.HistoryProcessInstanceState;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
-import pl.net.bluesoft.rnd.processtool.model.TaskState;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.util.eventbus.EventListener;
@@ -68,12 +67,21 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private Panel substitutionsPanel;
 	private TaskWatch watch;
 	private Collection<Button> taskButtons = new ArrayList<Button>();
+	
+	/** Filter factory */
+	private ProcessInstanceFilterFactory filterFactory;
+
+	private boolean refreshRequested; 
 
 	protected boolean onEvent = false;
+	private EventListener<ViewEvent> viewEventListener;
 
 	public ActivityQueuesPane(ActivityMainPane activityMainPane)
 	{
 		this.activityMainPane = activityMainPane;
+		
+		filterFactory = new ProcessInstanceFilterFactory(activityMainPane.getI18NSource());
+		
 		setWidth("100%");
 		setCaption(getMessage("activity.queues.title"));
 		addComponent(horizontalLayout(new Label(getMessage("activity.queues.help.short"), Label.CONTENT_XHTML),
@@ -81,21 +89,36 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		taskList = new VerticalLayout();
 		addComponent(taskList);
 
-		if(bpmEventListener == null)
-		{
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>()
-			{
+		//listen for BPM events - they usually mean there can be something changed in processes list
+		if(bpmEventListener == null){
+			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>(){
 				@Override
-				public void onEvent(BpmEvent e)
-				{
-					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null)
-					{
-						onEvent = true;
-						refreshData();
-						onEvent = false;
+				public void onEvent(BpmEvent e){
+					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null){
+						synchronized (this) {
+							refreshRequested = true;
+						}
 					}
 				}
 			});
+		}
+		//listen for ViewEvent ACTION_COMPLETE - it means BPM processing is done, so if there were some BPM events before, now is the time to refresh data.
+		if(viewEventListener == null){
+			activityMainPane.getBpmSession().getEventBusManager().subscribe(ViewEvent.class, viewEventListener = new EventListener<ViewEvent>(){
+				@Override
+				public void onEvent(ViewEvent e) {
+					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getEventType().equals(ViewEvent.Type.ACTION_COMPLETE)){
+						synchronized(this) {
+							if(refreshRequested) {
+								refreshRequested = false;
+								onEvent = true;
+								refreshData();
+								onEvent = false;
+							}
+						}
+					}
+				}
+			});		
 		}
 	}
 
@@ -160,10 +183,10 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private void buildMainTasksViews(ProcessToolContext ctx, final ProcessToolBpmSession bpmSession, UserData user)
 	{
 		/* Create filters for specific task list */
-		ProcessInstanceFilter myTasksBeingDoneByOthers = createMyTaskDoneByOthersFilter(user);
-		ProcessInstanceFilter assignedTasksFromOthers = createOthersTaskAssignedToMeFilter(user);
-		ProcessInstanceFilter assignedTasksByMyself = createMyTasksAssignedToMeFilter(user);
-		ProcessInstanceFilter myTasksClosed = createMyClosedTasksFilter(user);
+		ProcessInstanceFilter myTasksBeingDoneByOthers = filterFactory.createMyTaskDoneByOthersFilter(user);
+		ProcessInstanceFilter assignedTasksFromOthers = filterFactory.createOthersTaskAssignedToMeFilter(user);
+		ProcessInstanceFilter assignedTasksByMyself = filterFactory.createMyTasksAssignedToMeFilter(user);
+		ProcessInstanceFilter myTasksClosed = filterFactory.createMyClosedTasksFilter(user);
 				
 		taskList.addComponent(createUserTasksButton(bpmSession,ctx,assignedTasksFromOthers,true));
 		taskList.addComponent(createUserTasksButton(bpmSession,ctx,assignedTasksByMyself,true));
@@ -212,45 +235,30 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		return userAvailableQueues;
 	}
 
-	private int buildSubstitutedTasks(final ProcessToolContext ctx, final ProcessToolBpmSession bpmSessionForSubstituted, UserData user,
+	private int buildSubstitutedTasks(final ProcessToolContext ctx, final ProcessToolBpmSession bpmSessionForSubstituted, UserData substitutedUser,
 			HierarchicalContainer container, final ProcessInstanceFilter parent)
 	{
 		Collection<ProcessInstanceFilter> taskFilters = new ArrayList<ProcessInstanceFilter>();
 		
-		taskFilters.add(getProcessInstanceFilter(user,null,user,getMessage("activity.subst.assigned.tasks"),
-				HistoryProcessInstanceState.ACTIVE,TaskState.OPEN));
-		taskFilters.add(getProcessInstanceFilter(user,user,user,getMessage("activity.subst.created.assigned.tasks"),
-				HistoryProcessInstanceState.ACTIVE, TaskState.OPEN));
-		taskFilters.add(getProcessInstanceFilter(user,user,null,getMessage("activity.subst.created.tasks"),
-				HistoryProcessInstanceState.ACTIVE, TaskState.OPEN));
-		taskFilters.add(getProcessInstanceFilter(user,user,null,getMessage("activity.subst.created.closed.tasks"),
-				HistoryProcessInstanceState.ENDED, TaskState.CLOSED));
+		taskFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(substitutedUser));
+		taskFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(substitutedUser));
+		taskFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(substitutedUser));
+		taskFilters.add(filterFactory.createSubstitutedClosedTasksFilter(substitutedUser));
 		
-
 		int total = 0;
 
 		for(final ProcessInstanceFilter filter: taskFilters)
 		{
 			container.addItem(filter);
-			if(filter.getOwners().contains(user) && !filter.getStates().contains(TaskState.CLOSED))
+			if(filter.getOwners().contains(substitutedUser) && !filter.getQueueType().equals(QueueType.OWN_FINISHED))
 			{
-				ResultsPageWrapper<BpmTask> tasks = new ResultsPageWrapper<BpmTask>();
-				try {
-					tasks = watch.watchTask("Fetching tasks for " + filter.getName() + " for substituted " + user.getRealName(), new Callable<ResultsPageWrapper<BpmTask>>() {
 
-						@Override
-						public ResultsPageWrapper<BpmTask> call() throws Exception {
-							return bpmSessionForSubstituted.findProcessTasks(filter,0,0,ctx);
-						}
-					});
-				} catch (Exception e) {
-					logger.log(Level.WARNING, "Refreshing data", e);
-				}
+				int totalTasks = activityMainPane.getBpmSession().findUserTasksCount(filter.getQueueType(), filter.getFilterOwner().getLogin(), ctx);
 				
-				total += tasks.getTotal();
+				total += totalTasks;
 
-				container.getItem(filter).getItemProperty("name").setValue(filter.getName() + " (" + tasks.getTotal() + ")");
-				container.getItem(filter).getItemProperty("enabled").setValue(tasks.getTotal() > 0);
+				container.getItem(filter).getItemProperty("name").setValue(filter.getName() + " (" + totalTasks + ")");
+				container.getItem(filter).getItemProperty("enabled").setValue(totalTasks > 0);
 			}
 			else
 			{
@@ -276,23 +284,19 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		for(UserData substitutedUser: substitutedUsers)
 		{
 			ProcessToolBpmSession bpmSessionForSubstituted = substitutedUserToSession.get(substitutedUser);
-			UserData liferayUser = ctx.getUserDataDAO().loadUserByLogin(substitutedUser.getLogin());
-			liferayUser.getRoleNames().addAll(substitutedUser.getRoleNames());
+			UserData liferaySubstitutedUser = ctx.getUserDataDAO().loadUserByLogin(substitutedUser.getLogin());
+			liferaySubstitutedUser.getRoleNames().addAll(substitutedUser.getRoleNames());
 
-			ProcessInstanceFilter substAssignedTasks =
-					getProcessInstanceFilter(substitutedUser,null,liferayUser,getMessage("activity.other.users.tasks",liferayUser.getRealName()),
-							HistoryProcessInstanceState.ACTIVE, TaskState.OPEN);
-			
-			substAssignedTasks.getNotCreators().clear();
+			ProcessInstanceFilter substAssignedTasks = filterFactory.createOtherUserTaskForSubstitutedUser(liferaySubstitutedUser);
 
 			container.addItem(substAssignedTasks);
 
-			int total = buildSubstitutedTasks(ctx,bpmSessionForSubstituted,liferayUser,container,substAssignedTasks);
+			int total = buildSubstitutedTasks(ctx,bpmSessionForSubstituted,liferaySubstitutedUser,container,substAssignedTasks);
 			int totalQueues = buildSubstitutedQueues(ctx,userAvailableQueues,bpmSessionForSubstituted,substitutedUser,container,substAssignedTasks);
 
 			container.getItem(substAssignedTasks).getItemProperty("name").setValue(substAssignedTasks.getName() + " (" + total + ";" + totalQueues + ")");
 			container.getItem(substAssignedTasks).getItemProperty("description")
-					.setValue(getMessage("activity.substitutions.description",liferayUser.getRealName(),total,totalQueues));
+					.setValue(getMessage("activity.substitutions.description",liferaySubstitutedUser.getRealName(),total,totalQueues));
 
 		}
 
@@ -429,20 +433,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private Button createUserTasksButton(final ProcessToolBpmSession bpmSession, final ProcessToolContext ctx,
 			final ProcessInstanceFilter processInstanceFilter, final boolean showCounter)
 	{
-
-		try {
-			return watch.watchTask("Fetching tasks for " + processInstanceFilter.getName(), new Callable<Button>() {
-
-				@Override
-				public Button call() throws Exception {
-					return internalCreateUserTasksButton(bpmSession, ctx,
-							processInstanceFilter, showCounter);
-				}
-			});
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Refreshing data", e);
-			return new Button();
-		}
+		return internalCreateUserTasksButton(bpmSession, ctx, processInstanceFilter, showCounter);
 
 	}
 
@@ -455,9 +446,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		b.setStyleName(BaseTheme.BUTTON_LINK);
 		if(showCounter)
 		{
-			ResultsPageWrapper<BpmTask> tasks = bpmSession.findProcessTasks(processInstanceFilter,0,0,ctx);
-			b.setCaption(b.getCaption() + " (" + tasks.getTotal() + ")");
-			b.setEnabled(tasks.getTotal() > 0);
+			int taskCount = bpmSession.findUserTasksCount(processInstanceFilter.getQueueType(), processInstanceFilter.getFilterOwner().getUser().getLogin(), ctx);
+			b.setCaption(b.getCaption() + " (" + taskCount + ")");
+			b.setEnabled(taskCount > 0);
 		}
 
 		b.addListener(new Button.ClickListener()
@@ -478,57 +469,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		return b;
 	}
 	
-
-	
-	/** Methods creates new filter which returns tasks created by given user, but done by others */
-	private ProcessInstanceFilter createMyTaskDoneByOthersFilter(UserData user)
-	{
-		return getProcessInstanceFilter(user,user,null,getMessage("activity.created.tasks"),
-				HistoryProcessInstanceState.ACTIVE, TaskState.OPEN, TaskState.CLOSED);
-	}
-	
-	/** Methods creates new filter which returns tasks created by other users, but assigned to given user */
-	private ProcessInstanceFilter createOthersTaskAssignedToMeFilter(UserData user)
-	{
-		return getProcessInstanceFilter(user,null,user,getMessage("activity.assigned.tasks"),
-				HistoryProcessInstanceState.ACTIVE, TaskState.OPEN);
-	}
-	
-	/** Methods creates new filter which returns tasks created by given user and assigned to him */
-	private ProcessInstanceFilter createMyTasksAssignedToMeFilter(UserData user)
-	{
-		return getProcessInstanceFilter(user,user,user,getMessage("activity.created.assigned.tasks"),
-				HistoryProcessInstanceState.ACTIVE, TaskState.OPEN);
-	}
-	
-	/** Methods creates new filter which returns user closed tasks */
-	private ProcessInstanceFilter createMyClosedTasksFilter(UserData user)
-	{
-		return getProcessInstanceFilter(user,user,null,getMessage("activity.created.closed.tasks"),
-				HistoryProcessInstanceState.ENDED, TaskState.CLOSED);
-	}
-
-	private ProcessInstanceFilter getProcessInstanceFilter(UserData user, UserData creator, UserData owner, String name, 
-			HistoryProcessInstanceState processState, TaskState... states)
-	{
-		ProcessInstanceFilter pif = new ProcessInstanceFilter();
-		pif.setFilterOwner(user);
-		pif.setName(name);
-		pif.getStates().addAll(Arrays.asList(states));
-		pif.setProcessEnded(processState.equals(HistoryProcessInstanceState.ENDED));
-		
-		if(creator != null)
-			pif.getCreators().add(creator);
-		else
-			pif.getNotCreators().add(owner);
-
-		if(owner != null)
-			pif.getOwners().add(owner);
-		else if(!pif.getStates().contains(TaskState.CLOSED))
-			pif.getNotOwners().add(creator);
-
-		return pif;
-	}
 
 	private Button createQueueButton(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
 	{

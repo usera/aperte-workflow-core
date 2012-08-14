@@ -1,16 +1,18 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service;
 
-import java.util.List;
 import java.util.Map;
 
-public interface BpmNotificationService {
-    void sendNotification(String recipient, String subject, String body) throws Exception;
-
-    void sendNotification(String mailSessionProfileName, String recipient, String subject, String body) throws Exception;
-
-    void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body) throws Exception;
-    
-    void sendNotification(String mailSessionProfileName, String sender, String recipient, String subject, String body, List<String> attachments) throws Exception;
+/**
+ * Bpm notification service 
+ * 
+ * @author Maciej Pawlak
+ *
+ */
+public interface BpmNotificationService 
+{
+	/** Create and add notification with given parameter to queue. It will be send in the next scheduler run */
+	void addNotificationToSend(String profileName, String sender, String recipient, String subject, String body, boolean sendAsHtml,  String ... attachments) 
+			throws Exception;
 
     String findTemplate(String templateName);
 
@@ -18,4 +20,6 @@ public interface BpmNotificationService {
 
 	void registerTemplateArgumentProvider(TemplateArgumentProvider provider);
 	void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider);
+
+	void invalidateCache();
 }

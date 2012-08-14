@@ -113,8 +113,11 @@ public interface ProcessToolRegistry extends ProcessToolBpmConstants {
     UserSubstitutionDAO getUserSubstitutionDAO(Session hibernateSession);
 
 	ProcessDefinitionDAO getProcessDefinitionDAO(Session hibernateSession);
+	
+	UserProcessQueueDAO getUserProcessQueueDAO(Session hibernateSession);
 
 	ProcessToolContextFactory getProcessToolContextFactory();
+	
 
 	void setProcessToolContextFactory(ProcessToolContextFactory processToolContextFactory);
 

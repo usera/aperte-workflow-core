@@ -15,6 +15,7 @@ import pl.net.bluesoft.rnd.processtool.dict.mapping.providers.DictEntryProvider;
 import pl.net.bluesoft.rnd.processtool.dict.mapping.providers.DictEntryProviderParams;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.util.lang.Pair;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -30,7 +31,7 @@ import static pl.net.bluesoft.util.lang.Classes.getProperty;
 public class DictMapper {
 	private final Map<Class, ItemInfo> itemInfos = new HashMap<Class, ItemInfo>();
 	private final Map<Class, EntryInfo> entryInfos = new HashMap<Class, EntryInfo>();
-	private final Map<String, Container> dictContainers = new HashMap<String, Container>();
+	private final Map<Pair<String, DictEntryFilter>, Container> dictContainers = new HashMap<Pair<String, DictEntryFilter>, Container>();
 	private final Map<String, DictEntryProvider> dictEntryProviders = new HashMap<String, DictEntryProvider>();
 
 	private final DictDescriptionBuilder dictDescr;
@@ -236,18 +237,17 @@ public class DictMapper {
 	}
 	
 	public Container getContainer(String dictName, DictEntryFilter entryFilter) {
-		if (entryFilter == null) {
-			if (!dictContainers.containsKey(dictName)) {
-				dictContainers.put(dictName, createContainer(getDictEntryProvider(dictName).getKeyValueMap()));
-			}
-			return dictContainers.get(dictName);
+		Pair<String, DictEntryFilter> key = new Pair<String, DictEntryFilter>(dictName, entryFilter);
+		if (!dictContainers.containsKey(key)) {
+			Map map = getDictEntryProvider(dictName).getKeyValueMap(entryFilter);
+			dictContainers.put(key, createContainer(map));
 		}
-		return createContainer(getDictEntryProvider(dictName).getKeyValueMap(entryFilter));
+		return dictContainers.get(key);
 	}
 
 	private IndexedContainer createContainer(Map<?,?> elements) {
         IndexedContainer cont = new IndexedContainer();
-        cont.addContainerProperty("name", String.class, "puste");
+        cont.addContainerProperty("name", String.class, "");
         for (Map.Entry<?,?> element : elements.entrySet()) {
             cont.addItem(element.getKey());
             cont.getItem(element.getKey()).getItemProperty("name").setValue(element.getValue());
