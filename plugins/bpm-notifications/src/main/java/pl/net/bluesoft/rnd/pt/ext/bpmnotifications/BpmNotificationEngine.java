@@ -494,19 +494,22 @@ public class BpmNotificationEngine implements BpmNotificationService
         int counter = 0;
         URL url;
         
-        String[] attachments = notification.getAttachments().split(",");
-        
-        for (String u : attachments) {
-        	if (!Strings.hasText(u))
-        		continue;
-        	url = new URL(u);
-	        MimeBodyPart attachmentPart = new MimeBodyPart();
-	        URLDataSource urlDs = new URLDataSource(url);
-	        attachmentPart.setDataHandler(new DataHandler(urlDs));
-	        attachmentPart.setFileName("file" + counter++);
-	        multipart.addBodyPart(attachmentPart);
-	        logger.info("Added attachment " + u);
-        }       
+        if(notification.getAttachments() != null && !notification.getAttachments().isEmpty())
+        {
+	        String[] attachments = notification.getAttachments().split(",");
+	        
+	        for (String u : attachments) {
+	        	if (!Strings.hasText(u))
+	        		continue;
+	        	url = new URL(u);
+		        MimeBodyPart attachmentPart = new MimeBodyPart();
+		        URLDataSource urlDs = new URLDataSource(url);
+		        attachmentPart.setDataHandler(new DataHandler(urlDs));
+		        attachmentPart.setFileName("file" + counter++);
+		        multipart.addBodyPart(attachmentPart);
+		        logger.info("Added attachment " + u);
+	        }       
+        }
         
         message.setContent(multipart);
         message.setSentDate(new Date());
