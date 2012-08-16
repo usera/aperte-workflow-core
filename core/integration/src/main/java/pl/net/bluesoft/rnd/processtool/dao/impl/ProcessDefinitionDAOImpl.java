@@ -197,6 +197,7 @@ public class ProcessDefinitionDAOImpl extends SimpleHibernateBean<ProcessDefinit
                 nvl(newAction.getAutohide(),false).equals(nvl(oldAction.getAutohide(),false)) &&
                 nvl(newAction.getSkipSaving(),false).equals(nvl(oldAction.getSkipSaving(),false)) &&
                 nvl(newAction.getLabel(),"").equals(nvl(oldAction.getLabel(), "")) &&
+                nvl(newAction.getNotification(),"").equals(nvl(oldAction.getNotification(), "")) &&
                 Lang.equals(newAction.getMarkProcessImportant(), oldAction.getMarkProcessImportant()) &&
                 nvl(newAction.getPriority(),0).equals(nvl(oldAction.getPriority(), 0)) &&
                 compareAttributes(newAction.getAttributes(), oldAction.getAttributes()) &&

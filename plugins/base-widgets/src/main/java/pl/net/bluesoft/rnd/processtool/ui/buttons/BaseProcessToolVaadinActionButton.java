@@ -7,6 +7,8 @@ import com.vaadin.ui.Component;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
+
+import org.apache.commons.lang3.StringUtils;
 import org.aperteworkflow.util.vaadin.TaskAlreadyCompletedException;
 import pl.net.bluesoft.rnd.processtool.ui.WidgetContextSupport;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
@@ -57,10 +59,18 @@ public abstract class BaseProcessToolVaadinActionButton extends BaseProcessToolA
 	protected void invokeBpmTransition() {
 		ProcessToolContext ctx = getCurrentContext();
 		task = bpmSession.performAction(definition, task, ctx);
+		if (task == null || task.isFinished()) {
+			showTransitionNotification();
+		}
 		if (task == null) {
 			throw new TaskAlreadyCompletedException();
 		}
 		callback.getWidgetContextSupport().updateTask(task);
+	}
+
+	private void showTransitionNotification() {
+		if(!StringUtils.isEmpty(notification))
+			VaadinUtility.informationNotification(getApplication(), getMessage(notification));
 	}
 
 	protected void invokeSaveTask() {
