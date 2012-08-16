@@ -21,12 +21,14 @@ public abstract class AbstractListPane extends VerticalLayout implements VaadinU
 
     protected String title;
     protected Label titleLabel;
+	protected boolean addRefreshButton = true;
 
     private ResourceCache resourceCache;
 
     protected AbstractListPane() {
 
     }
+
     protected void setUp(Application application, I18NSource messageSource, String title) {
         this.application = application;
         this.messageSource = messageSource;
@@ -44,9 +46,16 @@ public abstract class AbstractListPane extends VerticalLayout implements VaadinU
         setMargin(true);
         setSpacing(true);
 
-        addComponent(horizontalLayout(titleLabel = new Label(getMessage(title), Label.CONTENT_XHTML) {{
-            addStyleName("h1 color processtool-title");
-        }}, refreshIcon(application, this)));
+		titleLabel = new Label(getMessage(title), Label.CONTENT_XHTML) {{
+			addStyleName("h1 color processtool-title");
+		}};
+
+		if (addRefreshButton) {
+        	addComponent(horizontalLayout(titleLabel, refreshIcon(application, this)));
+		}
+		else {
+			addComponent(titleLabel);
+		}
 
         return this;
     }
