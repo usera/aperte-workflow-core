@@ -371,7 +371,8 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		if(filter.getFilterOwner() != null)
    			taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
    		
-   		taskFilterQuery.addQueueTypeCondition(filter.getQueueTypes());
+   		if(!filter.getQueueTypes().isEmpty())
+   			taskFilterQuery.addQueueTypeCondition(filter.getQueueTypes());
    		
    		/* Set limit for max results count */
    		taskFilterQuery.setMaxResultsLimit(maxResults);
