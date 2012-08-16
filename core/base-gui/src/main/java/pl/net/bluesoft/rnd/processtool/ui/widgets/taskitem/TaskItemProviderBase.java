@@ -165,7 +165,7 @@ public class TaskItemProviderBase {
 	}
 
 	protected Component createOpenProcessInstanceButton(String caption, String styleName, final TaskItemProviderParams params, boolean showExclamation) {
-		Button b = VaadinUtility.button(caption, null, caption, new Button.ClickListener() {
+		Button b = VaadinUtility.button(caption, caption, styleName, new Button.ClickListener() {
 			@Override
 			public void buttonClick(Button.ClickEvent event) {
 				params.onClick();
