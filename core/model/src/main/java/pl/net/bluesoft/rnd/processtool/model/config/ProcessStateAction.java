@@ -31,6 +31,7 @@ public class ProcessStateAction extends PersistentEntity {
     private String url;
     private String title;
     private String question;
+    private String notification;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "action_id")
@@ -180,5 +181,13 @@ public class ProcessStateAction extends PersistentEntity {
 
 	public void setQuestion(String question) {
 		this.question = question;
+	}
+
+	public String getNotification() {
+		return notification;
+	}
+
+	public void setNotification(String notification) {
+		this.notification = notification;
 	}
 }
