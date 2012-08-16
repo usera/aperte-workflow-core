@@ -31,13 +31,17 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	private String name;
 	
 	/** Type of the queue */
-	@Column(name="queue_type")
-	@Enumerated(EnumType.STRING)
-	private QueueType queueType;
+
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "filter_owner_id")
 	private UserData filterOwner;
+	
+	/** Type of the queues */
+	@ManyToMany(fetch = FetchType.LAZY)
+	@Enumerated(EnumType.STRING)
+	@JoinTable(name = "pt_pi_filters_queue_types", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "queue_type_id"))
+	private Set<QueueType> queueTypes = new HashSet<QueueType>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "pt_pi_filters_owners", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "owner_id"))
@@ -165,11 +169,18 @@ public class ProcessInstanceFilter extends PersistentEntity {
 		this.name = name;
 	}
 	
-	public QueueType getQueueType() {
-		return queueType;
+	public Set<QueueType> getQueueTypes() {
+		return queueTypes;
 	}
 
-	public void setQueueType(QueueType queueType) {
-		this.queueType = queueType;
+	public void setQueueTypes(Set<QueueType> queueTypes) {
+		this.queueTypes = queueTypes;
 	}
+
+	public void addQueueType(QueueType queueType) 
+	{
+		this.queueTypes.add(queueType);
+		
+	}
+	
 }

@@ -140,6 +140,43 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		List<Task> tasks = getProcessEngine(ctx).execute(cmd);
    		return findProcessInstancesForTasks(tasks, ctx);
    	}
+    
+   	public Collection<BpmTask> getProcessTaskInQueues(ProcessToolContext ctx, final ProcessInstance processInstance) 
+   	{
+   		Command<List<Task>> cmd = new Command<List<Task>>() {
+   			@Override
+   			public List<Task> execute(Environment environment) throws Exception {
+   				AbstractQuery q = new AbstractQuery() {
+   					@Override
+   					protected void applyPage(Query query) 
+   					{
+
+   					}
+   					
+   					@Override
+   					protected void applyParameters(Query query) 
+   					{
+   						query.setString("executionId", processInstance.getInternalId());
+   					}
+
+   					@Override
+   					public String hql() {
+   						StringBuilder hql = new StringBuilder();
+   						hql.append("select task ")
+   						.append("from ")
+   						.append(TaskImpl.class.getName()).append(" as task, ")
+   						.append(ParticipationImpl.class.getName()).append(" as participation ")
+   						.append(" where participation.task = task ")
+   						.append(" and task.executionId = :executionId ");
+   						return hql.toString();
+   					}
+   				};
+   				return (List<Task>) q.execute(environment);
+   			}
+   		};
+   		List<Task> tasks = getProcessEngine(ctx).execute(cmd);
+   		return findProcessInstancesForTasks(tasks, ctx);
+   	}
 
        @Override
        public BpmTask getPastEndTask(ProcessInstanceLog log, ProcessToolContext ctx) {
@@ -314,9 +351,9 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    	}
    	
 	@Override
-	public int findUserTasksCount(QueueType type, String userLogin, ProcessToolContext ctx) 
+	public int findUserTasksCount(Collection<QueueType> queueTypes, String userLogin, ProcessToolContext ctx) 
 	{
-		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, type);
+		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, queueTypes);
 	}
    	
    	
@@ -329,8 +366,12 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    	{
    		/* Initialize query */
    		BpmTaskFilterQuery taskFilterQuery = new BpmTaskFilterQuery(ctx);
-   		taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
-   		taskFilterQuery.addQueueTypeCondition(filter.getQueueType());
+   		
+   		/* Queues filter do not have owner */
+   		if(filter.getFilterOwner() != null)
+   			taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
+   		
+   		taskFilterQuery.addQueueTypeCondition(filter.getQueueTypes());
    		
    		/* Set limit for max results count */
    		taskFilterQuery.setMaxResultsLimit(maxResults);
@@ -363,6 +404,9 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		/* Add conidtion for created after date */
    		if(filter.getCreatedAfter() != null)
    			taskFilterQuery.addCreatedAfterCondition(filter.getCreatedAfter());
+   		
+   		if(!filter.getQueues().isEmpty())
+   			taskFilterQuery.addQueuesCondition(filter.getQueues());
    		
    		/* Add condition for owner */
    		if(!ownerNames.isEmpty())
@@ -406,7 +450,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 		hql.append(" act.historyProcessInstance = proc ");
 		hql.append(" and act.historyTask = task ");
 		
-		if(filter.getQueueType().equals(QueueType.OWN_FINISHED))
+		if(filter.getQueueTypes().contains(QueueType.OWN_FINISHED))
 			hql.append(" and proc.state = 'ended' ");
 		else
 			hql.append(" and proc.state = 'active' ");
@@ -1051,11 +1095,26 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
         	   return performAction(skipAction, autoSkipTask, ctx);
            }
            
-           if (userTask == null) {
-               MutableBpmTask t = new MutableBpmTask(task);
-               t.setFinished(true);
-               t.setProcessInstance(processInstance);
-               userTask = t;
+           /* Task assigned to queue */
+           if (userTask == null) 
+           {
+        	   /* Get task assigned to queues */
+        	   Collection<BpmTask> queueTasks = getProcessTaskInQueues(ctx, processInstance);
+        	   
+        	   for(BpmTask queueTask: queueTasks)
+        	   {
+        		   MutableBpmTask mutableTask = new MutableBpmTask(queueTask);
+        		   mutableTask.setAssignee(task.getAssignee());
+        		   mutableTask.setProcessInstance(processInstance);
+        		   
+        		   /* Inform queue manager about task assigne */
+        		   ctx.getUserProcessQueueManager().onQueueAssigne(mutableTask);
+        	   }
+        	   
+               MutableBpmTask mutableTask = new MutableBpmTask(task);
+               mutableTask.setFinished(true);
+               mutableTask.setProcessInstance(processInstance);
+               userTask = mutableTask;
            }
 
            broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));

@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.pt.ext.jbpm.query;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 
@@ -22,8 +23,13 @@ public class BpmTaskFilterQuery extends BpmTaskQuery
 	/** Additional condition to main query to add filter for created before filter */
 	private static final String CREATED_BEFORE_CONDITION = " and process.createdate <= :createdBeforeDate ";
 	
-	/** Additional condition to main query to add filter for created after filter */
+	/** Additional condition to main query to add filter for created after date */
 	private static final String CREATED_AFTER_CONDITION = " and process.createdate >= :createdAfterDate ";
+	
+	/** Additional condition to main query to add filter for given queues */
+	private static final String QUEUES_CONDITION = 	" and exists (select participant.task_ from jbpm4_participation participant " +
+													"where participant.task_=task.htask_ AND participant.type_ = 'candidate' " +
+													"AND participant.groupid_ IN (:queueIds) AND participant.userid_ IS null) ";
 	
 	public BpmTaskFilterQuery(ProcessToolContext ctx) 
 	{
@@ -56,6 +62,14 @@ public class BpmTaskFilterQuery extends BpmTaskQuery
 	{
 		addCondition(CREATED_AFTER_CONDITION);
 		addParameter("createdAfterDate", createdAfterDate);
+	}
+
+	/** Add restriction for queue ids */
+	public void addQueuesCondition(Set<String> queues) 
+	{
+		addCondition(QUEUES_CONDITION);
+		addParameter("queueIds", queues);
+		
 	}
 
 }

@@ -36,13 +36,13 @@ public class MyProcessesListPane extends ProcessListPane {
 
     @Override
     protected ProcessInstanceFilter getDefaultFilter() {
-        ProcessInstanceFilter tfi = new ProcessInstanceFilter();
+        ProcessInstanceFilter processFilter = new ProcessInstanceFilter();
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-        tfi.setName(getMessage("activity.assigned.tasks"));
-        tfi.addOwner(getBpmSession().getUser(ctx));
-        tfi.setFilterOwner(getBpmSession().getUser(ctx));
-        tfi.setQueueType(QueueType.OWN_ASSIGNED);
-        return tfi;
+        processFilter.setName(getMessage("activity.assigned.tasks"));
+        processFilter.addOwner(getBpmSession().getUser(ctx));
+        processFilter.setFilterOwner(getBpmSession().getUser(ctx));
+        processFilter.addQueueType(QueueType.OWN_ASSIGNED);
+        return processFilter;
     }
 
     @Override

@@ -1,9 +1,10 @@
 package pl.net.bluesoft.rnd.processtool.filters.factory;
 
-import pl.net.bluesoft.rnd.processtool.model.HistoryProcessInstanceState;
+import java.util.HashSet;
+import java.util.Set;
+
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.QueueType;
-import pl.net.bluesoft.rnd.processtool.model.TaskState;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
@@ -24,7 +25,7 @@ public class ProcessInstanceFilterFactory
 	/** Methods creates new filter which returns tasks created by given user, but done by others */
 	public ProcessInstanceFilter createMyTaskDoneByOthersFilter(UserData user)
 	{
-		return getProcessInstanceFilter(user,user,null,getMessage("activity.created.tasks"), QueueType.OWN_IN_PROGRESS);
+		return getProcessInstanceFilter(user,user,null,getMessage("activity.created.tasks"), QueueType.OWN_IN_PROGRESS, QueueType.OWN_IN_QUEUE);
 	}
 	
 	/** Methods creates new filter which returns tasks created by other users, but assigned to given user */
@@ -82,12 +83,17 @@ public class ProcessInstanceFilterFactory
 	}
 	
 	private ProcessInstanceFilter getProcessInstanceFilter(UserData user, UserData creator, UserData owner, String name, 
-			QueueType type)
+			QueueType ... types)
 	{
 		ProcessInstanceFilter pif = new ProcessInstanceFilter();
 		pif.setFilterOwner(user);
 		pif.setName(name);
-		pif.setQueueType(type);
+		
+		Set<QueueType> queueTypes = new HashSet<QueueType>();
+		for(QueueType queueType: types)
+			queueTypes.add(queueType);
+		
+		pif.setQueueTypes(queueTypes);
 		
 		if(creator != null)
 			pif.getCreators().add(creator);

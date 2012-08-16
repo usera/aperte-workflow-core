@@ -14,6 +14,8 @@ public enum QueueType
     OWN_IN_PROGRESS, 
     /** User created task, assigned to him */
     OWN_ASSIGNED, 
+    /** User created task, but it is put in queue */
+    OWN_IN_QUEUE,
     /** User created task in finished state */
     OWN_FINISHED, 
     /** Others task, assigned to current user */

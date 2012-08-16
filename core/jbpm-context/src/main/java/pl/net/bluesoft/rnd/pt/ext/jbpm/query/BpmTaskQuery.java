@@ -32,7 +32,7 @@ public class BpmTaskQuery
 	private static final String USER_LOGIN_CONDITION = " and queue.user_login = :userLogin ";
 	
 	/** Additional condition to main query to add filter for queue type */
-	private static final String QUEUE_TYPE_CONDITION = " and queue.queue_type = :queueType ";
+	private static final String QUEUE_TYPE_CONDITION = " and queue.queue_type in (:queueTypes) ";
 	
 	/** String builder to build query */
 	private StringBuilder queryBuilder;
@@ -61,10 +61,16 @@ public class BpmTaskQuery
 	}
 	
 	/** Add restriction for user login to who process and task are assigned */
-	public void addQueueTypeCondition(QueueType type)
+	public void addQueueTypeCondition(Collection<QueueType> queueTypes)
 	{
 		addCondition(QUEUE_TYPE_CONDITION);
-		addParameter("queueType", type.toString());
+		
+		/* Map all enumerations to string, for valid type cast in database */
+		Collection<String> queueTypesString = new ArrayList<String>();
+		for(QueueType queueType: queueTypes)
+			queueTypesString.add(queueType.toString());
+		
+		addParameter("queueTypes", queueTypesString);
 	}
 	
 	/** Get bpm tasks from initialized query */

@@ -1,21 +1,26 @@
 package pl.net.bluesoft.rnd.processtool.bpm;
 
-import org.aperteworkflow.bpm.graph.GraphElement;
-import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
-import pl.net.bluesoft.rnd.processtool.model.*;
-import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
-import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateAction;
-import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
-import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateWidget;
-import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
-import pl.net.bluesoft.util.eventbus.EventBusManager;
-
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import org.aperteworkflow.bpm.graph.GraphElement;
+
+import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
+import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
+import pl.net.bluesoft.rnd.processtool.model.BpmTask;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
+import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceLog;
+import pl.net.bluesoft.rnd.processtool.model.QueueType;
+import pl.net.bluesoft.rnd.processtool.model.UserData;
+import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateAction;
+import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateWidget;
+import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
+import pl.net.bluesoft.util.eventbus.EventBusManager;
 
 /**
  * The process tool interface, providing basic operations.
@@ -74,7 +79,7 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
 
     BpmTask refreshTaskData(BpmTask task, ProcessToolContext ctx);
     
-    int findUserTasksCount(QueueType type, String userLogin, ProcessToolContext ctx);
+    int findUserTasksCount(Collection<QueueType> queueTypes, String userLogin, ProcessToolContext ctx);
 
     List<BpmTask> findUserTasks(ProcessInstance processInstance, ProcessToolContext ctx);
 

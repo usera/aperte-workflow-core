@@ -63,12 +63,10 @@ public class QueueListPane extends ProcessListPane {
     @Override
     protected ProcessInstanceFilter getDefaultFilter() {
         ProcessInstanceFilter tfi = new ProcessInstanceFilter();
-        ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-        tfi.setFilterOwner(getBpmSession().getUser(ctx));
         if (queue != null) {
             tfi.addQueue(queue.getName());
         }
-        tfi.setQueueType(QueueType.OWN_ASSIGNED);
+        tfi.addQueueType(QueueType.OWN_IN_QUEUE);
         return tfi;
     }
 }
