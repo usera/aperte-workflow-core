@@ -8,6 +8,8 @@ import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
+import java.text.MessageFormat;
+
 /**
  * Filter factory to encapsulte filter creation logic
  * @author Maciej Pawlak
@@ -74,7 +76,11 @@ public class ProcessInstanceFilterFactory
 	/** Methods creates new filter which returns user closed tasks */
 	public ProcessInstanceFilter createOtherUserTaskForSubstitutedUser(UserData substitutedUser)
 	{
-		return getProcessInstanceFilter(substitutedUser,null,substitutedUser,getMessage("activity.other.users.tasks"), QueueType.OTHERS_ASSIGNED);
+		return getProcessInstanceFilter(substitutedUser,
+				null,
+				substitutedUser,
+				MessageFormat.format(source.getMessage("activity.other.users.tasks"), substitutedUser.getRealName()),
+				QueueType.OTHERS_ASSIGNED);
 	}
 	
 	private String getMessage(String key)

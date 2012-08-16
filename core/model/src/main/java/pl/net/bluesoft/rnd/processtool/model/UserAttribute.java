@@ -25,7 +25,7 @@ public class UserAttribute extends UserAttributesSupport {
     @JoinColumn(name = "parent_id")
     private UserAttribute parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 //    @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<UserAttribute> attributes;
 

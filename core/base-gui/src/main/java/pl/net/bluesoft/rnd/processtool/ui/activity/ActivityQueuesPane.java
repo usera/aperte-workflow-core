@@ -257,7 +257,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 				
 				total += totalTasks;
 
-				container.getItem(filter).getItemProperty("name").setValue(filter.getName() + " (" + totalTasks + ")");
+				container.getItem(filter).getItemProperty("name").setValue(getMessage(filter.getName()) + " (" + totalTasks + ")");
 				container.getItem(filter).getItemProperty("enabled").setValue(totalTasks > 0);
 			}
 			else
@@ -294,7 +294,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			int total = buildSubstitutedTasks(ctx,bpmSessionForSubstituted,liferaySubstitutedUser,container,substAssignedTasks);
 			int totalQueues = buildSubstitutedQueues(ctx,userAvailableQueues,bpmSessionForSubstituted,substitutedUser,container,substAssignedTasks);
 
-			container.getItem(substAssignedTasks).getItemProperty("name").setValue(substAssignedTasks.getName() + " (" + total + ";" + totalQueues + ")");
+			container.getItem(substAssignedTasks).getItemProperty("name").setValue(getMessage(substAssignedTasks.getName(), liferaySubstitutedUser.getRealName()) + " (" + total + ";" + totalQueues + ")");
 			container.getItem(substAssignedTasks).getItemProperty("description")
 					.setValue(getMessage("activity.substitutions.description",liferaySubstitutedUser.getRealName(),total,totalQueues));
 
@@ -344,7 +344,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 			long count = qus.queue.getProcessCount();
 
-			container.getItem(qus).getItemProperty("name").setValue(qus.queue.getDescription() + " (" + count + ")");
+			container.getItem(qus).getItemProperty("name").setValue(getMessage(qus.queue.getDescription()) + " (" + count + ")");
 			container.getItem(qus).getItemProperty("enabled").setValue(count > 0);
 			container.getItem(qus).getItemProperty("description").setValue(qus.queue.getDescription());
 			container.getItem(qus).getItemProperty("queueUserSession").setValue(qus);
