@@ -13,7 +13,6 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.ui.tasks.TaskTableItem;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.taskitem.TaskItemProviderBase;
-import pl.net.bluesoft.rnd.processtool.ui.widgets.taskitem.TaskItemProvider;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.taskitem.TaskItemProviderParams;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 import org.aperteworkflow.util.vaadin.ui.AligningHorizontalLayout;
@@ -37,12 +36,12 @@ public abstract class ProcessListPane extends AbstractListPane {
     private List<TaskTableItem> processInstances = Collections.synchronizedList(new LinkedList<TaskTableItem>());
     private TasksFilterBox filterBox;
     private ProcessInstanceFilter filter;
-    private static boolean defaultTaskItemRegistered = false;
 
     public ProcessListPane(ActivityMainPane activityMainPane, String title, ProcessInstanceFilter filter) {
         super(activityMainPane.getApplication(), activityMainPane.getI18NSource(), title);
         this.activityMainPane = activityMainPane;
         this.filter = filter;
+		this.addRefreshButton = false;
     }
 
     public ProcessListPane(ActivityMainPane activityMainPane, String title) {
