@@ -69,7 +69,7 @@ public abstract class BaseProcessToolVaadinActionButton extends BaseProcessToolA
 	}
 
 	private void showTransitionNotification() {
-		if(!StringUtils.isEmpty(notification))
+		if(!StringUtils.isEmpty(notification) && !"null".equals(notification))
 			VaadinUtility.informationNotification(getApplication(), getMessage(notification));
 	}
 
