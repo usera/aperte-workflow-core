@@ -344,7 +344,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 			long count = qus.queue.getProcessCount();
 
-			container.getItem(qus).getItemProperty("name").setValue(qus.queue.getDescription() + " (" + count + ")");
+			container.getItem(qus).getItemProperty("name").setValue(getMessage(qus.queue.getDescription()) + " (" + count + ")");
 			container.getItem(qus).getItemProperty("enabled").setValue(count > 0);
 			container.getItem(qus).getItemProperty("description").setValue(qus.queue.getDescription());
 			container.getItem(qus).getItemProperty("queueUserSession").setValue(qus);
