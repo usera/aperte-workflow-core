@@ -40,6 +40,9 @@ public abstract class BaseProcessToolActionButton implements ProcessToolActionBu
 	protected String styleName;
 	
 	@AutoWiredProperty
+	protected String notification;
+	
+	@AutoWiredProperty
 	protected String actionType = ProcessStateAction.PRIMARY_ACTION;
 
     @AutoWiredProperty
@@ -82,6 +85,7 @@ public abstract class BaseProcessToolActionButton implements ProcessToolActionBu
 		map.put("url", String.valueOf(definition.getUrl()));
 		map.put("title", String.valueOf(definition.getTitle()));
 		map.put("question", String.valueOf(definition.getQuestion()));
+		map.put("notification", String.valueOf(definition.getNotification()));
 		for (ProcessStateActionAttribute attr : definition.getAttributes()) {
 			map.put(attr.getName(), attr.getValue());
 		}
@@ -249,4 +253,12 @@ public abstract class BaseProcessToolActionButton implements ProcessToolActionBu
     public void setCallback(ProcessToolActionCallback callback) {
         this.callback = callback;
     }
+
+	public String getNotification() {
+		return notification;
+	}
+
+	public void setNotification(String notification) {
+		this.notification = notification;
+	}
 }
