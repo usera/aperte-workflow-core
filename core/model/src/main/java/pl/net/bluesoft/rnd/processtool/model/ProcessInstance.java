@@ -385,4 +385,9 @@ public class ProcessInstance extends PersistentEntity {
 	public String toString() {
 		return "ProcessInstance [externalKey=" + getExternalKey() + ", internalId=" + internalId + "]";
 	}
+
+	/** Check if process is subprocess (has parent process) */
+	public boolean isSubprocess() {
+		return getParent() != null;
+	}
 }

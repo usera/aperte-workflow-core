@@ -1029,9 +1029,10 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
         	   if(!isProcessRunning && !startsSubprocess)
         	   {
         		   broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.END_PROCESS, bpmTask, user));
-        		  
-        		   /* Inform queue manager about process ending */
-        		   ctx.getUserProcessQueueManager().onProcessFinished(processInstance, bpmTask);
+        		   
+        		   /* Inform queue manager about process ending. Only main process is stored */
+        		   if(!processInstance.isSubprocess())
+        			   ctx.getUserProcessQueueManager().onProcessFinished(processInstance, bpmTask);
         		   
         		   processInstance.setStatus(ProcessStatus.FINISHED);
         	   }

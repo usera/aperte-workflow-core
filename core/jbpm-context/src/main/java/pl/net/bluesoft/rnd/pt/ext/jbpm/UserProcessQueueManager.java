@@ -151,4 +151,5 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		
 		queueDao.saveOrUpdate(userProcessQueue);
 	}
+
 }

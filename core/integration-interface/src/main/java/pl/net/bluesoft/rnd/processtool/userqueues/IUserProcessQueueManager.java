@@ -25,8 +25,6 @@ public interface IUserProcessQueueManager
 	/** Actions performed after process halt becouse of new subprocess creation */
 	void onProcessHalted(ProcessInstance processInstance, BpmTask task);
 
-	/** Actions performer on task assignation to queue */
+	/** Actions perform on task assignation to queue */
 	void onQueueAssigne(MutableBpmTask mutableTask);
-
-
 }
