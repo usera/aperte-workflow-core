@@ -15,7 +15,7 @@ import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 public class BpmTaskFilterQuery extends BpmTaskQuery
 {
 	/** Additional condition to main query to add filter for queue type */
-	private static final String TASK_NAME_CONDITION = " and task.activity_name_ in :taskNames ";
+	private static final String TASK_NAME_CONDITION = " and task.activity_name_ in (:taskNames) ";
 	
 	/** Additional condition to main query to add filter for owner login */
 	private static final String OWNER_LOGINS_CONDITION = " and queue.user_login IN (:ownerIds) ";
