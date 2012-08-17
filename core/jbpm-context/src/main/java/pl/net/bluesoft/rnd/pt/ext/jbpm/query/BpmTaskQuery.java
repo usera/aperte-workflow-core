@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.pt.ext.jbpm.query;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,9 +23,14 @@ import pl.net.bluesoft.rnd.processtool.model.nonpersistent.MutableBpmTask;
  */
 public class BpmTaskQuery 
 {
+	/** Normal query select to retrive entities */
+	private static final String LIST_QUERY = "select DISTINCT task.*, process.* ";
+	
+	/** Count query select to load only number of result to memory */
+	private static final String COUNT_QUERY = "select count(*) ";
+	
 	/** Main query to get task with correlated processes from user process queue */
 	public static final String GET_BPM_TASKS_QUERY = 
-			"select DISTINCT task.*, process.* " +
 			"from pt_user_process_queue queue, jbpm4_hist_actinst task, pt_process_instance process " +
 			"where queue.task_id = task.htask_ and process.id = queue.process_id ";
 	
@@ -33,6 +39,9 @@ public class BpmTaskQuery
 	
 	/** Additional condition to main query to add filter for queue type */
 	private static final String QUEUE_TYPE_CONDITION = " and queue.queue_type in (:queueTypes) ";
+	
+	/** Resuls sort order */
+	private static final String SORY_BY_DATE_ORDER = " order by task.start_ ";
 	
 	/** String builder to build query */
 	private StringBuilder queryBuilder;
@@ -45,12 +54,18 @@ public class BpmTaskQuery
 	/** Limit for results rows */
 	private int maxResultsLimit;
 	
+	/** Offset for results rows, used for paged views */
+	private int resultsOffset;
+	
 	public BpmTaskQuery(ProcessToolContext ctx)
 	{
 		this.ctx = ctx;
 		
 		queryBuilder = new StringBuilder(GET_BPM_TASKS_QUERY);
 		queryParameters = new ArrayList<BpmTaskQuery.QueryParameter>();
+		
+		this.maxResultsLimit = 0;
+		this.resultsOffset = 0;
 	}
 	
 	/** Add restriction for user login to who process and task are assigned */
@@ -73,17 +88,28 @@ public class BpmTaskQuery
 		addParameter("queueTypes", queueTypesString);
 	}
 	
+	/** Get results count. No entities are loaded to memory using this */
+	public int getBpmTaskCount()
+	{
+		/* Build query */
+		SQLQuery query = getCountQuery();
+		
+		BigInteger resultsCount = (BigInteger)query.uniqueResult();
+		
+		return resultsCount.intValue();
+	}
+	
 	/** Get bpm tasks from initialized query */
 	@SuppressWarnings("unchecked")
-	public Collection<BpmTask> getBpmTasks()
-	{
+	public List<BpmTask> getBpmTasks()
+	{	
 		/* Build query */
 		SQLQuery query = getQuery();
 		
 		/* Get query results */
 		List<Object[]> queueResults = query.list();
 		
-		Collection<BpmTask> result = new ArrayList<BpmTask>();
+		List<BpmTask> result = new ArrayList<BpmTask>();
 		
    		
 		/* Every row is one queue element with jbpm task as first column and process instance as second */
@@ -112,10 +138,29 @@ public class BpmTaskQuery
 		queryParameters.add(new QueryParameter(key, value));
 	}
 	
+	private SQLQuery getCountQuery()
+	{
+   		SQLQuery query = ctx.getHibernateSession().createSQLQuery(COUNT_QUERY + queryBuilder.toString());
+   		
+   		/* Add all parameters */
+   		for(QueryParameter parameter: queryParameters)
+   		{
+   			if(parameter.getValue() instanceof Collection<?>)
+   				query.setParameterList(parameter.getKey(), (Collection<?>)parameter.getValue());
+   			else
+   				query.setParameter(parameter.getKey(), parameter.getValue());
+   		}
+   		
+   		return query;
+	}
+	
 	/** Build main query and add stored parameters to it */
 	private SQLQuery getQuery()
 	{
-   		SQLQuery query = ctx.getHibernateSession().createSQLQuery(queryBuilder.toString())
+		/* Add results sort order */
+		queryBuilder.append(SORY_BY_DATE_ORDER);
+		
+   		SQLQuery query = ctx.getHibernateSession().createSQLQuery(LIST_QUERY + queryBuilder.toString())
    				.addEntity("task", HistoryTaskInstanceImpl.class)
    				.addEntity("process", ProcessInstance.class);
    		
@@ -131,6 +176,8 @@ public class BpmTaskQuery
    		/* Add limit for max rows count */
    		if(getMaxResultsLimit() > 0)
    			query.setMaxResults(getMaxResultsLimit());
+   		
+   		query.setFirstResult(resultsOffset);
    		
    		return query;
 	}
@@ -159,8 +206,18 @@ public class BpmTaskQuery
 		return maxResultsLimit;
 	}
 
+   	/** Sets max results limit. If equals zero, there is no limit set */
 	public void setMaxResultsLimit(int maxResultsLimit) {
 		this.maxResultsLimit = maxResultsLimit;
+	}
+
+	public int getResultsOffset() {
+		return resultsOffset;
+	}
+
+	public void setResultsOffset(int resultsOffset) 
+	{
+		this.resultsOffset = resultsOffset;
 	}
 
 	/** Class which provied key-object parameter for query */

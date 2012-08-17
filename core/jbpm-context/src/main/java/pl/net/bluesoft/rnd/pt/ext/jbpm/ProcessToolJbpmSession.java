@@ -263,7 +263,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
        }
 
        @Override
-   	public ResultsPageWrapper<BpmTask> findRecentTasks(Calendar minDate, Integer offset, Integer limit, ProcessToolContext ctx) {
+   	public List<BpmTask> findRecentTasks(Calendar minDate, Integer offset, Integer limit, ProcessToolContext ctx) {
    		List<BpmTask> recentTasks = new ArrayList<BpmTask>();
    		UserData user = getUser(ctx);
    		ResultsPageWrapper<ProcessInstance> recentInstances = ctx.getProcessInstanceDAO().getRecentProcesses(user, minDate, offset, limit);
@@ -280,7 +280,7 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    				recentTasks.addAll(tasks);
    			}
    		}
-   		return new ResultsPageWrapper<BpmTask>(recentTasks);
+   		return recentTasks;
    	}
 
    	private BpmTask getMostRecentProcessHistoryTask(final ProcessInstance pi, final UserData user, final Calendar minDate, ProcessToolContext ctx) {
@@ -355,14 +355,34 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 	{
 		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, queueTypes);
 	}
-   	
-   	
-	public ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx)
+	
+	@Override
+	public int getFilteredTasksCount(ProcessInstanceFilter filter, ProcessToolContext ctx) 
 	{
-		return findProcessTasks(filter, ctx, 0);
+   		/* Initialize query */
+   		BpmTaskFilterQuery taskFilterQuery = new BpmTaskFilterQuery(ctx);
+   		
+   		/* Queues filter do not have owner */
+   		if(filter.getFilterOwner() != null)
+   			taskFilterQuery.addUserLoginCondition(filter.getFilterOwner().getLogin());
+   		
+   		if(!filter.getQueueTypes().isEmpty())
+   			taskFilterQuery.addQueueTypeCondition(filter.getQueueTypes());
+   		
+   		/* Add external conditions for process instance filter */
+   		addExternalConditions(taskFilterQuery, filter);
+   		
+   		/* Get results count. No entities are loaded to memory using this */
+   		return taskFilterQuery.getBpmTaskCount();
 	}
    	
-	public ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int maxResults)
+   	
+	public List<BpmTask> findFilteredTasks(ProcessInstanceFilter filter, ProcessToolContext ctx)
+	{
+		return findFilteredTasks(filter, ctx, 0, 0);
+	}
+   	
+	public List<BpmTask> findFilteredTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int offset, int maxResults)
    	{
    		/* Initialize query */
    		BpmTaskFilterQuery taskFilterQuery = new BpmTaskFilterQuery(ctx);
@@ -376,14 +396,14 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		
    		/* Set limit for max results count */
    		taskFilterQuery.setMaxResultsLimit(maxResults);
-   		
+   		taskFilterQuery.setResultsOffset(offset);
    		/* Add external conditions for process instance filter */
    		addExternalConditions(taskFilterQuery, filter);
    		
 		/* BpmTasks */
-		Collection<BpmTask> result = taskFilterQuery.getBpmTasks();
+		List<BpmTask> result = taskFilterQuery.getBpmTasks();
    		
-   		return new ResultsPageWrapper<BpmTask>(result, result.size());
+   		return result;
    	}
    	
    	/** Add additional conditions to query from process instance filter */

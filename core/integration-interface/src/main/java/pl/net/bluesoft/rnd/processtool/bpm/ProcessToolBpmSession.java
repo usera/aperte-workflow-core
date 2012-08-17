@@ -92,12 +92,12 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
     List<BpmTask> findProcessTasks(ProcessInstance pi, String userLogin, Set<String> taskNames, ProcessToolContext ctx);
     
     /** Find tasks from user process queue with given queue type and login in filter instance */
-    ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx);
+    List<BpmTask> findFilteredTasks(ProcessInstanceFilter filter, ProcessToolContext ctx);
     
     /** Find tasks from user process queue with given queue type and login in filter instance with given max results limit */
-    ResultsPageWrapper<BpmTask> findProcessTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int maxResults);
+    List<BpmTask> findFilteredTasks(ProcessInstanceFilter filter, ProcessToolContext ctx, int resultOffset, int maxResults);
 
-    ResultsPageWrapper<BpmTask> findRecentTasks(Calendar minDate, Integer offset, Integer limit, ProcessToolContext ctx);
+    List<BpmTask> findRecentTasks(Calendar minDate, Integer offset, Integer limit, ProcessToolContext ctx);
 
     Integer getRecentTasksCount(Calendar minDate, ProcessToolContext ctx);
 
@@ -141,4 +141,6 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
     byte[] getProcessMapImage(ProcessInstance pi);
 
     String deployProcessDefinition(String processName, InputStream definitionStream, InputStream processMapImageStream);
+
+	int getFilteredTasksCount(ProcessInstanceFilter filter, ProcessToolContext ctx);
 }

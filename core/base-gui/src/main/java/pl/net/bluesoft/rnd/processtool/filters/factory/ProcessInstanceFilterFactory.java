@@ -1,14 +1,14 @@
 package pl.net.bluesoft.rnd.processtool.filters.factory;
 
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
+import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-
-import java.text.MessageFormat;
 
 /**
  * Filter factory to encapsulte filter creation logic
@@ -24,6 +24,10 @@ public class ProcessInstanceFilterFactory
 		this.source = source;
 	}
 	
+	public ProcessInstanceFilterFactory() 
+	{
+	}
+
 	/** Methods creates new filter which returns tasks created by given user, but done by others */
 	public ProcessInstanceFilter createMyTaskDoneByOthersFilter(UserData user)
 	{
@@ -46,6 +50,12 @@ public class ProcessInstanceFilterFactory
 	public ProcessInstanceFilter createMyClosedTasksFilter(UserData user)
 	{
 		return getProcessInstanceFilter(user,user,null,getMessage("activity.created.closed.tasks"), QueueType.OWN_FINISHED);
+	}
+	
+	/** Methods creates new filter which returns user closed tasks */
+	public ProcessInstanceFilter createQueuedTaskFilter(UserData user, ProcessQueue processQueue)
+	{
+		return getProcessInstanceFilterForQueue(user, processQueue);
 	}
 
 	
@@ -85,7 +95,19 @@ public class ProcessInstanceFilterFactory
 	
 	private String getMessage(String key)
 	{
+		if(source == null)
+			return key;
+		
 		return source.getMessage(key);
+	}
+	
+	private ProcessInstanceFilter getProcessInstanceFilterForQueue(UserData user, ProcessQueue processQueue)
+	{
+		ProcessInstanceFilter instanceFilter = getProcessInstanceFilter(user,user,null,getMessage("user.queue.name."+processQueue.getName()), QueueType.OWN_IN_QUEUE);
+		
+		instanceFilter.getQueues().add(processQueue.getName());
+		
+		return instanceFilter;
 	}
 	
 	private ProcessInstanceFilter getProcessInstanceFilter(UserData user, UserData creator, UserData owner, String name, 

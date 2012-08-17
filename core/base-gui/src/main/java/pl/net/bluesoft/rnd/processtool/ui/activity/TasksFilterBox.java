@@ -33,7 +33,6 @@ public class TasksFilterBox extends VerticalLayout {
 	private ProcessToolBpmSession session;
 	private Application application;
 	private TextField searchField;
-	final private List<TaskTableItem> processInstances;
 	private String filterExpression;
 	private Form advancedForm;
 	private Button advancedTrigger;
@@ -41,16 +40,14 @@ public class TasksFilterBox extends VerticalLayout {
 	private List<ItemSetChangeListener> listeners = new LinkedList<ItemSetChangeListener>();
 	private ProcessListPane parent;
 	private int limit;
-	private int totalResults;
 	private TextField filterNameField;
 	private Button filterNameSave;
 
-	public TasksFilterBox(I18NSource i18NSource, ProcessToolBpmSession session, Application application, ProcessListPane parent,
-			final List<TaskTableItem> processInstances) {
+	public TasksFilterBox(I18NSource i18NSource, ProcessToolBpmSession session, Application application, ProcessListPane parent) 
+	{
 		this.i18NSource = i18NSource;
 		this.session = session;
 		this.application = application;
-		this.processInstances = processInstances;
 		this.parent = parent;
 		initUI();
 	}
@@ -66,7 +63,7 @@ public class TasksFilterBox extends VerticalLayout {
 			public void textChange(FieldEvents.TextChangeEvent event) {
 				filterExpression = event.getText();
 				parent.setNewSearch();
-				refreshData(getBpmTasks(0));
+				refreshData();
 			}
 		});
 		addComponent(searchField);
@@ -102,7 +99,7 @@ public class TasksFilterBox extends VerticalLayout {
 			@Override
 			public void buttonClick(Button.ClickEvent event) {
 				parent.setNewSearch();
-				refreshData(getBpmTasks(0));
+				refreshData();
 			}
 		}));
 
@@ -143,10 +140,8 @@ public class TasksFilterBox extends VerticalLayout {
 		parent.getActivityMainPane().getBpmSession().getEventBusManager().publish(new FilterChangedEvent());
 	}
 
-	public void refreshData(ResultsPageWrapper<BpmTask> results) {
-		processInstances.clear();
-		totalResults = results.getTotal();
-		fillTaskList(results.getResults());
+	public void refreshData() 
+	{
 		fireItemSetChanged();
 	}
 
@@ -157,12 +152,6 @@ public class TasksFilterBox extends VerticalLayout {
 	private void fireItemSetChanged() {
 		for (ItemSetChangeListener listener : listeners) {
 			listener.itemSetChange();
-		}
-	}
-
-	private void fillTaskList(Collection<BpmTask> userTasks) {
-		for (BpmTask task : userTasks) {
-			processInstances.add(new TaskTableItem(task));
 		}
 	}
 
@@ -180,16 +169,6 @@ public class TasksFilterBox extends VerticalLayout {
 			advancedForm.setItemDataSource(new BeanItem<ProcessInstanceFilter>(filter));
 			advancedForm.setVisibleItemProperties(Arrays.asList("createdBefore", "createdAfter", "notUpdatedAfter", "updatedAfter", "creators", "owners", "queues"));
 		}
-	}
-
-	public ResultsPageWrapper<BpmTask> getBpmTasks(int offset) 
-	{
-		if(filter == null)
-			new ResultsPageWrapper<BpmTask>();
-		
-		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
-		filter.setGenericQuery(filterExpression);
-		return parent.getActivityMainPane().getBpmSession().findProcessTasks(filter, ctx);
 	}
 
 	public interface ItemSetChangeListener {
@@ -210,13 +189,5 @@ public class TasksFilterBox extends VerticalLayout {
 
 	public void setLimit(int limit) {
 		this.limit = limit;
-	}
-
-	public int getTotalResults() {
-		return totalResults;
-	}
-
-	public void setTotalResults(int totalResults) {
-		this.totalResults = totalResults;
 	}
 }
