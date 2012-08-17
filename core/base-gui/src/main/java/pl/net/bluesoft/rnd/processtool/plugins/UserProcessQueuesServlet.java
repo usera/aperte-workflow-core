@@ -2,7 +2,6 @@ package pl.net.bluesoft.rnd.processtool.plugins;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -14,9 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 
-import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
-import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider;
 
 import com.thoughtworks.xstream.XStream;

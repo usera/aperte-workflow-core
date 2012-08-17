@@ -1,10 +1,7 @@
 package pl.net.bluesoft.rnd.processtool.plugins.util;
 
-import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +14,6 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
-import pl.net.bluesoft.util.lang.DateUtil;
-import pl.net.bluesoft.util.lang.cquery.func.F;
 
 /**
  * User Process Queues size provider. For given user login it

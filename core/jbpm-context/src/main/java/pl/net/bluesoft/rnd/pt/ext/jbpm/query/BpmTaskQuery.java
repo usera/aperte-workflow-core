@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.pt.ext.jbpm.query;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -94,7 +95,7 @@ public class BpmTaskQuery
 		/* Build query */
 		SQLQuery query = getCountQuery();
 		
-		BigInteger resultsCount = (BigInteger)query.uniqueResult();
+		Number resultsCount = (Number)query.uniqueResult();
 		
 		return resultsCount.intValue();
 	}

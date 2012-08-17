@@ -665,11 +665,12 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
         if (!ProcessStatus.RUNNING.equals(pi.getStatus())) {
             pi.setStatus(ProcessStatus.RUNNING);
         }
-
-        broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, bpmTask, user));
         
 		/* Inform queue manager about task assigne */
 		ctx.getUserProcessQueueManager().onTaskAssigne(bpmTask);
+		
+        broadcastEvent(ctx, new BpmEvent(BpmEvent.Type.ASSIGN_TASK, bpmTask, user));
+        broadcastEvent(ctx, new ViewEvent(ViewEvent.Type.ACTION_COMPLETE));
 
         return bpmTask;
     }
