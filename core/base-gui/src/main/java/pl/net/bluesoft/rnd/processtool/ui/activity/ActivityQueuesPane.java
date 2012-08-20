@@ -19,7 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.aperteworkflow.ui.view.ViewEvent;
-import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -31,6 +30,7 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
+import pl.net.bluesoft.rnd.processtool.ui.utils.QueuesPanelRefresherUtil;
 import pl.net.bluesoft.util.eventbus.EventListener;
 import pl.net.bluesoft.util.lang.DateUtil;
 import pl.net.bluesoft.util.lang.TaskWatch;
@@ -45,8 +45,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
-import com.vaadin.ui.Tree.ExpandEvent;
-import com.vaadin.ui.Tree.ExpandListener;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.Tree.ItemStyleGenerator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.BaseTheme;
@@ -157,7 +156,13 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 		final List<ProcessQueue> userAvailableQueues = buildUserQueues(ctx,bpmSession);
 
-		List<UserData> substitutedUsers = getSubstitutedUsers(user,new Date());
+		List<UserData> substitutedUsers =
+				ProcessToolContext.Util.getThreadProcessToolContext().getUserSubstitutionDAO().getSubstitutedUsers(user,DateUtil.truncHours(new Date()));
+		
+		for(UserData substitutedUser: substitutedUsers)
+		{
+			
+		}
 
 		if(!substitutedUsers.isEmpty())
 		{
@@ -260,7 +265,8 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 				total += totalTasks;
 				
 				/* button id for the refresher */
-				String buttonId = USER_QUEUE_PREFIX+filter.getName();
+				String buttonId = QueuesPanelRefresherUtil.getQueueTaskId(filter.getName());
+				QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 
 				container.getItem(filter).getItemProperty("name").setValue(getMessage(filter.getName()) + " (" + totalTasks + ")");
 				container.getItem(filter).getItemProperty("enabled").setValue(totalTasks > 0);
@@ -304,7 +310,12 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			container.getItem(substAssignedTasks).getItemProperty("name").setValue(getMessage(substAssignedTasks.getName(), liferaySubstitutedUser.getRealName()) + " (" + total + ";" + totalQueues + ")");
 			container.getItem(substAssignedTasks).getItemProperty("description")
 					.setValue(getMessage("activity.substitutions.description",liferaySubstitutedUser.getRealName(),total,totalQueues));
-
+			
+			/* button id for the refresher */
+			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueTaskId(substAssignedTasks.getName(), substitutedUser.getLogin());
+			QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
+			
+			container.getItem(substAssignedTasks).getItemProperty("debugId").setValue(buttonId);
 		}
 
 		final Tree substitutionsTree = getSubstitutionsTree();
@@ -352,7 +363,8 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			long count = qus.queue.getProcessCount();
 			
 			/* button id for the refresher */
-			String buttonId = USER_QUEUE_PREFIX+qus.queue.getName();
+			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueProcessQueueId(qus.queue.getName(), user.getLogin());
+			QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 			
 			String desc = getMessage(qus.queue.getDescription());
 			/* The name of the queue */
@@ -464,7 +476,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		final Button b = new Button(processInstanceFilter.getName());
 		
 		/* button id for the refresher */
-		String buttonId = USER_QUEUE_PREFIX+processInstanceFilter.getName();
+		String buttonId = QueuesPanelRefresherUtil.getQueueTaskId(processInstanceFilter.getName());
+		QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
+		
 		b.setStyleName(BaseTheme.BUTTON_LINK);
 		b.setDebugId(buttonId);
 		b.addStyleName(" "+buttonId);
@@ -495,6 +509,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	}
 	
 
+
 	private Button createQueueButton(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
 	{
 		long processCount = q.getProcessCount();
@@ -503,7 +518,8 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		String queueName = activityMainPane.getI18NSource().getMessage(USER_QUEUE_PREFIX+q.getName(), "");
 		
 		/* button id for the refresher */
-		String buttonId = USER_QUEUE_PREFIX+q.getName();
+		String buttonId = QueuesPanelRefresherUtil.getQueueProcessQueueId(q.getName());
+		QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 		
 		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
 		qb.setDescription(desc);
@@ -520,27 +536,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			}
 		});
 		return qb;
-	}
-
-	private static List<UserData> getSubstitutedUsers(UserData user, Date date)
-	{
-		List<UserData> substitutedUsers =
-				ProcessToolContext.Util.getThreadProcessToolContext().getUserSubstitutionDAO().getSubstitutedUsers(user,DateUtil.truncHours(date));
-		return from(substitutedUsers).select(new F<UserData,UserData>()
-		{
-			@Override
-			public UserData invoke(UserData user)
-			{
-				return LiferayBridge.getLiferayUser(user.getLogin(),user.getCompanyId());
-			}
-		}).orderBy(new F<UserData,String>()
-		{
-			@Override
-			public String invoke(UserData user)
-			{
-				return user.getRealName() != null ? user.getRealName().toLowerCase() : null;
-			}
-		}).toList();
 	}
 
 	private String getMessage(String title)

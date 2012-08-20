@@ -77,6 +77,8 @@ public abstract class ProcessListPane extends AbstractListPane {
         limit = 10;
         offset = 0;
         totalResults = 0;
+        
+        filter = filter == null ? getDefaultFilter() : filter;
 
         VerticalLayout marginPanel = new VerticalLayout();
         marginPanel.addComponent(new Label(getMessage("activity.tasks.help.short"), Label.CONTENT_XHTML));
@@ -85,7 +87,7 @@ public abstract class ProcessListPane extends AbstractListPane {
         addComponent(marginPanel);
 
         filterBox = new TasksFilterBox(messageSource, getBpmSession(), application, this);
-        filterBox.setFilter(filter == null ? getDefaultFilter() : filter);
+        filterBox.setFilter(filter);
         filterBox.setLimit(limit);
 
         marginPanel.addComponent(filterBox);
@@ -212,7 +214,7 @@ public abstract class ProcessListPane extends AbstractListPane {
 	        
 	        HorizontalLayout resultsLayout = new HorizontalLayout();
 	        resultsLayout.setMargin(false);
-	        resultsLayout.setWidth("70px");
+	        resultsLayout.setWidth("75px");
 
 	        resultsLabel = new Label(String.format(getMessage("activity.tasks.of.line"), first, last, getTotalResults()));
 	        resultsLayout.addComponent(resultsLabel);

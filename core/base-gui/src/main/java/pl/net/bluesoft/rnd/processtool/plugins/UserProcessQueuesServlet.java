@@ -41,7 +41,7 @@ public class UserProcessQueuesServlet extends HttpServlet
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException 
 	{
 		ProcessToolRegistry reg = (ProcessToolRegistry) getServletContext().getAttribute(ProcessToolRegistry.class.getName());
-		resp.setContentType("text/plain");
+		resp.setContentType("application/json");
 		
 		PrintWriter out = resp.getWriter();
 		String formatString = req.getParameter("format");

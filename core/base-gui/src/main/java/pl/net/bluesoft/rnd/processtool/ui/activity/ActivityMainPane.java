@@ -202,6 +202,8 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 			public Component render(Map<String,?> viewData)
 			{
 				ProcessQueue q = (ProcessQueue)viewData.get("queue");
+				ProcessInstanceFilter filter = (ProcessInstanceFilter)viewData.get("filter");
+				pane.setFilter(filter);
 				pane.setQueue(q);
 				leftPanelTrigger.show();
 				return pane.init();
@@ -215,6 +217,8 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 			{
 				ProcessQueue queue = (ProcessQueue)viewData.get("queue");
 				UserData user = (UserData)viewData.get("user");
+				ProcessInstanceFilter filter = (ProcessInstanceFilter)viewData.get("filter");
+				pane.setFilter(filter);
 				pane.setUserData(user);
 				pane.setQueue(queue);
 				leftPanelTrigger.show();
