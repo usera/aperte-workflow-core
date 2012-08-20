@@ -30,6 +30,7 @@ import pl.net.bluesoft.util.eventbus.EventBusManager;
  *
  * @author tlipski@bluesoft.net.pl
  * @author amichalak@bluesoft.net.pl
+ * @author mpawlak@bluesoft.net.pl
  */
 
 //
@@ -79,7 +80,16 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
 
     BpmTask refreshTaskData(BpmTask task, ProcessToolContext ctx);
     
-    int findUserTasksCount(Collection<QueueType> queueTypes, String userLogin, ProcessToolContext ctx);
+    /** Method returns queue size for given queue type and user login. Methods is significally faster
+     * than {@link getFilteredTasksCount} but does not provide filtering support. 
+     */
+    int getTasksCount(QueueType queueType, String userLogin, ProcessToolContext ctx);
+    
+    /** Method returns queue size for conditions provided by given filter. Methods is slower then
+     * than {@link getTasksCount} but has full filtering options. It does not load entities to
+     * memory
+     */
+	int getFilteredTasksCount(ProcessInstanceFilter filter, ProcessToolContext ctx);
 
     List<BpmTask> findUserTasks(ProcessInstance processInstance, ProcessToolContext ctx);
 
@@ -142,5 +152,4 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
 
     String deployProcessDefinition(String processName, InputStream definitionStream, InputStream processMapImageStream);
 
-	int getFilteredTasksCount(ProcessInstanceFilter filter, ProcessToolContext ctx);
 }

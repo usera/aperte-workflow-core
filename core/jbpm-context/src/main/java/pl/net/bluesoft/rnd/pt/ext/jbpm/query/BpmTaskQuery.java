@@ -42,7 +42,7 @@ public class BpmTaskQuery
 	private static final String QUEUE_TYPE_CONDITION = " and queue.queue_type in (:queueTypes) ";
 	
 	/** Resuls sort order */
-	private static final String SORY_BY_DATE_ORDER = " order by task.start_ ";
+	private static final String SORY_BY_DATE_ORDER = " order by task.start_ desc";
 	
 	/** String builder to build query */
 	private StringBuilder queryBuilder;

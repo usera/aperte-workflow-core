@@ -35,7 +35,8 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 /**
- * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
+ * @author tlipski@bluesoft.net.pl
+ * @author mpawlak@bluesoft.net.pl
  */
 public abstract class ProcessListPane extends AbstractListPane {
     protected ActivityMainPane activityMainPane;
@@ -72,6 +73,10 @@ public abstract class ProcessListPane extends AbstractListPane {
     public ProcessListPane init() 
     {
         super.init();
+        
+        limit = 10;
+        offset = 0;
+        totalResults = 0;
 
         VerticalLayout marginPanel = new VerticalLayout();
         marginPanel.addComponent(new Label(getMessage("activity.tasks.help.short"), Label.CONTENT_XHTML));
@@ -170,6 +175,8 @@ public abstract class ProcessListPane extends AbstractListPane {
     {
     	private Button prevButton;
     	private Button nextButton;
+    	
+    	private Label resultsLabel;
 
 		public NavigationComponent() 
 		{
@@ -184,6 +191,10 @@ public abstract class ProcessListPane extends AbstractListPane {
 			
             prevButton.setEnabled(privButtonEnabled);
             nextButton.setEnabled(nextButtonEnabled);
+            
+	        int first = getTotalResults() > 0 ? offset + 1 : 0;
+	        int last = Math.min(offset + limit, getTotalResults());
+            resultsLabel.setValue(String.format(getMessage("activity.tasks.of.line"), first, last, getTotalResults()));
 		}
 		
 		private void init()
@@ -195,8 +206,6 @@ public abstract class ProcessListPane extends AbstractListPane {
 	        
 	        nextButton = VaadinUtility.link(getMessage("activity.tasks.next"));
 	        nextButton.addListener((ClickListener)NavigationComponent.this);
-	        
-	        refresh();
 
 	        int first = getTotalResults() > 0 ? offset + 1 : 0;
 	        int last = Math.min(offset + limit, getTotalResults());
@@ -205,9 +214,12 @@ public abstract class ProcessListPane extends AbstractListPane {
 	        resultsLayout.setMargin(false);
 	        resultsLayout.setWidth("70px");
 
-	        Label resultsLabel = new Label(String.format(getMessage("activity.tasks.of.line"), first, last, getTotalResults()));
+	        resultsLabel = new Label(String.format(getMessage("activity.tasks.of.line"), first, last, getTotalResults()));
 	        resultsLayout.addComponent(resultsLabel);
 	        resultsLayout.setComponentAlignment(resultsLabel, Alignment.MIDDLE_CENTER);
+	        
+	        refresh();
+	        
 
 	        setMargin(false, true, false, true);
 	        addComponents(new Component[] {new Label() {{

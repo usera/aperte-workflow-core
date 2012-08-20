@@ -77,11 +77,11 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
 	}
 
 	@Override
-	public int getQueueLength(String userLogin, Collection<QueueType> queueTypes) 
+	public int getQueueLength(String userLogin, QueueType queueType) 
 	{
 		Criteria criteria = session.createCriteria(UserProcessQueue.class)
                 .add(Restrictions.eq("login", userLogin))
-                .add(Restrictions.in("queueType", queueTypes))
+                .add(Restrictions.eq("queueType", queueType))
                 .setProjection(Projections.rowCount());
 		
 		Long taskCount = (Long)criteria.uniqueResult();

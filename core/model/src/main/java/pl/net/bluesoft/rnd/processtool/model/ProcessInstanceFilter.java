@@ -172,6 +172,14 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	public Set<QueueType> getQueueTypes() {
 		return queueTypes;
 	}
+	
+	public QueueType getFirstQueueType()
+	{
+		for(QueueType queueType: queueTypes)
+			return queueType;
+		
+		return null;
+	}
 
 	public void setQueueTypes(Set<QueueType> queueTypes) {
 		this.queueTypes = queueTypes;

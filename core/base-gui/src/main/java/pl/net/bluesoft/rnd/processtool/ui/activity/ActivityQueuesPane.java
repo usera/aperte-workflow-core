@@ -45,6 +45,8 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.Tree.ExpandEvent;
+import com.vaadin.ui.Tree.ExpandListener;
 import com.vaadin.ui.Tree.ItemStyleGenerator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.BaseTheme;
@@ -59,6 +61,7 @@ import com.vaadin.ui.themes.ChameleonTheme;
 public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshable
 {
     private static final Logger logger = Logger.getLogger(ActivityQueuesPane.class.getName());
+    private static final String USER_QUEUE_PREFIX = "user.queue.name.";
 
 	private ActivityMainPane activityMainPane;
 	private VerticalLayout taskList;
@@ -252,13 +255,16 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			container.addItem(filter);
 			if(filter.getOwners().contains(substitutedUser) && !filter.getQueueTypes().contains(QueueType.OWN_FINISHED))
 			{
-
-				int totalTasks = activityMainPane.getBpmSession().findUserTasksCount(filter.getQueueTypes(), filter.getFilterOwner().getLogin(), ctx);
+				int totalTasks = activityMainPane.getBpmSession().getTasksCount(filter.getFirstQueueType(), filter.getFilterOwner().getLogin(), ctx);
 				
 				total += totalTasks;
+				
+				/* button id for the refresher */
+				String buttonId = USER_QUEUE_PREFIX+filter.getName();
 
 				container.getItem(filter).getItemProperty("name").setValue(getMessage(filter.getName()) + " (" + totalTasks + ")");
 				container.getItem(filter).getItemProperty("enabled").setValue(totalTasks > 0);
+				container.getItem(filter).getItemProperty("debugId").setValue(buttonId);
 			}
 			else
 			{
@@ -280,7 +286,8 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		container.addContainerProperty("description",String.class,null);
 		container.addContainerProperty("queueUserSession",QueueUserSession.class,null);
 		container.addContainerProperty("enabled",Boolean.class,Boolean.TRUE);
-
+		container.addContainerProperty("debugId",String.class,null);
+		
 		for(UserData substitutedUser: substitutedUsers)
 		{
 			ProcessToolBpmSession bpmSessionForSubstituted = substitutedUserToSession.get(substitutedUser);
@@ -343,11 +350,19 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			container.addItem(qus);
 
 			long count = qus.queue.getProcessCount();
+			
+			/* button id for the refresher */
+			String buttonId = USER_QUEUE_PREFIX+qus.queue.getName();
+			
+			String desc = getMessage(qus.queue.getDescription());
+			/* The name of the queue */
+			String name = activityMainPane.getI18NSource().getMessage(USER_QUEUE_PREFIX+qus.queue.getName(), "");
 
-			container.getItem(qus).getItemProperty("name").setValue(getMessage(qus.queue.getDescription()) + " (" + count + ")");
+			container.getItem(qus).getItemProperty("name").setValue(desc + " " + name + " (" + count + ")");
 			container.getItem(qus).getItemProperty("enabled").setValue(count > 0);
 			container.getItem(qus).getItemProperty("description").setValue(qus.queue.getDescription());
 			container.getItem(qus).getItemProperty("queueUserSession").setValue(qus);
+			container.getItem(qus).getItemProperty("debugId").setValue(buttonId);
 
 			container.setParent(qus,parent);
 			container.setChildrenAllowed(qus,false);
@@ -373,7 +388,11 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			{
 				if(substitutionsTree.hasChildren(itemId))
 					return "";
-				return ((Boolean)substitutionsTree.getItem(itemId).getItemProperty("enabled").getValue()) ? "link-enabled" : "link-disabled";
+				
+				String itemClass = ((Boolean)substitutionsTree.getItem(itemId).getItemProperty("enabled").getValue()) ? "link-enabled" : "link-disabled";
+				itemClass += " " + substitutionsTree.getItem(itemId).getItemProperty("debugId");
+				
+				return itemClass;
 			}
 		});
 		substitutionsTree.addListener(new ItemClickListener()
@@ -443,10 +462,16 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			final ProcessInstanceFilter processInstanceFilter,
 			final boolean showCounter) {
 		final Button b = new Button(processInstanceFilter.getName());
+		
+		/* button id for the refresher */
+		String buttonId = USER_QUEUE_PREFIX+processInstanceFilter.getName();
 		b.setStyleName(BaseTheme.BUTTON_LINK);
+		b.setDebugId(buttonId);
+		b.addStyleName(" "+buttonId);
+		
 		if(showCounter)
 		{
-			int taskCount = bpmSession.findUserTasksCount(processInstanceFilter.getQueueTypes(), processInstanceFilter.getFilterOwner().getUser().getLogin(), ctx);
+			int taskCount = bpmSession.getTasksCount(processInstanceFilter.getFirstQueueType(), processInstanceFilter.getFilterOwner().getUser().getLogin(), ctx);
 			b.setCaption(b.getCaption() + " (" + taskCount + ")");
 			b.setEnabled(taskCount > 0);
 		}
@@ -475,12 +500,17 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		long processCount = q.getProcessCount();
 		String desc = getMessage(q.getDescription());
 		/* The name of the queue */
-		String queueName = activityMainPane.getI18NSource().getMessage("user.queue.name."+q.getName(), "");
+		String queueName = activityMainPane.getI18NSource().getMessage(USER_QUEUE_PREFIX+q.getName(), "");
+		
+		/* button id for the refresher */
+		String buttonId = USER_QUEUE_PREFIX+q.getName();
 		
 		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
 		qb.setDescription(desc);
 		qb.setStyleName(BaseTheme.BUTTON_LINK);
 		qb.setEnabled(processCount > 0);
+		qb.setDebugId(buttonId);
+		qb.addStyleName(" "+buttonId);
 		qb.addListener(new Button.ClickListener()
 		{
 			@Override

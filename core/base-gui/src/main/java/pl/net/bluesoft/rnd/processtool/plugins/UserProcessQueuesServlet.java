@@ -2,6 +2,8 @@ package pl.net.bluesoft.rnd.processtool.plugins;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -14,6 +16,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 
 import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider;
+import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider.UsersQueuesSize;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -57,16 +60,22 @@ public class UserProcessQueuesServlet extends HttpServlet
 		}
 		
 		UserProcessQueuesSizeProvider userQueuesSizeProvider = new UserProcessQueuesSizeProvider(reg, userLogin);
-		Map<String, Integer> userProcessQueueSize = userQueuesSizeProvider.getUserProcessQueueSize();
+		Collection<UsersQueuesSize> usersQueuesSize = userQueuesSizeProvider.getUserProcessQueueSize();
+		
+		Map<String, Map<String, Integer>> usersQueues = new HashMap<String, Map<String,Integer>>(usersQueuesSize.size());
+		for(UsersQueuesSize userQuueueSize: usersQueuesSize)
+			usersQueues.put(userQuueueSize.getUserLogin(), userQuueueSize.getUserProcessQueueSize());
 
 
 		switch (format) {
-			case XML: {
-				out.write(xstream.toXML(userProcessQueueSize));
+			case XML: 
+			{
+				out.write(xstream.toXML(usersQueues));
 			}
-			case JSON: {
+			case JSON: 
+			{
 				mapper.configure(Feature.INDENT_OUTPUT, true);
-				mapper.writeValue(out, userProcessQueueSize);
+				mapper.writeValue(out, usersQueues);
 			}
 		}
 
@@ -74,8 +83,6 @@ public class UserProcessQueuesServlet extends HttpServlet
 
 		logger.info(this.getClass().getSimpleName() + " GET");
 	}
-	
-
 
 	@Override
 	public void init() throws ServletException {
