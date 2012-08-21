@@ -41,7 +41,7 @@ public class MyProcessesListPane extends ProcessListPane {
         processFilter.setName(getMessage("activity.assigned.tasks"));
         processFilter.addOwner(getBpmSession().getUser(ctx));
         processFilter.setFilterOwner(getBpmSession().getUser(ctx));
-        processFilter.addQueueType(QueueType.OWN_ASSIGNED);
+        processFilter.addQueueType(QueueType.OTHERS_ASSIGNED);
         return processFilter;
     }
 

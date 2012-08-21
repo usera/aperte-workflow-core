@@ -55,19 +55,19 @@ public class ProcessInstanceFilterFactory
 	/** Methods creates new filter which returns tasks created by given user, but done by others */
 	public ProcessInstanceFilter createSubstitutedTaskDoneByOthersFilter(UserData substitutedUser)
 	{
-		return getProcessInstanceFilter(substitutedUser,substitutedUser,null,"activity.subst.assigned.tasks", QueueType.OWN_IN_PROGRESS);
+		return getProcessInstanceFilter(substitutedUser,substitutedUser,null,"activity.subst.created.tasks", QueueType.OWN_IN_PROGRESS);
 	}
 	
 	/** Methods creates new filter which returns tasks created by other users, but assigned to given user */
 	public ProcessInstanceFilter createSubstitutedOthersTaskAssignedToHimFilter(UserData substitutedUser)
 	{
-		return getProcessInstanceFilter(substitutedUser,null,substitutedUser,"activity.subst.created.assigned.tasks", QueueType.OTHERS_ASSIGNED);
+		return getProcessInstanceFilter(substitutedUser,null,substitutedUser,"activity.subst.assigned.tasks", QueueType.OTHERS_ASSIGNED);
 	}
 	
 	/** Methods creates new filter which returns tasks created by given user and assigned to him */
 	public ProcessInstanceFilter createSubstitutedTasksAssignedToMeFilter(UserData substitutedUser)
 	{
-		return getProcessInstanceFilter(substitutedUser,substitutedUser,substitutedUser,"activity.subst.created.tasks", QueueType.OWN_ASSIGNED);
+		return getProcessInstanceFilter(substitutedUser,substitutedUser,substitutedUser,"activity.subst.created.assigned.tasks", QueueType.OWN_ASSIGNED);
 	}
 	
 	/** Methods creates new filter which returns user closed tasks */

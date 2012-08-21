@@ -45,7 +45,6 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
-import com.vaadin.ui.Window;
 import com.vaadin.ui.Tree.ItemStyleGenerator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.BaseTheme;
@@ -243,9 +242,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 		Collection<ProcessInstanceFilter> taskFilters = new ArrayList<ProcessInstanceFilter>();
 		
-		taskFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(substitutedUser));
+		taskFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedClosedTasksFilter(substitutedUser));
 		
 		int total = 0;
