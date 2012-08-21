@@ -159,11 +159,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		List<UserData> substitutedUsers =
 				ProcessToolContext.Util.getThreadProcessToolContext().getUserSubstitutionDAO().getSubstitutedUsers(user,DateUtil.truncHours(new Date()));
 		
-		for(UserData substitutedUser: substitutedUsers)
-		{
-			
-		}
-
 		if(!substitutedUsers.isEmpty())
 		{
 			Map<UserData,ProcessToolBpmSession> substitutedUserToSession = from(substitutedUsers).mapTo(new F<UserData,ProcessToolBpmSession>()
@@ -265,8 +260,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 				total += totalTasks;
 				
 				/* button id for the refresher */
-				String buttonId = QueuesPanelRefresherUtil.getQueueTaskId(filter.getName());
-				QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
+				String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueTaskId(filter.getName(), substitutedUser.getLogin());
 				
 				//String taskName =  MessageFormat.format(getMessage("activity.other.users.tasks"), user.getRealName());
 
@@ -315,7 +309,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			
 			/* button id for the refresher */
 			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueTaskId(substAssignedTasks.getName(), substitutedUser.getLogin());
-			QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 			
 			container.getItem(substAssignedTasks).getItemProperty("debugId").setValue(buttonId);
 		}
@@ -366,7 +359,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			
 			/* button id for the refresher */
 			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueProcessQueueId(qus.queue.getName(), user.getLogin());
-			QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 			
 			String desc = getMessage(qus.queue.getDescription());
 			/* The name of the queue */
@@ -479,7 +471,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		
 		/* button id for the refresher */
 		String buttonId = QueuesPanelRefresherUtil.getQueueTaskId(processInstanceFilter.getName());
-		QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 		
 		b.setStyleName(BaseTheme.BUTTON_LINK);
 		b.setDebugId(buttonId);
@@ -521,7 +512,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		
 		/* button id for the refresher */
 		String buttonId = QueuesPanelRefresherUtil.getQueueProcessQueueId(q.getName());
-		QueuesPanelRefresherUtil.registerButtonToRefresh(activityMainPane.getApplication().getMainWindow(), buttonId);
 		
 		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
 		qb.setDescription(desc);

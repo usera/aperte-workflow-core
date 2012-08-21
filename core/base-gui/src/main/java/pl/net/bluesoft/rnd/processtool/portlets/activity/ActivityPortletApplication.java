@@ -1,7 +1,13 @@
 package pl.net.bluesoft.rnd.processtool.portlets.activity;
 
 import org.aperteworkflow.util.vaadin.GenericVaadinPortlet2BpmApplication;
+
+import com.vaadin.Application.UserChangeListener;
+import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.CloseListener;
+
 import pl.net.bluesoft.rnd.processtool.ui.activity.ActivityMainPane;
+import pl.net.bluesoft.rnd.processtool.ui.utils.QueuesPanelRefresherUtil;
 
 import java.util.Map;
 
@@ -10,7 +16,7 @@ import static pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmConstants.REQUES
 /**
  * @author tlipski@bluesoft.net.pl
  */
-public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplication {
+public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplication implements CloseListener {
 
 	ActivityMainPane amp;
 
@@ -19,7 +25,9 @@ public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplicat
 	}
 
 	@Override
-	protected void initializePortlet() {
+	protected void initializePortlet() 
+	{
+
         amp = new ActivityMainPane(ActivityPortletApplication.this, ActivityPortletApplication.this, bpmSession);
         addListener(new RequestParameterListener(REQUEST_PARAMETER_TASK_ID) {
             @Override
@@ -30,10 +38,21 @@ public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplicat
             }
         });
 		getMainWindow().setContent(amp);
+		getMainWindow().addListener((CloseListener)this);
+		
+		QueuesPanelRefresherUtil.registerUser(getMainWindow(), user.getLogin());
 	}
 
 	@Override
 	protected void renderPortlet() {
 
 	}
+
+	@Override
+	public void windowClose(CloseEvent e) 
+	{
+		QueuesPanelRefresherUtil.unregisterUser(getMainWindow(), user.getLogin());
+	}
+	
+	
 }

@@ -34,7 +34,7 @@ public class QueuesPanelRefresherUtil
 		/* remove whitespaces */
 		String fixedTaskName = StringUtils.trimToEmpty(taskName).replace(".", "-").replace(" ", "-");
 		
-		return "substituted["+userLogin+"]-user-queue-name-"+fixedTaskName;
+		return "substituted-"+userLogin+"-user-queue-name-"+fixedTaskName;
 	}
 
 	public static String getSubstitutedQueueProcessQueueId(String queueId, String userLogin)
@@ -42,12 +42,17 @@ public class QueuesPanelRefresherUtil
 		/* remove whitespaces */
 		String fixedQueueId= StringUtils.trimToEmpty(queueId).replace(".", "-").replace(" ", "-");
 		
-		return "substituted["+userLogin+"]-user-queue-name-"+fixedQueueId;
+		return "substituted-"+userLogin+"-user-queue-name-"+fixedQueueId;
 	}
 	
 	/** Register button with given button id */
-	public static void registerButtonToRefresh(Window mainWindow, String buttonId)
+	public static void registerUser(Window mainWindow, String userLogin)
 	{
-		//mainWindow.executeJavaScript("registerButton("+buttonId+");");
+		mainWindow.executeJavaScript("setCurrentUser('"+userLogin+"');");
+	}
+
+	public static void unregisterUser(Window mainWindow, String login) 
+	{
+		mainWindow.executeJavaScript("clearCurrentUser();");
 	}
 }
