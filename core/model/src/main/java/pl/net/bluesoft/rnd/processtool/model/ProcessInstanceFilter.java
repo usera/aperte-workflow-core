@@ -38,9 +38,9 @@ public class ProcessInstanceFilter extends PersistentEntity {
 	private UserData filterOwner;
 	
 	/** Type of the queues */
-	@ManyToMany(fetch = FetchType.LAZY)
+	@ElementCollection(fetch = FetchType.LAZY)
 	@Enumerated(EnumType.STRING)
-	@JoinTable(name = "pt_pi_filters_queue_types", joinColumns = @JoinColumn(name = "filter_id"), inverseJoinColumns = @JoinColumn(name = "queue_type_id"))
+	@JoinTable(name = "pt_pi_filters_queue_types", joinColumns = @JoinColumn(name = "filter_id"))
 	private Set<QueueType> queueTypes = new HashSet<QueueType>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
