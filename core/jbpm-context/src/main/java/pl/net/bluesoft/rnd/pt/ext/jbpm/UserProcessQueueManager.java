@@ -1,5 +1,7 @@
 package pl.net.bluesoft.rnd.pt.ext.jbpm;
 
+import java.util.Collection;
+
 import org.hibernate.Session;
 
 import pl.net.bluesoft.rnd.processtool.dao.UserProcessQueueDAO;
@@ -30,13 +32,7 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 
 	public void onTaskAssigne(BpmTask bpmTask)
 	{
-		/* Check if process is reassigned to its creator */
-		boolean isProcessAssiegnedToCreator = isProcessAssiegnedToCreator(bpmTask);
-		
-		if(isProcessAssiegnedToCreator)
-			processTaskAssigneToOwnerQueue(bpmTask);
-		else
-			processTaskAssigneToOthers(bpmTask);
+		processTaskAssigne(bpmTask);
 	}
 	
 	@Override
@@ -62,23 +58,12 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		String taskIdString = bpmTask.getInternalTaskId();
 		Long taskId = Long.parseLong(taskIdString);
 		
-		/* Check if process is reassigned to its creator */
-		boolean isProcessAssiegnedToCreator = isProcessAssiegnedToCreator(bpmTask);
+		Collection<UserProcessQueue> userProcessQueues = queueDao.getAllUserProcessQueueByTaskId(taskId);
 		
-		UserProcessQueue userProcesQueue = queueDao.getUserProcessQueueByTaskId(taskId, bpmTask.getCreator());
-		
-		if(userProcesQueue != null)
-			queueDao.delete(userProcesQueue);
-		
-		/** If taks was assigned to someone else, there is also queue element assigned to him to delete */
-		if(!isProcessAssiegnedToCreator)
-		{
-			UserProcessQueue otherUserProcessQueue = queueDao.getUserProcessQueueByTaskId(taskId, bpmTask.getAssignee());
-			
-			if(otherUserProcessQueue != null)
-				queueDao.delete(otherUserProcessQueue);
-		}
-		
+		/* Delete all process user task with assigned task id. It will delete all user queues
+		 * for creator, assigne and owners
+		 */
+		queueDao.delete(userProcessQueues);
 	}
 	
 	@Override
@@ -105,31 +90,32 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		
 	}
 	
-	/** Method checks if process should be in "mine assigned to others" queue */
-	private boolean isProcessAssiegnedToCreator(BpmTask bpmTask)
+	private void processTaskAssigne(BpmTask bpmTask)
 	{
-		String assigneeLogin = bpmTask.getAssignee();
-		String creatorLogin = bpmTask.getCreator();
+		String assignee = bpmTask.getAssignee();
+		Long processId = bpmTask.getProcessInstance().getId();
+		String taskIdString = bpmTask.getInternalTaskId();
 		
-		/** Process is assigned to someone, and this person is not the creator */
-		return assigneeLogin == null || creatorLogin.equals(assigneeLogin);
+		/* There is at least one owner - creator by default */
+		for(String ownerLogin: bpmTask.getProcessInstance().getOwners())
+		{
+			/* Assign process to its owner queue */
+			if(ownerLogin.equals(assignee))
+			{
+				updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_ASSIGNED);
+			}
+			
+			/* Assign owner process to someone else. Create queue element to owner "mine assigned to others"
+			 * and element to other person queue "others assigned to me" */
+			else
+			{
+				updateUserProcessQueue(taskIdString, processId, assignee, QueueType.OTHERS_ASSIGNED);
+				updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_IN_PROGRESS); 
+			}
+		}
 	}
 	
-	/** Assign process to its owner queue */
-	private void processTaskAssigneToOwnerQueue(BpmTask bpmTask)
-	{
-		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId(), bpmTask.getAssignee(), QueueType.OWN_ASSIGNED);
-	}
-	
-	/** Assign owner process to someone else. Create queue element to owner "mine assigned to others"
-	 * and element to other person queue "others assigned to me" */
-	private void processTaskAssigneToOthers(BpmTask bpmTask)
-	{
-		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId(), bpmTask.getCreator(), QueueType.OWN_IN_PROGRESS);
-		processTaskAssigne(bpmTask.getInternalTaskId(), bpmTask.getProcessInstance().getId(), bpmTask.getAssignee(), QueueType.OTHERS_ASSIGNED);
-	}
-	
-	private void processTaskAssigne(String taskIdString, Long processId, String assigneLogin, QueueType type)
+	private void updateUserProcessQueue(String taskIdString, Long processId, String assigneLogin, QueueType type)
 	{
 		Long taskId = Long.parseLong(taskIdString);
 		UserProcessQueue userProcessQueue = queueDao.getUserProcessQueueByTaskId(taskId, assigneLogin);

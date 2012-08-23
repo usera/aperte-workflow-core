@@ -33,7 +33,13 @@ public interface UserProcessQueueDAO extends HibernateBean<UserProcessQueue>
 	/** Get user queue element by given taks id 
 	 * @param assigneLogin */
 	UserProcessQueue getUserProcessQueueByTaskId(Long taskId, String assigneLogin);
+	
+	/** Get all user process queues by task id */
+	Collection<UserProcessQueue> getAllUserProcessQueueByTaskId(Long taskId);
 
 	/** Get the queue length for given user and selected type */
-	int getQueueLength(String userLogin, QueueType queueType);
+	int getQueueLength(String userLogin, QueueType ... queueTypes);
+	
+	/** Get the queue length for given user and selected type */
+	int getQueueLength(String userLogin, Collection<QueueType> queueTypes);
 }

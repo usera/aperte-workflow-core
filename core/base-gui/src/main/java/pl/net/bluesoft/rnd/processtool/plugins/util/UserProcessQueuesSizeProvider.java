@@ -100,7 +100,7 @@ public class UserProcessQueuesSizeProvider
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)
 		{
-			int filteredQueueSize = bpmSession.getTasksCount(queueFilter.getFirstQueueType(), currentUserLogin, ctx);
+			int filteredQueueSize = bpmSession.getTasksCount(ctx, queueFilter.getFilterOwner().getLogin(), queueFilter.getQueueTypes());
 			//int filteredQueueSize = session.getFilteredTasksCount(queueFilter, ctx);
 			
 			String queueId = QueuesPanelRefresherUtil.getQueueTaskId(queueFilter.getName());
@@ -136,7 +136,7 @@ public class UserProcessQueuesSizeProvider
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)
 		{
-			int filteredQueueSize = bpmSession.getTasksCount(queueFilter.getFirstQueueType(), currentUserLogin, ctx);
+			int filteredQueueSize = bpmSession.getTasksCount(ctx, queueFilter.getFilterOwner().getLogin(), queueFilter.getQueueTypes());
 			//int filteredQueueSize = session.getFilteredTasksCount(queueFilter, ctx);
 			
 			String queueId = QueuesPanelRefresherUtil.getSubstitutedQueueTaskId(queueFilter.getName(), currentUserLogin);

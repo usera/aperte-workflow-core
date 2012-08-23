@@ -351,9 +351,15 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    	}
    	
 	@Override
-	public int getTasksCount(QueueType queueType, String userLogin, ProcessToolContext ctx) 
+	public int getTasksCount(ProcessToolContext ctx, String userLogin, QueueType... queueTypes) 
 	{
-		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, queueType);
+		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, queueTypes);
+	}
+
+	@Override
+	public int getTasksCount(ProcessToolContext ctx, String userLogin, Collection<QueueType> queueTypes) 
+	{
+		return ctx.getUserProcessQueueDAO().getQueueLength(userLogin, queueTypes);
 	}
 	
 	@Override

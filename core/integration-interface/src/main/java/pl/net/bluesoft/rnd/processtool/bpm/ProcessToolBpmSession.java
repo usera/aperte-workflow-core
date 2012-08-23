@@ -9,7 +9,6 @@ import java.util.Set;
 import org.aperteworkflow.bpm.graph.GraphElement;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.hibernate.ResultsPageWrapper;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
@@ -83,7 +82,9 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
     /** Method returns queue size for given queue type and user login. Methods is significally faster
      * than {@link getFilteredTasksCount} but does not provide filtering support. 
      */
-    int getTasksCount(QueueType queueType, String userLogin, ProcessToolContext ctx);
+    int getTasksCount(ProcessToolContext ctx, String userLogin, QueueType ... queueTypes);
+    
+    int getTasksCount(ProcessToolContext ctx, String userLogin, Collection<QueueType> queueTypes);
     
     /** Method returns queue size for conditions provided by given filter. Methods is slower then
      * than {@link getTasksCount} but has full filtering options. It does not load entities to

@@ -39,7 +39,8 @@ import pl.net.bluesoft.util.lang.Pair;
 import pl.net.bluesoft.util.lang.Predicate;
 
 /**
- * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
+ * @author tlipski@bluesoft.net.pl
+ * @author mpawlak@bluesoft.net.pl
  */
 public abstract class AbstractProcessToolSession
         implements ProcessToolBpmSession, Serializable {
@@ -106,38 +107,39 @@ public abstract class AbstractProcessToolSession
     	if (!config.getEnabled()) 
             throw new IllegalArgumentException("Process definition has been disabled!");
         
-        ProcessInstance pi = new ProcessInstance();
-        pi.setDefinition(config);
-        pi.setCreator(creator);
-        pi.setDefinitionName(config.getBpmDefinitionKey());
-        pi.setCreateDate(new Date());
-        pi.setExternalKey(externalKey);
-        pi.setDescription(description);
-        pi.setKeyword(keyword);
-        pi.setStatus(ProcessStatus.NEW);
+        ProcessInstance newProcessInstance = new ProcessInstance();
+        newProcessInstance.setDefinition(config);
+        newProcessInstance.setCreator(creator);
+        newProcessInstance.addOwner(creator.getLogin());
+        newProcessInstance.setDefinitionName(config.getBpmDefinitionKey());
+        newProcessInstance.setCreateDate(new Date());
+        newProcessInstance.setExternalKey(externalKey);
+        newProcessInstance.setDescription(description);
+        newProcessInstance.setKeyword(keyword);
+        newProcessInstance.setStatus(ProcessStatus.NEW);
 
         if (creator != null) {
             ProcessInstanceSimpleAttribute attr = new ProcessInstanceSimpleAttribute();
             attr.setKey("creator");
             attr.setValue(creator.getLogin());
-            pi.addAttribute(attr);
+            newProcessInstance.addAttribute(attr);
 
             attr = new ProcessInstanceSimpleAttribute();
             attr.setKey("creatorName");
             attr.setValue(creator.getRealName());
-            pi.addAttribute(attr);
+            newProcessInstance.addAttribute(attr);
         }
         ProcessInstanceSimpleAttribute attr = new ProcessInstanceSimpleAttribute();
         attr.setKey("source");
         attr.setValue(source);
-        pi.addAttribute(attr);
+        newProcessInstance.addAttribute(attr);
 
-        ctx.getProcessInstanceDAO().saveProcessInstance(pi);
+        ctx.getProcessInstanceDAO().saveProcessInstance(newProcessInstance);
 
         if(internalId == null)
-        	pi = startProcessInstance(config, externalKey, ctx, pi);
+        	newProcessInstance = startProcessInstance(config, externalKey, ctx, newProcessInstance);
         else
-        	pi.setInternalId(internalId);
+        	newProcessInstance.setInternalId(internalId);
 
         creator = findOrCreateUser(creator, ctx);
 
@@ -147,16 +149,15 @@ public abstract class AbstractProcessToolSession
         log.setEventI18NKey("process.log.process-started");
         log.setUser(creator);
         log.setLogType(ProcessInstanceLog.LOG_TYPE_START_PROCESS);
-        //log.setLogType(LogType.START);
-        log.setOwnProcessInstance(pi);
-        pi.getRootProcessInstance().addProcessLog(log);
+        log.setOwnProcessInstance(newProcessInstance);
+        newProcessInstance.getRootProcessInstance().addProcessLog(log);
 
-        ctx.getProcessInstanceDAO().saveProcessInstance(pi);
+        ctx.getProcessInstanceDAO().saveProcessInstance(newProcessInstance);
 
         Collection<IEvent> events = new ArrayList<IEvent>();
-        events.add(new BpmEvent(Type.NEW_PROCESS, pi, creator));
+        events.add(new BpmEvent(Type.NEW_PROCESS, newProcessInstance, creator));
 
-        for (BpmTask task : findProcessTasks(pi, ctx)) 
+        for (BpmTask task : findProcessTasks(newProcessInstance, ctx)) 
         {
             events.add(new BpmEvent(Type.ASSIGN_TASK, task, creator));
             
@@ -169,7 +170,7 @@ public abstract class AbstractProcessToolSession
         }
         
 
-        return pi;
+        return newProcessInstance;
     }
 
     protected void broadcastEvent(final ProcessToolContext ctx, final IEvent event) {
@@ -187,43 +188,6 @@ public abstract class AbstractProcessToolSession
     protected UserData findOrCreateUser(UserData user, ProcessToolContext ctx) {
         return ctx.getProcessInstanceDAO().findOrCreateUser(user);
     }
-
-//    public ProcessStateConfiguration getProcessStateConfiguration(ProcessInstance pi, ProcessToolContext ctx) {
-//        ProcessStateConfiguration configuration = ctx.getProcessDefinitionDAO().getProcessStateConfiguration(pi);
-//        if (configuration == null) return null;
-//        ProcessStateConfiguration res = new ProcessStateConfiguration();
-//        res.setDescription(configuration.getDescription());
-//        res.setCommentary(configuration.getCommentary());
-//        res.setName(configuration.getName());
-//        Set<ProcessStateWidget> newWidgetList = new HashSet<ProcessStateWidget>();
-//        for (ProcessStateWidget widget : configuration.getWidgets()) {
-//            Set<ProcessStateWidgetPermission> permissions = widget.getPermissions();
-//            if (permissions.isEmpty()) {
-//                newWidgetList.add(widget);
-//            }
-//            else {
-//                if (!getPermissionsForWidget(widget, ctx).isEmpty()) {
-//                    newWidgetList.add(widget);
-//                }
-//            }
-//        }
-//        res.setWidgets(newWidgetList);
-//
-//        //actions
-//        Set<ProcessStateAction> actionList = new HashSet<ProcessStateAction>();
-//        for (ProcessStateAction a : configuration.getActions()) {
-//            if (a.getPermissions().isEmpty()) {
-//                actionList.add(a);
-//            }
-//            else {
-//                if (!getPermissionsForAction(a, ctx).isEmpty()) {
-//                    actionList.add(a);
-//                }
-//            }
-//        }
-//        res.setActions(actionList);
-//        return res;
-//    }
 
     protected Set<String> getPermissions(Collection<? extends AbstractPermission> col) {
         Set<String> res = new HashSet<String>();

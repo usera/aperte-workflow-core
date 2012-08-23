@@ -1,7 +1,9 @@
 package pl.net.bluesoft.rnd.processtool.dao.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
@@ -9,7 +11,6 @@ import org.hibernate.criterion.Restrictions;
 
 import pl.net.bluesoft.rnd.processtool.dao.UserProcessQueueDAO;
 import pl.net.bluesoft.rnd.processtool.hibernate.SimpleHibernateBean;
-import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserProcessQueue;
 
@@ -75,18 +76,39 @@ public class UserProcessQueueDAOImpl extends SimpleHibernateBean<UserProcessQueu
                 .add(Restrictions.eq("queueType", type))
                 .uniqueResult();
 	}
+	
+	@Override
+	public int getQueueLength(String userLogin, QueueType ... queueTypes) 
+	{
+		Collection<QueueType> types = new ArrayList<QueueType>();
+		CollectionUtils.addAll(types, queueTypes);
+		
+		return getQueueLength(userLogin, types);
+	}
 
 	@Override
-	public int getQueueLength(String userLogin, QueueType queueType) 
+	public int getQueueLength(String userLogin, Collection<QueueType> queueTypes) 
 	{
 		Criteria criteria = session.createCriteria(UserProcessQueue.class)
                 .add(Restrictions.eq("login", userLogin))
-                .add(Restrictions.eq("queueType", queueType))
+                .add(Restrictions.in("queueType", queueTypes))
                 .setProjection(Projections.rowCount());
 		
 		Long taskCount = (Long)criteria.uniqueResult();
 		return taskCount.intValue();
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Collection<UserProcessQueue> getAllUserProcessQueueByTaskId(Long taskId) 
+	{
+		Criteria criteria = session.createCriteria(UserProcessQueue.class)
+                .add(Restrictions.eq("taskId", taskId));
+		
+		return (Collection<UserProcessQueue>)criteria.list();
+	}
+
+
 
 
 

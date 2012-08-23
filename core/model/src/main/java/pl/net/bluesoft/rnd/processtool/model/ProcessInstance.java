@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -63,28 +65,28 @@ public class ProcessInstance extends PersistentEntity {
 
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
 	@JoinColumn(name="process_instance_id")
-	private Set<ProcessInstanceAttribute> processAttributes = new HashSet();
+	private Set<ProcessInstanceAttribute> processAttributes = new HashSet<ProcessInstanceAttribute>();
 
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
 	@JoinColumn(name="process_instance_id")
-	private Set<ProcessInstanceLog> processLogs = new HashSet();
+	private Set<ProcessInstanceLog> processLogs = new HashSet<ProcessInstanceLog>();
 
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
 	@JoinColumn(name="parent_id")
-	private Set<ProcessInstance> children = new HashSet();
+	private Set<ProcessInstance> children = new HashSet<ProcessInstance>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="parent_id")
 	private ProcessInstance parent;
+	
+	/** Owners of the process. Owner is diffrent then process creator. Process can have many owners */
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "pt_process_instance_owners", joinColumns = @JoinColumn(name = "process_id"))
+	private Set<String> owners = new HashSet<String>();
 
 	@Transient
-	private Set toDelete;
+	private Set<ProcessInstanceAttribute> toDelete;
 
-
-	public ProcessInstance() {
-
-	}
-    
     public ProcessInstance getRootProcessInstance() {
     	ProcessInstance parentProcess = this;
     	while(parentProcess.getParent() != null){
@@ -114,6 +116,10 @@ public class ProcessInstance extends PersistentEntity {
 		this.creator = creator;
 		this.definitionName = definionName;
 		this.createDate = new Date();
+	}
+
+	public ProcessInstance() {
+		// TODO Auto-generated constructor stub
 	}
 
 	public String getExternalKey() {
@@ -170,6 +176,24 @@ public class ProcessInstance extends PersistentEntity {
 	public void setState(String state) {
 		this.state = state;
 	}
+	
+	public Set<String> getOwners() {
+		return owners;
+	}
+
+	public void setOwners(Set<String> ownersLogins) {
+		this.owners = ownersLogins;
+	}
+	
+	public void addOwner(String ownerLogin)
+	{
+		this.owners.add(ownerLogin);
+	}
+	
+	public void removeOwner(String ownerLogin)
+	{
+		this.owners.remove(ownerLogin);
+	}
 
 	public Set<ProcessInstanceAttribute> getProcessAttributes() {
 		if (processAttributes == null) processAttributes = new HashSet<ProcessInstanceAttribute>();
@@ -193,13 +217,13 @@ public class ProcessInstance extends PersistentEntity {
 		processAttributes.remove(attr);
 		if (attr.getId() > 0) {
             if (toDelete == null) {
-                toDelete = new HashSet();
+                toDelete = new HashSet<ProcessInstanceAttribute>();
             }
             toDelete.add(attr);
         }
 	}
 
-	public Set getToDelete() {
+	public Set<ProcessInstanceAttribute> getToDelete() {
 		return toDelete;
 	}
 

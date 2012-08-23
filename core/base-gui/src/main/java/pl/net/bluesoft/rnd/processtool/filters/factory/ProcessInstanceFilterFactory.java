@@ -1,14 +1,9 @@
 package pl.net.bluesoft.rnd.processtool.filters.factory;
 
-import java.text.MessageFormat;
-import java.util.HashSet;
-import java.util.Set;
-
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.QueueType;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
-import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 /**
  * Filter factory to encapsulte filter creation logic
@@ -95,18 +90,14 @@ public class ProcessInstanceFilterFactory
 		return instanceFilter;
 	}
 	
-	private ProcessInstanceFilter getProcessInstanceFilter(UserData user, UserData creator, UserData owner, String name, 
-			QueueType ... types)
+	private ProcessInstanceFilter getProcessInstanceFilter(UserData user, UserData creator, UserData owner, String name, QueueType ... types)
 	{
 		ProcessInstanceFilter pif = new ProcessInstanceFilter();
 		pif.setFilterOwner(user);
 		pif.setName(name);
 		
-		Set<QueueType> queueTypes = new HashSet<QueueType>();
 		for(QueueType queueType: types)
-			queueTypes.add(queueType);
-		
-		pif.setQueueTypes(queueTypes);
+			pif.addQueueType(queueType);
 		
 		if(creator != null)
 			pif.getCreators().add(creator);

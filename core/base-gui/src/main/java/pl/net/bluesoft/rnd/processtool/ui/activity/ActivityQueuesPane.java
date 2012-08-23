@@ -125,8 +125,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 	@Override
 	public void refreshData()
-	{
-		try {
+	{	
+		try 
+		{
 			watch = new TaskWatch(ActivityQueuesPane.class.getSimpleName() + " - lista kolejek " + (onEvent ? " refresh ON_EVENT" : ""));
 			watch.watchTask("Total refreshing data", new Callable<Object>() {
 
@@ -144,7 +145,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		}
 	}
 
-	public void internalRefreshData() {
+	public void internalRefreshData() 
+	{
+		
 		taskList.removeAllComponents();
 
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
@@ -185,9 +188,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private void buildMainTasksViews(ProcessToolContext ctx, final ProcessToolBpmSession bpmSession, UserData user)
 	{
 		/* Create filters for specific task list */
-		ProcessInstanceFilter myTasksBeingDoneByOthers = filterFactory.createMyTaskDoneByOthersFilter(user);
 		ProcessInstanceFilter assignedTasksFromOthers = filterFactory.createOthersTaskAssignedToMeFilter(user);
 		ProcessInstanceFilter assignedTasksByMyself = filterFactory.createMyTasksAssignedToMeFilter(user);
+		ProcessInstanceFilter myTasksBeingDoneByOthers = filterFactory.createMyTaskDoneByOthersFilter(user);
 		ProcessInstanceFilter myTasksClosed = filterFactory.createMyClosedTasksFilter(user);
 				
 		taskList.addComponent(createUserTasksButton(bpmSession,ctx,assignedTasksFromOthers,true));
@@ -254,7 +257,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			container.addItem(filter);
 			if(filter.getOwners().contains(substitutedUser) && !filter.getQueueTypes().contains(QueueType.OWN_FINISHED))
 			{
-				int totalTasks = activityMainPane.getBpmSession().getTasksCount(filter.getFirstQueueType(), filter.getFilterOwner().getLogin(), ctx);
+				int totalTasks = activityMainPane.getBpmSession().getTasksCount(ctx, filter.getFilterOwner().getLogin(), filter.getQueueTypes());
 				
 				total += totalTasks;
 				
@@ -477,7 +480,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		
 		if(showCounter)
 		{
-			int taskCount = bpmSession.getTasksCount(processInstanceFilter.getFirstQueueType(), processInstanceFilter.getFilterOwner().getUser().getLogin(), ctx);
+			int taskCount = bpmSession.getTasksCount(ctx, processInstanceFilter.getFilterOwner().getUser().getLogin(), processInstanceFilter.getQueueTypes());
 			b.setCaption(b.getCaption() + " (" + taskCount + ")");
 			b.setEnabled(taskCount > 0);
 		}
