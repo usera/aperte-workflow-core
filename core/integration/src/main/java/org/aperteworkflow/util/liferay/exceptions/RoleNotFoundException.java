@@ -5,7 +5,7 @@ package org.aperteworkflow.util.liferay.exceptions;
  * @author Maciej Pawlak
  *
  */
-public class RoleNotFoundException extends Exception {
+public class RoleNotFoundException extends RuntimeException {
 
 	public RoleNotFoundException() {
 		// TODO Auto-generated constructor stub
