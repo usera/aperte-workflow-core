@@ -251,8 +251,8 @@ public class PluginHelper implements PluginManager, SearchProvider {
         }
 
         if (bundleHelper.hasHeaderValues(PROCESS_DEPLOYMENT)) {
-            handleProcessDeployment(eventType, bundleHelper, registry);
             handleProcessRoles(eventType, bundleHelper, registry);
+            handleProcessDeployment(eventType, bundleHelper, registry);
         }
 
         if (bundleHelper.hasHeaderValues(GLOBAL_DICTIONARY)) {

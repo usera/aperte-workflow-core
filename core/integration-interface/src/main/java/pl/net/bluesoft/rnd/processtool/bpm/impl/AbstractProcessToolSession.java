@@ -76,11 +76,15 @@ public abstract class AbstractProcessToolSession
 
     	ProcessInstance newSubprocessInstance = createProcessInstance(config, null, ctx, null, null, source, id, parentProcessInstance.getCreator());
     	
-    	/** Corelate parent process with it's new child process */ 
+    	/* Corelate parent process with it's new child process */ 
     	newSubprocessInstance.setParent(parentProcessInstance);  	
     	parentProcessInstance.getChildren().add(newSubprocessInstance);
     	
-    	/** Inform about parent process halt */
+    	
+    	/* Map parent process owners to subprocess */
+    	newSubprocessInstance.getOwners().addAll(parentProcessInstance.getOwners());
+    	
+    	/* Inform about parent process halt */
         broadcastEvent(ctx, new BpmEvent(Type.PROCESS_HALTED, parentProcessInstance, parentProcessInstance.getCreator()));
     	
     	return newSubprocessInstance;

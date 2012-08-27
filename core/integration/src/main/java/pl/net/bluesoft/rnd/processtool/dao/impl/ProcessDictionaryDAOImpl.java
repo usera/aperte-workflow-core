@@ -192,32 +192,48 @@ public class ProcessDictionaryDAOImpl extends SimpleHibernateBean<ProcessDBDicti
         List<ProcessDBDictionary> existingDBDictionaries = definition != null ? fetchProcessDictionaries(definition)
                 : fetchAllGlobalDictionaries();
         Session session = getSession();
-        for (ProcessDBDictionary newDict : newDictionaries) {
+        for (ProcessDBDictionary newDict : newDictionaries) 
+        {
+        	ProcessDBDictionary existingDictionary = null;
+        	for (ProcessDBDictionary existingDict : existingDBDictionaries)
+        		if (existingDict.getDictionaryId().equals(newDict.getDictionaryId()) && existingDict.getLanguageCode().equals(newDict.getLanguageCode()))
+        		{
+        			existingDictionary = existingDict;
+        			break;
+        		}
+        	
             boolean updated = false;
-            for (ProcessDBDictionary existingDict : existingDBDictionaries) {
-                if (existingDict.getDictionaryId().equals(newDict.getDictionaryId())
-                        && existingDict.getLanguageCode().equals(newDict.getLanguageCode())) {
-                    if (overwrite) {
-                        session.delete(existingDict);
-                    } else {
-                        existingDict.getPermissions().clear();
-                        existingDict.getPermissions().addAll(newDict.getPermissions());
-                        existingDict.setDefaultDictionary(newDict.isDefaultDictionary());
-                        existingDict.setDescription(newDict.getDescription());
-                        for (ProcessDBDictionaryItem newItem : newDict.getItems().values()) {
-                            if (!existingDict.getItems().containsKey(newItem.getKey())) {
-                                existingDict.addItem(newItem);
-                            }
+        	if(existingDictionary != null)
+        	{
+                if (overwrite) 
+                {
+                    session.delete(existingDictionary);
+                } 
+                else 
+                {
+                	existingDictionary.getPermissions().clear();
+                	for(ProcessDBDictionaryPermission permission: newDict.getPermissions())
+                	{
+                		permission.setDictionary(existingDictionary);
+                		existingDictionary.getPermissions().add(permission);
+                	}
+                	
+                	existingDictionary.setDefaultDictionary(newDict.isDefaultDictionary());
+                	existingDictionary.setDescription(newDict.getDescription());
+                    for (ProcessDBDictionaryItem newItem : newDict.getItems().values()) {
+                        if (!existingDictionary.getItems().containsKey(newItem.getKey())) {
+                        	existingDictionary.addItem(newItem);
                         }
-                        session.saveOrUpdate(existingDict);
-                        updateCache(existingDict);
-                        updated = true;
                     }
+                    session.saveOrUpdate(existingDictionary);
+                    updateCache(existingDictionary);
+                    updated = true;
                 }
-            }
+        	}
+        	
             if (!updated) {
                 newDict.setProcessDefinition(definition);
-                session.save(newDict);
+                session.saveOrUpdate(newDict);
                 updateCache(newDict);
             }
         }

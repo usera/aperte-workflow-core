@@ -16,6 +16,7 @@ import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.util.lang.Collections;
 import pl.net.bluesoft.util.lang.Predicate;
 
+import com.liferay.portal.NoSuchRoleException;
 import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -289,6 +290,10 @@ public class LiferayBridge {
 	        /* No role with given name found, throw exception */
 	        throw new RoleNotFoundException("No role found with given name: "+roleName);
     	}
+    	catch(NoSuchRoleException ex)
+    	{
+    		throw new RoleNotFoundException("No role found with given name: "+roleName);
+    	}
     	catch (PortalException e) 
     	{
     		throw new RoleNotFoundException("Error during role ["+roleName+"]", e);
@@ -299,26 +304,34 @@ public class LiferayBridge {
 		}
     }
     
-    public static boolean createRoleIfNotExists(String roleName, String description) {
+    public static boolean createRoleIfNotExists(String roleName, String description) 
+    {
     	try 
     	{
     		/* Look for the role with provided name */
-    		Role role = RoleLocalServiceUtil.getRole(PortalUtil.getDefaultCompanyId(), roleName);
-			if (role == null) 
-			{
+        	Role role = null;
+        	try
+        	{
+        		/* Look for the role with provided name */
+        		role = getRoleByName(roleName);
+        	}
+        	catch(RoleNotFoundException ex)
+        	{
 				Map<Locale, String> titles = new HashMap<Locale,  String>();
 				RoleLocalServiceUtil.addRole(0, PortalUtil.getDefaultCompanyId(), roleName, titles, description, RoleConstants.TYPE_REGULAR);
 				return true;
-			}
+        	}
+
 			/* Role found, maybe there is need to update description */
-			else if(description != null && !description.equals(role.getDescription()))
+			if(description != null && !description.equals(role.getDescription()))
 			{
 				role.setDescription(description);
 				RoleLocalServiceUtil.updateRole(role);
 			}
 			return false;
 		}
-		catch (Exception e) {
+		catch (Exception e) 
+		{
 			throw new LiferayBridgeException(e);
 		}
     }
