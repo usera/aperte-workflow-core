@@ -230,7 +230,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                 
                 /* Add all notification to queue */
                 for (String rcpt : new HashSet<String>(emailsToNotify)) {
-                	addNotificationToSend("Default", rcpt, template.getSender(), subject, body, cfg.isSendHtml());
+                	addNotificationToSend("Default", template.getSender(), rcpt, subject, body, cfg.isSendHtml());
                 }
             }
             catch (Exception e) {
