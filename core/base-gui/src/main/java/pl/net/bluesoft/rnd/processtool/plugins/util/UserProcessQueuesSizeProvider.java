@@ -30,7 +30,6 @@ public class UserProcessQueuesSizeProvider
 {
 	private Collection<UsersQueuesSize> usersQueuesSize;
 	private String userLogin;
-	private UserData userData;
 	private ProcessToolRegistry reg;
 	private ProcessToolContext ctx;
 	
@@ -60,7 +59,7 @@ public class UserProcessQueuesSizeProvider
 			{
 				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
 				
-				UserProcessQueuesSizeProvider.this.userData = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
+				UserData userData = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
 				UserProcessQueuesSizeProvider.this.ctx = ctx;
 				
 				/* Fill queues for main user */
@@ -87,15 +86,17 @@ public class UserProcessQueuesSizeProvider
 	{
 		String currentUserLogin = bpmSession.getUserLogin();
 		
+		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
+		
 		ProcessInstanceFilterFactory filterFactory = new ProcessInstanceFilterFactory();
 		Collection<ProcessInstanceFilter> queuesFilters = new ArrayList<ProcessInstanceFilter>();
 		
 		UsersQueuesSize userQueueSize = new UsersQueuesSize(currentUserLogin);
 		
-		queuesFilters.add(filterFactory.createMyTasksAssignedToMeFilter(userData));
-		queuesFilters.add(filterFactory.createMyTaskDoneByOthersFilter(userData));
-		queuesFilters.add(filterFactory.createOthersTaskAssignedToMeFilter(userData));
-		queuesFilters.add(filterFactory.createMyClosedTasksFilter(userData));
+		queuesFilters.add(filterFactory.createMyTasksAssignedToMeFilter(user));
+		queuesFilters.add(filterFactory.createMyTaskDoneByOthersFilter(user));
+		queuesFilters.add(filterFactory.createOthersTaskAssignedToMeFilter(user));
+		queuesFilters.add(filterFactory.createMyClosedTasksFilter(user));
 		
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)
@@ -123,15 +124,17 @@ public class UserProcessQueuesSizeProvider
 	{
 		String currentUserLogin = bpmSession.getUserLogin();
 		
+		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
+		
 		ProcessInstanceFilterFactory filterFactory = new ProcessInstanceFilterFactory();
 		Collection<ProcessInstanceFilter> queuesFilters = new ArrayList<ProcessInstanceFilter>();
 		
 		UsersQueuesSize userQueueSize = new UsersQueuesSize(currentUserLogin);
 		
-		queuesFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(userData));
-		queuesFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(userData));
-		queuesFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(userData));
-		queuesFilters.add(filterFactory.createSubstitutedClosedTasksFilter(userData));
+		queuesFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(user));
+		queuesFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(user));
+		queuesFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(user));
+		queuesFilters.add(filterFactory.createSubstitutedClosedTasksFilter(user));
 		
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)
