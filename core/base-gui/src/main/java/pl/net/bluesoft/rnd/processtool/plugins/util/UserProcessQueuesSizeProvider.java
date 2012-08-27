@@ -86,7 +86,7 @@ public class UserProcessQueuesSizeProvider
 	{
 		String currentUserLogin = bpmSession.getUserLogin();
 		
-		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
+		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(currentUserLogin);
 		
 		ProcessInstanceFilterFactory filterFactory = new ProcessInstanceFilterFactory();
 		Collection<ProcessInstanceFilter> queuesFilters = new ArrayList<ProcessInstanceFilter>();
@@ -124,7 +124,7 @@ public class UserProcessQueuesSizeProvider
 	{
 		String currentUserLogin = bpmSession.getUserLogin();
 		
-		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(userLogin);
+		UserData user = reg.getUserDataDAO(ctx.getHibernateSession()).loadUserByLogin(currentUserLogin);
 		
 		ProcessInstanceFilterFactory filterFactory = new ProcessInstanceFilterFactory();
 		Collection<ProcessInstanceFilter> queuesFilters = new ArrayList<ProcessInstanceFilter>();
