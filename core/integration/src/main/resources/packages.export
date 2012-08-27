@@ -450,4 +450,5 @@ pl.net.bluesoft.rnd.processtool.dict.mapping.annotations.entry,
 pl.net.bluesoft.rnd.util,
 pl.net.bluesoft.rnd.processtool.dict.mapping.annotations.key,
 pl.net.bluesoft.rnd.processtool.dict.mapping.metadata.dict,
-pl.net.bluesoft.rnd.processtool.dict.mapping.providers
+pl.net.bluesoft.rnd.processtool.dict.mapping.providers,
+pl.net.bluesoft.rnd.processtool.ui.widgets.event

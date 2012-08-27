@@ -42,6 +42,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolChildrenFilteringWi
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolDataWidget;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolWidget;
+import pl.net.bluesoft.rnd.processtool.ui.widgets.event.WidgetEventBus;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 import pl.net.bluesoft.util.lang.TaskWatch;
@@ -191,7 +192,8 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
         
         
         TaskWatch watch = new TaskWatch(ProcessDataPane.class.getSimpleName() + " - generowanie interfejsu dla kroku " + stateConfiguration.getName());
-        
+
+		final WidgetEventBus widgetEventBus = new WidgetEventBus();
 
 		for (final ProcessStateWidget w : widgets) {
 			try {
@@ -200,9 +202,9 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 					@Override
 					public Object call() throws Exception {
 						try {
-							ProcessToolWidget realWidget = getWidget(w, stateConfiguration, ctx, null);
+							ProcessToolWidget realWidget = getWidget(w, stateConfiguration, ctx, null, widgetEventBus);
 							if (realWidget instanceof ProcessToolVaadinRenderable && (!nvl(w.getOptional(), false) || realWidget.hasVisibleData())) {
-								processWidgetChildren(w, realWidget, stateConfiguration, ctx, null);
+								processWidgetChildren(w, realWidget, stateConfiguration, ctx, null, widgetEventBus);
 								ProcessToolVaadinRenderable vaadinW = (ProcessToolVaadinRenderable) realWidget;
 								vl.addComponent(vaadinW.render());
 							}
@@ -477,7 +479,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 	}
 
 	private void processWidgetChildren(ProcessStateWidget parentWidgetConfiguration, ProcessToolWidget parentWidgetInstance,
-			ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx, String generatorKey) {
+			ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx, String generatorKey, WidgetEventBus widgetEventBus) {
 		Set<ProcessStateWidget> children = parentWidgetConfiguration.getChildren();
 		List<ProcessStateWidget> sortedList = new ArrayList<ProcessStateWidget>(children);
 		Collections.sort(sortedList, new Comparator<ProcessStateWidget>() {
@@ -495,10 +497,10 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 
 		for (ProcessStateWidget subW : sortedList) {
 			if(StringUtils.isNotEmpty(subW.getGenerateFromCollection())){
-				generateChildren(parentWidgetInstance, stateConfiguration, ctx, subW);
+				generateChildren(parentWidgetInstance, stateConfiguration, ctx, subW, widgetEventBus);
 			} else {
 				subW.setParent(parentWidgetConfiguration);
-				addWidgetChild(parentWidgetInstance, stateConfiguration, ctx, subW, generatorKey);
+				addWidgetChild(parentWidgetInstance, stateConfiguration, ctx, subW, generatorKey, widgetEventBus);
 			}
 		}
 	}
@@ -564,27 +566,28 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
         }
 
 	private void generateChildren(ProcessToolWidget parentWidgetInstance, ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx,
-			ProcessStateWidget subW) {
+			ProcessStateWidget subW, WidgetEventBus widgetEventBus) {
 		String collection = task.getProcessInstance().getSimpleAttributeValue(subW.getGenerateFromCollection(), null);
 		if(StringUtils.isEmpty(collection))
 			return;
 		String[] items = collection.split("[,; ]");
 
 		for(String item : items){
-			addWidgetChild(parentWidgetInstance, stateConfiguration, ctx, subW, item);
+			addWidgetChild(parentWidgetInstance, stateConfiguration, ctx, subW, item, widgetEventBus);
 		}
 	}
 
 	private void addWidgetChild(ProcessToolWidget parentWidgetInstance, ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx,
-			ProcessStateWidget subW, String generatorKey) {
-		ProcessToolWidget widgetInstance = getWidget(subW, stateConfiguration, ctx, generatorKey);
+			ProcessStateWidget subW, String generatorKey, WidgetEventBus widgetEventBus) {
+		ProcessToolWidget widgetInstance = getWidget(subW, stateConfiguration, ctx, generatorKey, widgetEventBus);
 			if (!nvl(subW.getOptional(), false) || widgetInstance.hasVisibleData()) {
-			processWidgetChildren(subW, widgetInstance, stateConfiguration, ctx, generatorKey);
+				processWidgetChildren(subW, widgetInstance, stateConfiguration, ctx, generatorKey, widgetEventBus);
 				parentWidgetInstance.addChild(widgetInstance);
 			}
 		}
 
-	private ProcessToolWidget getWidget(ProcessStateWidget w, ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx, String generatorKey) {
+	private ProcessToolWidget getWidget(ProcessStateWidget w, ProcessStateConfiguration stateConfiguration, ProcessToolContext ctx,
+										String generatorKey, WidgetEventBus widgetEventBus) {
 		ProcessToolWidget processToolWidget;
 		try {
 			ProcessToolRegistry toolRegistry = VaadinUtility.getProcessToolContext(application.getContext()).getRegistry();
@@ -592,6 +595,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 			processToolWidget.setContext(stateConfiguration, w, i18NSource, bpmSession, application,
 			                             bpmSession.getPermissionsForWidget(w, ctx), isOwner);
 			processToolWidget.setGeneratorKey(generatorKey);
+			processToolWidget.setWidgetEventBus(widgetEventBus);
 			if (processToolWidget instanceof ProcessToolDataWidget) {
 				((ProcessToolDataWidget) processToolWidget).loadData(task);
 				dataWidgets.add((ProcessToolDataWidget) processToolWidget);

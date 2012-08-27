@@ -89,7 +89,7 @@ public abstract class SimpleHibernateBean<T> implements HibernateBean<T> {
     public void saveOrUpdate(Collection<T> objects) {
         for (T object : objects) {
             saveOrUpdate(object);
-    }
+    	}
     }
 
     @Override
