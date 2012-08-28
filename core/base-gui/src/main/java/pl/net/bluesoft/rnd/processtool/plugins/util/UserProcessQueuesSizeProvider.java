@@ -93,10 +93,10 @@ public class UserProcessQueuesSizeProvider
 		
 		UsersQueuesSize userQueueSize = new UsersQueuesSize(currentUserLogin);
 		
+		/* Create organized tasks filters */
 		queuesFilters.add(filterFactory.createMyTasksAssignedToMeFilter(user));
 		queuesFilters.add(filterFactory.createMyTaskDoneByOthersFilter(user));
 		queuesFilters.add(filterFactory.createOthersTaskAssignedToMeFilter(user));
-		queuesFilters.add(filterFactory.createMyClosedTasksFilter(user));
 		
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)
@@ -108,6 +108,7 @@ public class UserProcessQueuesSizeProvider
 			userQueueSize.addProcessQueueSize(queueId, filteredQueueSize);
 		}
 		
+		/* Add queues */
 		List<ProcessQueue> userAvailableQueues = new ArrayList<ProcessQueue>(bpmSession.getUserAvailableQueues(ctx));
 		for(ProcessQueue processQueue: userAvailableQueues)
 		{
@@ -132,9 +133,7 @@ public class UserProcessQueuesSizeProvider
 		UsersQueuesSize userQueueSize = new UsersQueuesSize(currentUserLogin);
 		
 		queuesFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(user));
-		queuesFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(user));
-		queuesFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(user));
-		queuesFilters.add(filterFactory.createSubstitutedClosedTasksFilter(user));
+		queuesFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToMeFilter(user));
 		
 		
 		for(ProcessInstanceFilter queueFilter: queuesFilters)

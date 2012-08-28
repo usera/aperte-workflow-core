@@ -54,7 +54,7 @@ public class ProcessInstanceFilterFactory
 	}
 	
 	/** Methods creates new filter which returns tasks created by other users, but assigned to given user */
-	public ProcessInstanceFilter createSubstitutedOthersTaskAssignedToHimFilter(UserData substitutedUser)
+	public ProcessInstanceFilter createSubstitutedOthersTaskAssignedToMeFilter(UserData substitutedUser)
 	{
 		return getProcessInstanceFilter(substitutedUser,null,substitutedUser,"activity.subst.assigned.tasks", QueueType.OTHERS_ASSIGNED);
 	}

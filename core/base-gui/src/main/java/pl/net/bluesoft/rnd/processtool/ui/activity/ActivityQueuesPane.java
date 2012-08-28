@@ -245,7 +245,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	{
 		Collection<ProcessInstanceFilter> taskFilters = new ArrayList<ProcessInstanceFilter>();
 		
-		taskFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToHimFilter(substitutedUser));
+		taskFilters.add(filterFactory.createSubstitutedOthersTaskAssignedToMeFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedTasksAssignedToMeFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedTaskDoneByOthersFilter(substitutedUser));
 		taskFilters.add(filterFactory.createSubstitutedClosedTasksFilter(substitutedUser));
@@ -310,7 +310,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 					.setValue(getMessage("activity.substitutions.description",liferaySubstitutedUser.getRealName(),total,totalQueues));
 			
 			/* button id for the refresher */
-			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueTaskId(substAssignedTasks.getName(), substitutedUser.getLogin());
+			String buttonId = QueuesPanelRefresherUtil.getSubstitutedRootNodeId(substitutedUser.getLogin());
 			
 			container.getItem(substAssignedTasks).getItemProperty("debugId").setValue(buttonId);
 		}
@@ -395,7 +395,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			public String getStyle(Object itemId)
 			{
 				if(substitutionsTree.hasChildren(itemId))
-					return "";
+					return substitutionsTree.getItem(itemId).getItemProperty("debugId").toString();
 				
 				String itemClass = ((Boolean)substitutionsTree.getItem(itemId).getItemProperty("enabled").getValue()) ? "link-enabled" : "link-disabled";
 				itemClass += " " + substitutionsTree.getItem(itemId).getItemProperty("debugId");

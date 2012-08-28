@@ -23,7 +23,7 @@ public class QueuesPanelRefresherUtil
 		/* remove whitespaces */
 		String fixedTaskName = StringUtils.trimToEmpty(taskName).replace(".", "-").replace(" ", "-");
 		
-		return "user-queue-name-"+fixedTaskName;
+		return "user-task-name-"+fixedTaskName;
 	}
 
 	public static String getQueueProcessQueueId(String queueId)
@@ -39,7 +39,12 @@ public class QueuesPanelRefresherUtil
 		/* remove whitespaces */
 		String fixedTaskName = StringUtils.trimToEmpty(taskName).replace(".", "-").replace(" ", "-");
 		
-		return "substituted-"+userLogin+"-user-queue-name-"+fixedTaskName;
+		return "substituted-"+userLogin+"-user-task-name-"+fixedTaskName;
+	}
+	
+	public static String getSubstitutedRootNodeId(String userLogin)
+	{	
+		return "substituted-"+userLogin+"-user-root-node";
 	}
 
 	public static String getSubstitutedQueueProcessQueueId(String queueId, String userLogin)
