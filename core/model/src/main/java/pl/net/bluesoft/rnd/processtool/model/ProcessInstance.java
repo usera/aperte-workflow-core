@@ -273,6 +273,21 @@ public class ProcessInstance extends PersistentEntity {
         return null;
     }
 
+	public <T extends ProcessInstanceAttribute> T findOrCreateAttribute(Class<T> attrClass) {
+		T attribute = findAttributeByClass(attrClass);
+		if(attribute == null) {
+			try {
+				attribute = attrClass.newInstance();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+			addAttribute(attribute);
+		}
+		return attribute;	
+	}
+    
     public <T extends ProcessInstanceAttribute> Set<T> findAttributesByClass(Class<T> clazz) {
         Set<T> result = new HashSet<T>();
         Set<ProcessInstanceAttribute> attrs = getProcessAttributes();
