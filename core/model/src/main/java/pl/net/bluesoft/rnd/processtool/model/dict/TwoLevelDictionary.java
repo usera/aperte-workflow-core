@@ -2,6 +2,8 @@ package pl.net.bluesoft.rnd.processtool.model.dict;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -70,6 +72,11 @@ public class TwoLevelDictionary implements ProcessDictionary<String, String> {
 	@Override
 	public boolean containsKey(String key) {
 		return processDictionary.containsKey(key) || globalDictionary.containsKey(key);
+	}
+
+	@Override
+	public ProcessDefinitionConfig getProcessDefinition() {
+		return processDictionary.getProcessDefinition();
 	}
 
 }

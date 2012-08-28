@@ -3,6 +3,7 @@ package pl.net.bluesoft.rnd.processtool.dao.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -185,6 +186,52 @@ public class ProcessDictionaryDAOImpl extends SimpleHibernateBean<ProcessDBDicti
     @Override
     public void createOrUpdateDictionary(ProcessDefinitionConfig definition, ProcessDBDictionary dictionary, boolean overwrite) {
         createOrUpdateDictionaries(definition, Collections.singletonList(dictionary), overwrite);
+    }
+    
+    public ProcessDBDictionary findDictionaryById(Long dictionaryId)
+    {
+        Criteria criteria = getSession().createCriteria(ProcessDBDictionary.class)
+                .add(Restrictions.eq("id", dictionaryId));
+        
+        return (ProcessDBDictionary)criteria.uniqueResult();
+    }
+    
+    public void createOrUpdateDictionaryItem(ProcessDBDictionary dictionary, String dictionaryItemKey, String dictionaryItemValue)
+    { 	
+    	
+        Criteria criteria = getSession().createCriteria(ProcessDBDictionaryItem.class)
+                .add(Restrictions.eq("key", dictionaryItemKey))
+                .add(Restrictions.eq("dictionary", dictionary));
+        
+        ProcessDBDictionaryItem dictionaryItem = (ProcessDBDictionaryItem)criteria.uniqueResult();
+        
+        if(dictionaryItem == null)
+        {
+        	dictionaryItem = new ProcessDBDictionaryItem();
+        	dictionaryItem.setDictionary(dictionary);
+        	dictionaryItem.setKey(dictionaryItemKey);
+        	
+        	ProcessDBDictionaryItemValue itemValue = new ProcessDBDictionaryItemValue();
+        	itemValue.setItem(dictionaryItem);
+        	itemValue.setValue(dictionaryItemValue);
+        	itemValue.setStringValue(dictionaryItemValue);
+        	itemValue.setValidStartDate(new Date());
+        	
+        	dictionaryItem.getValues().add(itemValue);
+        	
+        	dictionary.addItem(dictionaryItem);
+        	
+        	session.saveOrUpdate(dictionary);
+        }
+        else
+        {
+        	ProcessDBDictionaryItemValue currentValue = dictionaryItem.getValueForCurrentDate();
+        	currentValue.setValue(dictionaryItemValue);
+        	
+        	session.save(currentValue);
+        }
+        
+        
     }
 
     @Override

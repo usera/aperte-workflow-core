@@ -100,6 +100,8 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
                         bpmSession = ctx.getProcessToolSessionFactory().createSession(user, userRoles),
                         PortletSession.APPLICATION_SCOPE);
             }
+            setUser(user);
+            
         }
         if (!initialized) {
             initializePortlet();
