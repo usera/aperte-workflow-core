@@ -39,7 +39,6 @@ public class ProcessDBDictionary extends PersistentEntity implements ProcessDict
 
     @OneToMany(mappedBy = "dictionary", fetch = FetchType.EAGER, orphanRemoval = true)
     @Cascade(value = CascadeType.ALL)
-    //@JoinTable(name = "pt_dictionary_prms", joinColumns = @JoinColumn(name = "process_dictionary_id"))
     private Set<ProcessDBDictionaryPermission> permissions = new HashSet<ProcessDBDictionaryPermission>();
 
     @OneToMany(mappedBy = "dictionary", fetch = FetchType.EAGER, orphanRemoval = true)
@@ -47,8 +46,8 @@ public class ProcessDBDictionary extends PersistentEntity implements ProcessDict
     @Cascade(value = CascadeType.ALL)
     private Map<String, ProcessDBDictionaryItem> items = new HashMap<String, ProcessDBDictionaryItem>();
 
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "dictionary_id")
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "definition_id")
     @Cascade(value = CascadeType.REFRESH)
     private ProcessDefinitionConfig processDefinition;
 
