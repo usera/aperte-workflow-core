@@ -19,6 +19,8 @@ import com.vaadin.ui.themes.BaseTheme;
 /**
  * Created by IntelliJ IDEA. User: mwysocki_bls Date: 8/29/11 Time: 12:33 PM To
  * change this template use File | Settings | File Templates.
+ * 
+ * @author mpawlak
  */
 public class HelpUtility {
 	public static Component helpIcon(final Application application, final I18NSource i18NSource, ContextHelp contextHelp, String dictionary, String key,
@@ -46,6 +48,7 @@ public class HelpUtility {
 		} else {
 			contextHelp.addHelpForComponent(icon, message, popupPlacement);
 		}
+
 		icon.addListener(new Button.ClickListener() {
 			@Override
 			public void buttonClick(Button.ClickEvent event) {
@@ -70,10 +73,14 @@ public class HelpUtility {
 		
 		StringBuilder messageBuilder = new StringBuilder();
 		
+		messageBuilder.append("<div id=\"editor1\">");
+		
 		if(dictItem == null)
 			messageBuilder.append(i18NSource.getMessage("help.empty").replaceAll("\\{0\\}", key));
 		else
 			messageBuilder.append(dictItem.getValueForCurrentDate().getValue());
+		
+		messageBuilder.append("</div>");
 		
 		/* Add edit icon */
 		if(showEditButton)
@@ -82,6 +89,7 @@ public class HelpUtility {
 			String dictionaryId = dict.getDictionaryId();
 			String languageCode = i18NSource.getLocale().toString();
 			String dictionaryItemKey = key;
+			String dictionaryItemValue = dictItem == null ? "" : dictItem.getValueForCurrentDate().getValue().toString();
 			
 			
 			messageBuilder.append("<br/>");
@@ -93,6 +101,8 @@ public class HelpUtility {
 			messageBuilder.append(languageCode);
 			messageBuilder.append("','");
 			messageBuilder.append(dictionaryItemKey);
+			messageBuilder.append("','");
+			messageBuilder.append(dictionaryItemValue);
 			messageBuilder.append("')\" />");
 			
 			

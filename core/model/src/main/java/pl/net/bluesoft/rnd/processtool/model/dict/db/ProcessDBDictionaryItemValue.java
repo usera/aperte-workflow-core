@@ -20,7 +20,6 @@ import java.util.*;
 public class ProcessDBDictionaryItemValue extends PersistentEntity implements ProcessDictionaryItemValue<String> 
 {
     @ManyToOne(fetch = FetchType.LAZY)
-    @Cascade(value = {CascadeType.REFRESH})
     private ProcessDBDictionaryItem item;
 
     @Lob

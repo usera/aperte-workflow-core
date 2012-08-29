@@ -198,12 +198,22 @@ public class ProcessDictionaryDAOImpl extends SimpleHibernateBean<ProcessDBDicti
     
     public void createOrUpdateDictionaryItem(ProcessDBDictionary dictionary, String dictionaryItemKey, String dictionaryItemValue)
     { 	
+    	Session session = getSession();
     	
-        Criteria criteria = getSession().createCriteria(ProcessDBDictionaryItem.class)
-                .add(Restrictions.eq("key", dictionaryItemKey))
-                .add(Restrictions.eq("dictionary", dictionary));
-        
-        ProcessDBDictionaryItem dictionaryItem = (ProcessDBDictionaryItem)criteria.uniqueResult();
+    	ProcessDBDictionaryItem dictionaryItem = null;
+    	
+    	if(dictionary.getId() == null)
+    	{
+	        Criteria criteria = session.createCriteria(ProcessDBDictionaryItem.class)
+	                .add(Restrictions.eq("key", dictionaryItemKey))
+	                .add(Restrictions.eq("dictionary", dictionary));
+	        
+	        dictionaryItem = (ProcessDBDictionaryItem)criteria.uniqueResult();
+    	}
+    	else
+    	{
+    		dictionaryItem = dictionary.getItems().get(dictionaryItemKey);
+    	}
         
         if(dictionaryItem == null)
         {
@@ -228,10 +238,20 @@ public class ProcessDictionaryDAOImpl extends SimpleHibernateBean<ProcessDBDicti
         	ProcessDBDictionaryItemValue currentValue = dictionaryItem.getValueForCurrentDate();
         	currentValue.setValue(dictionaryItemValue);
         	
-        	session.save(currentValue);
+        	dictionaryItem.getValues().remove(currentValue);
+        	
+        	ProcessDBDictionaryItemValue itemValue = new ProcessDBDictionaryItemValue();
+        	itemValue.setItem(dictionaryItem);
+        	itemValue.setValue(dictionaryItemValue);
+        	itemValue.setStringValue(dictionaryItemValue);
+        	itemValue.setValidStartDate(new Date());
+        	
+        	dictionaryItem.getValues().add(itemValue);
+        	
+        	session.saveOrUpdate(dictionary);
         }
         
-        
+        updateCache(dictionary);
     }
 
     @Override
