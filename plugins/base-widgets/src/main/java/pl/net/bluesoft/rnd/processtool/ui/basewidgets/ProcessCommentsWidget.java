@@ -190,6 +190,9 @@ public class ProcessCommentsWidget extends BaseProcessToolVaadinWidget implement
             hl.addComponent(label("<b class=\"header-author\">" + authorLabel + "</b>", 150));
 			hl.addComponent(label("<b class=\"header-time\">" + FormatUtil.formatFullDate(pc.getCreateTime()) + "</b>", 150));
 			//			hl.addComponent(label(pc.getComment(), 450));
+            Label spacer = new Label("");
+            hl.addComponent(spacer);
+            hl.setExpandRatio(spacer, 1);
 			layout.addComponent(hl);
 
 			hl = new HorizontalLayout();
