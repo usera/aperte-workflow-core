@@ -179,6 +179,7 @@ public class ProcessCommentsWidget extends BaseProcessToolVaadinWidget implement
 			hl = new HorizontalLayout();
             hl.addStyleName("comment-header");
 			hl.setSpacing(true);
+            hl.setWidth("100%");
             String authorLabel = pc.getAuthor() != null ? pc.getAuthor().getRealName() : "System";
             if (pc.getAuthorSubstitute() != null) {
                 authorLabel = (pc.getAuthorSubstitute() != null ? pc.getAuthorSubstitute().getRealName() : "System")
