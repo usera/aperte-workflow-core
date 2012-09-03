@@ -94,7 +94,7 @@ public class LatestProcessCommentsWidget extends BaseProcessToolVaadinWidget imp
                                 + " )";
                 }
                 hl.addComponent(label("<b>" + authorLabel + "</b>", 150));
-                hl.addComponent(label("<b>" + FormatUtil.formatFullDate(pc.getCreateTime()) + "</b>", 130));
+                hl.addComponent(label("<b>" + FormatUtil.formatFullDate(pc.getCreateTime()) + "</b>", 150));
 				//                hl.addComponent(label(pc.getComment(), 450));
                 layout.addComponent(hl);
 
