@@ -194,7 +194,9 @@ public class ProcessHistoryWidget extends BaseProcessToolVaadinWidget implements
 				hl.addComponent(label("<b class=\"header-time\">" + pli.getPerformDate() + "</b>", 150));
                 if (Strings.hasText(pli.getStateDescription())) {
                     hl.addComponent(new Label("<b class=\"header-state\">" + getMessage("awf.basewidgets.process-history.stateDescription") + "</b>", Label.CONTENT_XHTML));
-                    hl.addComponent(label(getMessage(pli.getStateDescription()), 350));
+                    Label label = label(getMessage(pli.getStateDescription()), 350);
+                    label.setStyleName("header-state");
+					hl.addComponent(label);
                 }
                 Label spacer = new Label("");
                 hl.addComponent(spacer);
