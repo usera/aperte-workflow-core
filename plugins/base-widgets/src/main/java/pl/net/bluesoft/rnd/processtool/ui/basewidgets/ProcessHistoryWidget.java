@@ -185,6 +185,7 @@ public class ProcessHistoryWidget extends BaseProcessToolVaadinWidget implements
 				hl = new HorizontalLayout();
                 hl.addStyleName("history-item-header");
 				hl.setSpacing(true);
+	            hl.setWidth("100%");
 				if (hasText(pli.getUserDescription()))
 					hl.addComponent(label("<b class=\"header-author\">" + pli.getUserDescription() + "</b>", 150));
 				else
@@ -199,6 +200,7 @@ public class ProcessHistoryWidget extends BaseProcessToolVaadinWidget implements
 				hl = new HorizontalLayout();
                 hl.addStyleName("history-item-body");
 				hl.setSpacing(true);
+	            hl.setWidth("100%");
 				hl.setMargin(new Layout.MarginInfo(false, false, true, true));
 				Label l = new Label(pli.getActionDescription(), Label.CONTENT_XHTML);
 				l.setWidth("730px");
