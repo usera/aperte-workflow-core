@@ -50,9 +50,11 @@ public class PermissionFilter implements Filter {
             //check for user session
             User userByScreenName = null;
             //try to authorize user using Liferay API
-            long basicAuthUserId = PortalUtil.getBasicAuthUserId(req);
-            if (basicAuthUserId != 0)
-                userByScreenName  = UserLocalServiceUtil.getUserById(basicAuthUserId);
+			long userId = PortalUtil.getUserId(req);
+            if (userId != 0)
+                userByScreenName  = UserLocalServiceUtil.getUserById(userId);
+            
+            
             if (userByScreenName != null) {
                 String username = userByScreenName.getScreenName();
                 logger.info("Successfully authorized user: " + username);
