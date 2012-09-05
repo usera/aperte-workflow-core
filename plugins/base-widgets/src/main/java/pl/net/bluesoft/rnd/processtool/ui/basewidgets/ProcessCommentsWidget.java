@@ -177,7 +177,9 @@ public class ProcessCommentsWidget extends BaseProcessToolVaadinWidget implement
 		for (ProcessComment pc : bic.getItemIds()) {
 			HorizontalLayout hl;
 			hl = new HorizontalLayout();
+            hl.addStyleName("comment-header");
 			hl.setSpacing(true);
+            hl.setWidth("100%");
             String authorLabel = pc.getAuthor() != null ? pc.getAuthor().getRealName() : "System";
             if (pc.getAuthorSubstitute() != null) {
                 authorLabel = (pc.getAuthorSubstitute() != null ? pc.getAuthorSubstitute().getRealName() : "System")
@@ -185,12 +187,16 @@ public class ProcessCommentsWidget extends BaseProcessToolVaadinWidget implement
                             + authorLabel
                             + " )";
             }
-            hl.addComponent(label("<b>" + authorLabel + "</b>", 150));
-			hl.addComponent(label("<b>" + FormatUtil.formatFullDate(pc.getCreateTime()) + "</b>", 130));
+            hl.addComponent(label("<b class=\"header-author\">" + authorLabel + "</b>", 150));
+			hl.addComponent(label("<b class=\"header-time\">" + FormatUtil.formatFullDate(pc.getCreateTime()) + "</b>", 150));
 			//			hl.addComponent(label(pc.getComment(), 450));
+            Label spacer = new Label("");
+            hl.addComponent(spacer);
+            hl.setExpandRatio(spacer, 1);
 			layout.addComponent(hl);
 
 			hl = new HorizontalLayout();
+            hl.addStyleName("comment-body");
             hl.setWidth("100%");
 			hl.setSpacing(true);
 			hl.setMargin(new Layout.MarginInfo(false, false, true, true));
