@@ -364,7 +364,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			
 			String desc = getMessage(qus.queue.getDescription());
 			/* The name of the queue */
-			String name = getMessage(USER_QUEUE_PREFIX+qus.queue.getName(), "");
+			String name = getMessage(USER_QUEUE_PREFIX+qus.queue.getName());
 
 			container.getItem(qus).getItemProperty("name").setValue(desc + " " + name + " (" + count + ")");
 			container.getItem(qus).getItemProperty("enabled").setValue(count > 0);
