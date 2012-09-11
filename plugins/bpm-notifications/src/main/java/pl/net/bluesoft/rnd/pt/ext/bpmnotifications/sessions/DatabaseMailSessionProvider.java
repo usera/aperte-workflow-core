@@ -97,7 +97,7 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
                 		"\n mail.smtp.port = "+bnmp.getSmtpPort() +
                 		"\n mail.smtp.user = "+bnmp.getSmtpUser() +
                 		"\n mail.debug = "+bnmp.isDebug() +
-                		"\n ail.transport.protocol = "+bnmp.getTransportProtocol() +
+                		"\n mail.transport.protocol = "+bnmp.getTransportProtocol() +
                 		"\n ssl.SocketFactory.provider = "+bnmp.getSslSocketFactoryClass() +
                 		"\n mail.smtp.auth.plain.disable = "+bnmp.isDisablePlainAuth() +
                 		"\n mail.smtp.starttls.enable = "+bnmp.isStarttls());
@@ -119,7 +119,7 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
                 	prop.put("mail.smtp.user", bnmp.getSmtpUser());
                 
                 if(bnmp.getTransportProtocol() != null)
-                	prop.put("mail.smtp.user", bnmp.getTransportProtocol());
+                	prop.put("mail.transport.protocol", bnmp.getTransportProtocol());
                 
                 if(bnmp.getSslSocketFactoryClass() != null)
                 	prop.put("ssl.SocketFactory.provider", bnmp.getSslSocketFactoryClass());
