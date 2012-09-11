@@ -30,6 +30,7 @@ import pl.net.bluesoft.rnd.processtool.model.config.ProcessQueueConfig;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessQueueRight;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateAction;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateWidget;
+import pl.net.bluesoft.rnd.processtool.model.nonpersistent.MutableBpmTask;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.util.eventbus.EventBusManager;
@@ -161,13 +162,24 @@ public abstract class AbstractProcessToolSession
         Collection<IEvent> events = new ArrayList<IEvent>();
         events.add(new BpmEvent(Type.NEW_PROCESS, newProcessInstance, creator));
 
-        for (BpmTask task : findProcessTasks(newProcessInstance, ctx)) 
-        {
-            events.add(new BpmEvent(Type.ASSIGN_TASK, task, creator));
-            
-    		/* Inform queue manager about task assigne */
-    		ctx.getUserProcessQueueManager().onTaskAssigne(task);
-        }
+		List<BpmTask> processTasks = findProcessTasks(newProcessInstance, ctx);
+
+		if (!processTasks.isEmpty()) {
+			for (BpmTask task : processTasks)
+			{
+				events.add(new BpmEvent(Type.ASSIGN_TASK, task, creator));
+
+				/* Inform queue manager about task assigne */
+				ctx.getUserProcessQueueManager().onTaskAssigne(task);
+			}
+		}
+		else {
+			Collection<BpmTask> processTaskInQueues = getProcessTaskInQueues(ctx, newProcessInstance);
+
+			for (BpmTask task : processTaskInQueues) {
+				ctx.getUserProcessQueueManager().onQueueAssigne(new MutableBpmTask(task));
+			}
+		}
 
         for (IEvent event : events) {
             broadcastEvent(ctx, event);
