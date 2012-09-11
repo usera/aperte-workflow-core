@@ -153,4 +153,5 @@ public interface ProcessToolBpmSession extends ProcessToolBpmConstants {
 
     String deployProcessDefinition(String processName, InputStream definitionStream, InputStream processMapImageStream);
 
+	Collection<BpmTask> getProcessTaskInQueues(ProcessToolContext ctx, final ProcessInstance processInstance);
 }
