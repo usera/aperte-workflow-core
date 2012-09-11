@@ -4,6 +4,7 @@ package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions;
 
 import java.util.logging.Logger;
 
+import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.URLName;
@@ -40,6 +41,11 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		String userPassword = mailSession.getProperties().getProperty("mail.smtp.password");
 		String isDebug = mailSession.getProperties().getProperty("mail.debug");
 		
+		String portString = mailSession.getProperties().getProperty("mail.smtp.port");
+		String protocol = mailSession.getProperties().getProperty("mail.transport.protocol");
+		String host = mailSession.getProperties().getProperty("mail.smtp.host");
+		
+		
 		if(isDebug != null && isDebug.equals("true"))
 		{
 			for(Object property: mailSession.getProperties().keySet())
@@ -54,16 +60,34 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		if(userPassword == null)
 			userPassword = mailSession.getProperties().getProperty("password");
 		
-		PasswordAuthentication authentication = new PasswordAuthentication(userName,userPassword);
-
-	    URLName url=  new URLName(
-	    		mailSession.getProperties().getProperty("mail.transport.protocol"),
-	        mailSession.getProperties().getProperty("mail.smtp.host"),
-	        -1, null, userName, null);
-	    
-	    mailSession.setPasswordAuthentication(url,authentication);
+		Authenticator authenticator = new JndiAuthenticator(userName, userPassword);
+		
+		Session session = mailSession.getInstance(mailSession.getProperties(), authenticator);
+		
+//		PasswordAuthentication authentication = new PasswordAuthentication(userName,userPassword);
+//
+//	    URLName url=  new URLName(protocol,host , Integer.parseInt(portString), null, userName, userPassword);
+//	    
+//	    mailSession.setPasswordAuthentication(url,authentication);
 		
 		return mailSession;
+	}
+	
+	private class JndiAuthenticator extends Authenticator
+	{
+		 String userName;
+		 String userPassword;
+		 
+		 public JndiAuthenticator(String userName, String userPassword)
+		 {
+			 this.userName = userName;
+			 this.userPassword = userPassword;
+		 }
+		 
+		public PasswordAuthentication getPasswordAuthentication()
+		{
+			return new PasswordAuthentication(userName, userPassword);
+		}
 	}
 	
 	private Session tryLookupForSession(String profileName)
