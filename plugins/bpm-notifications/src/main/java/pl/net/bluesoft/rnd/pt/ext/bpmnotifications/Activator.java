@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.aperteworkflow.ui.view.ViewRegistry;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -13,6 +14,7 @@ import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent.Type;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.event.MailEvent;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.event.MailEventListener;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet.BpmAdminPortletRender;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.util.eventbus.EventListener;
 
@@ -47,6 +49,7 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		/* Register scheduler for notifications sending */
 		schedulerActivator.scheduleNotificationsSend(engine);
 	
+		getViewRegistry(registry).registerGenericPortletViewRenderer("user", BpmAdminPortletRender.INSTANCE);
 	}
 	
 	
@@ -58,6 +61,8 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		registry.getEventBusManager().unsubscribe(BpmEvent.class, this);
 		registry.getEventBusManager().unsubscribe(MailEvent.class, mailEventListener);
 		mailEventListener = null;
+		
+		getViewRegistry(registry).unregisterGenericPortletViewRenderer("user", BpmAdminPortletRender.INSTANCE);
 	}
 
 	private ProcessToolRegistry getRegistry(BundleContext context) {
@@ -80,5 +85,9 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
                     e.getUserData(), processStarted, enteringStep);
         }
+	}
+	
+	private ViewRegistry getViewRegistry(ProcessToolRegistry registry) {
+		return registry.getRegisteredService(ViewRegistry.class);
 	}
 }

@@ -54,25 +54,29 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvi
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates.MailTemplateProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
-import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
 /**
  * E-mail notification engine. 
  * 
- * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
+ * @author tlipski@bluesoft.net.pl
+ * @author mpawlak@bluesoft.net.pl
  */
 public class BpmNotificationEngine implements BpmNotificationService 
 {
+    private static final long CONFIG_DEFAULT_CACHE_REFRESH_INTERVAL = 60 * 60 * 1000;
+    
     private static final String SUBJECT_TEMPLATE_SUFFIX = "_subject";
     private static final String PROVIDER_TYPE = "mail.settings.provider.type";
-
+    private static final String REFRESH_INTERVAL = "mail.settings.refresh.interval";
+    
     private Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
 
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
     private long cacheUpdateTime;
-    private static final long CONFIG_CACHE_REFRESH_INTERVAL = 60 * 60 * 1000;
+    private long refrshInterval;
+
     private ProcessToolBpmSession bpmSession;
 
 	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
@@ -105,11 +109,15 @@ public class BpmNotificationEngine implements BpmNotificationService
 		    	/* Register simple providers */
 		    	templateProvider = new  MailTemplateProvider();
 		    	
+		    	readRefreshIntervalFromSettings();
+		    	
 		    	registerMailSettingProvider();
 		    	
 	            /* Refresh config for providers */
 	            templateProvider.refreshConfig();
 	            mailSessionProvider.refreshConfig();
+	            
+	            logger.info("[NOTIFICATIONS] Notifications engine initialized");
 			}
         });
     }
@@ -273,6 +281,22 @@ public class BpmNotificationEngine implements BpmNotificationService
     	
     	
     }
+    
+    /** Read config refresh rate */
+    private void readRefreshIntervalFromSettings()
+    {
+    	String refreshIntervalString = ProcessToolContext.Util.getThreadProcessToolContext().getSetting(REFRESH_INTERVAL);
+    	
+    	if(refreshIntervalString == null)
+    	{
+    		refrshInterval = CONFIG_DEFAULT_CACHE_REFRESH_INTERVAL;
+    	}
+    	else
+    	{
+    		refrshInterval = Long.parseLong(refreshIntervalString);
+    	}
+    		
+    }
 
 	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
 		Set<String> emails = new HashSet<String>();
@@ -361,7 +385,7 @@ public class BpmNotificationEngine implements BpmNotificationService
 	}
 
     public synchronized void refreshConfigIfNecessary() {
-        if (cacheUpdateTime + CONFIG_CACHE_REFRESH_INTERVAL < System.currentTimeMillis()) {
+        if (cacheUpdateTime + refrshInterval < System.currentTimeMillis()) {
             Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
             configCache = session
                     .createCriteria(BpmNotificationConfig.class)
@@ -371,6 +395,9 @@ public class BpmNotificationEngine implements BpmNotificationService
 
             cacheUpdateTime = System.currentTimeMillis();
             
+            /* Update cache refresh rate 8 */
+            readRefreshIntervalFromSettings();
+            
             registerMailSettingProvider();
             
             /* Refresh config for providers */
@@ -378,6 +405,8 @@ public class BpmNotificationEngine implements BpmNotificationService
             mailSessionProvider.refreshConfig();
 
             bpmSession = ProcessToolContext.Util.getThreadProcessToolContext().getProcessToolSessionFactory().createAutoSession();
+            
+            logger.info("Mail configuration updated. Interval is set to "+refrshInterval);
         }
 
     }
