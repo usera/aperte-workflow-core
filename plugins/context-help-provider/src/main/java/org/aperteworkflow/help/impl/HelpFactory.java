@@ -19,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HelpFactory {
@@ -27,18 +28,17 @@ public class HelpFactory {
 	private ProcessDictionary		dict;
 	private ContextHelp				contextHelp;
 	private boolean					showKeys;
-	private ProcessDefinitionConfig	definition;
 	private String 					helpKeysOutputFileName = "keys.txt";
 	private BufferedWriter 			helpKeysOutputFileStream;
 	private Map<Integer, Resource> 	helpIcons = new HashMap<Integer, Resource>();
 	private String 					dictionaryName;
 
-	public HelpFactory(ProcessDefinitionConfig definition, Application application, I18NSource i18NSource, String dictionary, ContextHelp contextHelp) {
+	public HelpFactory(List<ProcessDefinitionConfig> definitions, Application application, I18NSource i18NSource, String dictionary, ContextHelp contextHelp) {
 		this.application = application;
 		this.i18NSource = i18NSource;
 		this.contextHelp = contextHelp;
-		this.definition = definition;
-		dictionaryName = dictionary;
+		this.dictionaryName = dictionary;
+
 		if (application instanceof GenericVaadinPortlet2BpmApplication) {
 			GenericVaadinPortlet2BpmApplication o = (GenericVaadinPortlet2BpmApplication) application;
 			showKeys = o.showKeys();
@@ -46,7 +46,16 @@ public class HelpFactory {
 
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		ProcessDictionaryRegistry registry = ctx.getProcessDictionaryRegistry();
-		ProcessDictionary dictProcess = registry.getSpecificOrDefaultProcessDictionary(definition, "db", dictionary, i18NSource.getLocale().toString());
+
+		ProcessDictionary dictProcess = null;
+
+		for (ProcessDefinitionConfig definition : definitions) {
+			dictProcess = registry.getSpecificOrDefaultProcessDictionary(definition, "db", dictionary, i18NSource.getLocale().toString());
+			if (dictProcess != null) {
+				break;
+			}
+		}
+
 		ProcessDictionary dictGlobal = registry.getSpecificOrDefaultGlobalDictionary("db", dictionary, i18NSource.getLocale().toString());
 
 		if (dictProcess == null) {
