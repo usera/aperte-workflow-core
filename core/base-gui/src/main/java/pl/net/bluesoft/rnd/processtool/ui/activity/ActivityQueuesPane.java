@@ -482,7 +482,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		{
 			int taskCount = bpmSession.getTasksCount(ctx, processInstanceFilter.getFilterOwner().getUser().getLogin(), processInstanceFilter.getQueueTypes());
 			b.setCaption(b.getCaption() + " (" + taskCount + ")");
-			b.setEnabled(taskCount > 0);
+			
+			String styleName = taskCount > 0 ? "v-enabled" : "v-disabled";
+			b.addStyleName(styleName);
 		}
 
 		b.addListener(new Button.ClickListener()
@@ -518,7 +520,10 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
 		qb.setDescription(desc);
 		qb.setStyleName(BaseTheme.BUTTON_LINK);
-		qb.setEnabled(processCount > 0);
+		
+		String styleName = processCount > 0 ? "v-enabled" : "v-disabled";
+		qb.addStyleName(styleName);
+		
 		qb.setDebugId(buttonId);
 		qb.addStyleName(" "+buttonId);
 		qb.addListener(new Button.ClickListener()
