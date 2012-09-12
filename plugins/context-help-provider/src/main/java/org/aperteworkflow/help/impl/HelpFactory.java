@@ -11,13 +11,14 @@ import org.vaadin.jonatan.contexthelp.Placement;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.dict.ProcessDictionaryRegistry;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.processtool.model.dict.MultiLevelDictionary;
 import pl.net.bluesoft.rnd.processtool.model.dict.ProcessDictionary;
-import pl.net.bluesoft.rnd.processtool.model.dict.TwoLevelDictionary;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,27 +48,34 @@ public class HelpFactory {
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 		ProcessDictionaryRegistry registry = ctx.getProcessDictionaryRegistry();
 
-		ProcessDictionary dictProcess = null;
+		List<ProcessDictionary> dictionaries = new ArrayList<ProcessDictionary>();
 
 		for (ProcessDefinitionConfig definition : definitions) {
-			dictProcess = registry.getSpecificOrDefaultProcessDictionary(definition, "db", dictionary, i18NSource.getLocale().toString());
+			ProcessDictionary dictProcess = registry.getSpecificOrDefaultProcessDictionary(definition, "db", dictionary, i18NSource.getLocale().toString());
+
 			if (dictProcess != null) {
-				break;
+				dictionaries.add(dictProcess);
 			}
 		}
 
 		ProcessDictionary dictGlobal = registry.getSpecificOrDefaultGlobalDictionary("db", dictionary, i18NSource.getLocale().toString());
 
-		if (dictProcess == null) {
-			dict = dictGlobal;
-		} else if (dictGlobal == null) {
-			dict = dictProcess;
-		} else {
-			dict = new TwoLevelDictionary(dictGlobal, dictProcess);
+		if (dictGlobal != null) {
+			dictionaries.add(dictGlobal);
 		}
 
-		if (dict == null) {
-			dict = registry.getEmptyDictionary();
+		dict = createDict(registry, dictionaries);
+	}
+
+	private ProcessDictionary createDict(ProcessDictionaryRegistry registry, List<ProcessDictionary> dictionaries) {
+		if (dictionaries.isEmpty()) {
+			return registry.getEmptyDictionary();
+		}
+		else if (dictionaries.size() == 1) {
+			return dictionaries.get(0);
+		}
+		else {
+			return new MultiLevelDictionary(dictionaries);
 		}
 	}
 
