@@ -173,14 +173,10 @@ public class BpmNotificationEngine implements BpmNotificationService
 	    	{
 	    		try
 	    		{
-	    			ctx.getHibernateSession().buildLockRequest(LockOptions.UPGRADE).lock(notification);
-	    			
 	    			sendNotification(notification);
 	    			
 	    			/* Notification was sent, so remove it from te queue */
 	    			NotificationsFacade.removeNotification(notification);
-	    			
-	
 	    		}
 	    		catch(Exception ex)
 	    		{
