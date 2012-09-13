@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade;
 
 import java.util.Collection;
 
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
@@ -21,7 +22,10 @@ public class NotificationsFacade
 	{
 		Session session = getSession();
 		
-		return session.createCriteria(BpmNotification.class).list();
+		SQLQuery query = session.createSQLQuery("select * from PT_EXT_BPM_NOTIFICATION for update NOWAIT");
+		query.addEntity(BpmNotification.class);
+		
+		return query.list();
 	}
 	/** Get all notifications properties */
 	public static Collection<BpmNotificationMailProperties> getNotificationMailProperties()

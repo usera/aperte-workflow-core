@@ -29,9 +29,12 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.GenericJDBCException;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
@@ -93,33 +96,47 @@ public class BpmNotificationEngine implements BpmNotificationService
     {
     	this.registry = registry;
     	
+    	
     	init();
     }
     
     /** Initialize all providers and configurations */
     private void init()
     {
-        registry.withProcessToolContext(new ProcessToolContextCallback() 
-        {
-			@Override
-			public void withContext(ProcessToolContext ctx)
-			{
-				ProcessToolContext.Util.setThreadProcessToolContext(ctx);
-				
-		    	/* Register simple providers */
-		    	templateProvider = new  MailTemplateProvider();
-		    	
-		    	readRefreshIntervalFromSettings();
-		    	
-		    	registerMailSettingProvider();
-		    	
-	            /* Refresh config for providers */
-	            templateProvider.refreshConfig();
-	            mailSessionProvider.refreshConfig();
-	            
-	            logger.info("[NOTIFICATIONS] Notifications engine initialized");
-			}
-        });
+    	if(ProcessToolContext.Util.getThreadProcessToolContext() != null)
+    	{
+    		initComponents();
+    	}
+    		
+    	else
+    	{
+	        registry.withProcessToolContext(new ProcessToolContextCallback() 
+	        {
+				@Override
+				public void withContext(ProcessToolContext ctx)
+				{
+					ProcessToolContext.Util.setThreadProcessToolContext(ctx);
+					
+					initComponents();
+				}
+	        });
+    	}
+    }
+    
+    private void initComponents()
+    {
+    	/* Register simple providers */
+    	templateProvider = new  MailTemplateProvider();
+    	
+    	readRefreshIntervalFromSettings();
+    	
+    	registerMailSettingProvider();
+    	
+        /* Refresh config for providers */
+        templateProvider.refreshConfig();
+        mailSessionProvider.refreshConfig();
+        
+        logger.info("[NOTIFICATIONS] Notifications engine initialized");
     }
     
     /** The method check if there are any new notifications in database to be sent */
@@ -138,33 +155,44 @@ public class BpmNotificationEngine implements BpmNotificationService
     }
     
     /** The method check if there are any new notifications in database to be sent */
-    private void handleNotificationsWithContext()
+    public void handleNotificationsWithContext()
     {
     	logger.info("[NOTIFICATIONS JOB] Checking awaiting notifications... ");
     	
-    	/* Get all notifications waiting to be sent */
-    	Collection<BpmNotification> notificationsToSend = NotificationsFacade.getNotificationsToSend();
+    	ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
+
+		try
+		{
     	
-    	/* The queue is empty, so stop */
-    	if(notificationsToSend.isEmpty())
-    		return;
-    	
-    	logger.info("[NOTIFICATIONS JOB] "+notificationsToSend.size()+" notifications waiting to be sent...");
-    	
-    	for(BpmNotification notification: notificationsToSend)
-    	{
-    		try
-    		{
-    			sendNotification(notification);
-    			
-    			/* Notification was sent, so remove it from te queue */
-    			NotificationsFacade.removeNotification(notification);
-    		}
-    		catch(Exception ex)
-    		{
-    			logger.log(Level.SEVERE, "[NOTIFICATIONS JOB] Problem during notification sending", ex);
-    		}
-    	}
+	    	/* Get all notifications waiting to be sent */
+	    	Collection<BpmNotification> notificationsToSend = NotificationsFacade.getNotificationsToSend();
+	    	
+	    	logger.info("[NOTIFICATIONS JOB] "+notificationsToSend.size()+" notifications waiting to be sent...");
+	    	
+	    	for(BpmNotification notification: notificationsToSend)
+	    	{
+	    		try
+	    		{
+	    			ctx.getHibernateSession().buildLockRequest(LockOptions.UPGRADE).lock(notification);
+	    			
+	    			sendNotification(notification);
+	    			
+	    			/* Notification was sent, so remove it from te queue */
+	    			NotificationsFacade.removeNotification(notification);
+	    			
+	
+	    		}
+	    		catch(Exception ex)
+	    		{
+	    			logger.log(Level.SEVERE, "[NOTIFICATIONS JOB] Problem during notification sending", ex);
+	    		}
+	    	}
+		}
+		/* Table is locked, end transation */
+		catch(Exception ex)
+		{
+
+		}
     }
     
     
