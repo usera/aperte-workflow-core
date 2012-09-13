@@ -70,7 +70,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     private static final String PROVIDER_TYPE = "mail.settings.provider.type";
     private static final String REFRESH_INTERVAL = "mail.settings.refresh.interval";
     
-    private Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
+    private static final Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
 
     private Collection<BpmNotificationConfig> configCache = new HashSet<BpmNotificationConfig>();
 
@@ -503,20 +503,18 @@ public class BpmNotificationEngine implements BpmNotificationService
         }
     }
     
-    private Message createMessageFromNotification(BpmNotification notification, javax.mail.Session mailSession) throws Exception 
+    public static Message createMessageFromNotification(BpmNotification notification, javax.mail.Session mailSession) throws Exception 
     {
         Message message = new MimeMessage(mailSession);
         message.setFrom(new InternetAddress(notification.getSender()));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(notification.getRecipient()));
         message.setSubject(notification.getSubject());
-        message.setContent(notification.getBody(), (notification.getSendAsHtml() ? "text/html" : "text/plain") + "; charset=utf-8");
         message.setSentDate(new Date());
-        
         //body
         MimeBodyPart messagePart = new MimeBodyPart();
-        messagePart.setText(notification.getBody());
+        messagePart.setContent(notification.getBody(), (notification.getSendAsHtml() ? "text/html" : "text/plain") + "; charset=\"iso-8859-1\"");
         
-        Multipart multipart = new MimeMultipart();
+        Multipart multipart = new MimeMultipart("alternative");
         multipart.addBodyPart(messagePart);
 
         //zalaczniki
@@ -542,6 +540,7 @@ public class BpmNotificationEngine implements BpmNotificationService
         
         message.setContent(multipart);
         message.setSentDate(new Date());
+ 
         
         return message;
     }
