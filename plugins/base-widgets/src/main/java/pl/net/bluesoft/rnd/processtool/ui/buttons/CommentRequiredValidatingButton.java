@@ -7,20 +7,37 @@ import pl.net.bluesoft.rnd.processtool.model.processdata.ProcessComment;
 import pl.net.bluesoft.rnd.processtool.model.processdata.ProcessComments;
 import pl.net.bluesoft.rnd.processtool.ui.buttons.dialog.AddCommentDialog;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.AliasName;
+import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.AutoWiredProperty;
 
 import java.util.Date;
+
+import static pl.net.bluesoft.util.lang.Strings.hasText;
 
 /**
  * @author amichalak@bluesoft.net.pl
  */
 
 @AliasName(name = "CommentButton")
-public class CommentRequiredValidatingButton extends StandardValidatingButton {    
+public class CommentRequiredValidatingButton extends StandardValidatingButton {
+	@AutoWiredProperty
+	private String askForCommentKey;
+
 	protected AddCommentDialog dialog;
 	
 	@Override
 	protected void doShowValidationErrorsOrSave(PerformedActionParams params) {
-		showAddCommentDialog(params);
+		if (hasText(askForCommentKey)) {
+			task = params.getSupport().refreshTask(bpmSession, task);
+			if ("true".equals(task.getProcessInstance().getSimpleAttributeValue(askForCommentKey, "false"))) {
+				showAddCommentDialog(params);
+			}
+			else {
+				super.doShowValidationErrorsOrSave(params);
+			}
+		}
+		else {
+			showAddCommentDialog(params);
+		}
 	}
 
 	protected void showAddCommentDialog(final PerformedActionParams params) {
