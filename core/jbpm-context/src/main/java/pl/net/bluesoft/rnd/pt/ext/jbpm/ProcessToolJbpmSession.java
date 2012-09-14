@@ -27,6 +27,7 @@ import org.aperteworkflow.bpm.graph.StateNode;
 import org.aperteworkflow.bpm.graph.TransitionArc;
 import org.aperteworkflow.ui.view.ViewEvent;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.jbpm.api.Execution;
 import org.jbpm.api.ExecutionService;
 import org.jbpm.api.HistoryService;
@@ -572,6 +573,43 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
    		}
    		return configs;
    	}
+   	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<BpmTask> getQueueTasks(ProcessToolContext ctx, String queueName)
+	{
+		SQLQuery query = ctx.getHibernateSession().createSQLQuery(
+				"select task.*, process.*, part.* from jbpm4_task task, pt_process_instance process, jbpm4_participation part " +
+				"where process.internalid = task.execution_id_ and part.task_ = task.dbid_ " +
+				"and part.groupid_ = '"+queueName+"'");
+		
+		query.addEntity("task", TaskImpl.class);
+		query.addEntity("process", ProcessInstance.class);
+		query.addEntity("part", ParticipationImpl.class);
+		
+		/* Get query results */
+		List<Object[]> queueResults = query.list();
+		
+		List<BpmTask> result = new ArrayList<BpmTask>();
+		
+		BpmTaskFactory taskFactory = new BpmTaskFactory(ctx);
+		
+		/* Every row is one queue element with jbpm task as first column and process instance as second */
+   		for(Object[] resultRow: queueResults)
+   		{
+   			
+   			TaskImpl taskInstance = (TaskImpl)resultRow[0];
+   			ProcessInstance processInstance = (ProcessInstance)resultRow[1];
+   			
+   			/* Map process and jbpm task to system's bpm task */
+   			BpmTask task = taskFactory.create(taskInstance, processInstance);
+   			
+   			result.add(task);
+   		}
+   		
+   		return result;
+	}
+	
 
    	@Override
    	public BpmTask assignTaskFromQueue(ProcessQueue queue, ProcessToolContext ctx) {

@@ -18,6 +18,10 @@ import org.codehaus.jackson.map.SerializationConfig.Feature;
 import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider;
 import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider.UsersQueuesSize;
 
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.model.User;
+import com.liferay.portal.util.PortalUtil;
 import com.thoughtworks.xstream.XStream;
 
 /**
@@ -42,6 +46,22 @@ public class UserProcessQueuesServlet extends HttpServlet
 	{
 		ProcessToolRegistry reg = (ProcessToolRegistry) getServletContext().getAttribute(ProcessToolRegistry.class.getName());
 		resp.setContentType("application/json");
+		
+		try
+		{
+			long basicAuthUserId = PortalUtil.getBasicAuthUserId(req);
+			User user = PortalUtil.getUser(req);
+		}
+		catch(PortalException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(SystemException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		PrintWriter out = resp.getWriter();
 		String formatString = req.getParameter("format");

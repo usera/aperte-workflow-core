@@ -109,7 +109,9 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 			 * and element to other person queue "others assigned to me" */
 			else
 			{
-				updateUserProcessQueue(taskIdString, processId, assignee, QueueType.OTHERS_ASSIGNED);
+				if(assignee != null)
+					updateUserProcessQueue(taskIdString, processId, assignee, QueueType.OTHERS_ASSIGNED);
+				
 				updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_IN_PROGRESS); 
 			}
 		}
