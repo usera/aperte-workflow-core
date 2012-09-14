@@ -23,6 +23,8 @@ public class CommentRequiredValidatingButton extends StandardValidatingButton {
 	private String askForCommentKey;
 
 	protected AddCommentDialog dialog;
+
+	private boolean skipAddingComment = false;
 	
 	@Override
 	protected void doShowValidationErrorsOrSave(PerformedActionParams params) {
@@ -32,6 +34,7 @@ public class CommentRequiredValidatingButton extends StandardValidatingButton {
 				showAddCommentDialog(params);
 			}
 			else {
+				skipAddingComment = true;
 				super.doShowValidationErrorsOrSave(params);
 			}
 		}
@@ -72,6 +75,9 @@ public class CommentRequiredValidatingButton extends StandardValidatingButton {
     }
 
     private void saveComment() {
+		if (skipAddingComment) {
+			return;
+		}
         ProcessToolContext ctx = getCurrentContext();
 		ProcessComment pc = dialog.getProcessComment();
         pc.setAuthor(ctx.getUserDataDAO().loadOrCreateUserByLogin(loggedUser));
