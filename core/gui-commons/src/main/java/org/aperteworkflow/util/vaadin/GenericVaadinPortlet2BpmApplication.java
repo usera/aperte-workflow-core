@@ -10,7 +10,6 @@ import org.aperteworkflow.util.liferay.PortalBridge;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
-import pl.net.bluesoft.rnd.util.i18n.impl.DefaultI18NSource;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolGuiCallback;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
@@ -77,13 +76,17 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
 
     public void handleRenderRequest(RenderRequest request, RenderResponse response, Window window) {
         showKeysString = PortalBridge.getCurrentRequestParameter("showKeys");
-        locale = request.getLocale();
-        i18NSource = I18NSourceFactory.createI18NSource(locale);
-        user = PortalBridge.getLiferayUser(request);
+
+		if (request.getLocale() != null) {
+			setLocale(request.getLocale());
+		}
+		else {
+			setLocale(Locale.getDefault());
+		}
+
+		user = PortalBridge.getLiferayUser(request);
         userRoles = user != null ? user.getRoleNames() : Collections.<String>emptyList();
-        if (locale == null) {
-            locale = Locale.getDefault();
-        }
+
         if (user == null) {
             if (loginRequired) {
                 window.removeAllComponents();
@@ -164,8 +167,14 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
         return i18NSource.getMessage(key, defaultValue, params);
     }
 
+	@Override
+	public void setLocale(Locale locale) {
+		super.setLocale(locale);
+		this.locale = locale;
+		this.i18NSource = I18NSourceFactory.createI18NSource(locale);
+	}
 
-    public void handleActionRequest(ActionRequest request, ActionResponse response, Window window) {
+	public void handleActionRequest(ActionRequest request, ActionResponse response, Window window) {
         // nothing
     }
 
