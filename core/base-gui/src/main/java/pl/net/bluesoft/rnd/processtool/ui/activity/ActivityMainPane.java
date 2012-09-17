@@ -20,18 +20,17 @@ import org.aperteworkflow.util.vaadin.UriChangedCallback;
 import org.aperteworkflow.util.vaadin.VaadinUtility;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
-import pl.net.bluesoft.rnd.processtool.bpm.BpmEvent;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstanceFilter;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.nonpersistent.ProcessQueue;
 import pl.net.bluesoft.rnd.processtool.ui.newprocess.NewProcessExtendedPane;
+import pl.net.bluesoft.rnd.processtool.ui.process.ProcessDataPane;
 import pl.net.bluesoft.rnd.processtool.ui.process.ProcessDataViewComponent;
 import pl.net.bluesoft.rnd.processtool.view.impl.BasicViewController;
 import pl.net.bluesoft.rnd.processtool.view.impl.ComponentPaneRenderer;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-import pl.net.bluesoft.util.eventbus.EventListener;
 import pl.net.bluesoft.util.lang.Strings;
 
 import com.vaadin.Application;
@@ -68,14 +67,15 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 	private ResourceCache resourceCache;
 	private ActivityQueuesPane activityQueuesPane;
 
+	private ProcessDataViewComponent pdvc;
+
 	public ActivityMainPane(Application application, I18NSource i18NSource, ProcessToolBpmSession bpmSession)
 	{
 		this.application = application;
 		this.i18NSource = i18NSource;
 		this.bpmSession = bpmSession;
 		this.resourceCache = new ResourceCache(application);
-        
-        
+
 		setWidth("100%");
 		initLayout();
 	}
@@ -174,6 +174,7 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 				ProcessToolBpmSession bpmSession = (ProcessToolBpmSession)viewData.get("bpmSession");
 				BpmTask task = (BpmTask)viewData.get("task");
 				pane.attachProcessDataPane(task,bpmSession);
+				ActivityMainPane.this.pdvc = pane;
 				return pane;
 			}
 		});
@@ -396,7 +397,7 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		displayProcessDataInPane(task,bpmSession,forward);
 	}
 
-	private void confirmTaskClosing(EventHandler eventHandler)
+	private void confirmTaskClosing(final EventHandler eventHandler)
 	{
 		BpmTask task;
 		final ProcessToolContext processToolContextFromThread = ProcessToolContext.Util.getThreadProcessToolContext();
@@ -404,10 +405,30 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 				&& (task = (BpmTask)viewController.getCurrentViewData().get("task")) != null
 				&& getBpmSession().isProcessRunning(task.getProcessInstance().getInternalId(),processToolContextFromThread))
 		{
-			// show confirmation if there already is an open process
-			VaadinUtility.displayConfirmationWindow(application,getI18NSource(),i18NSource.getMessage("activity.close.process.confirmation.title"),
-					i18NSource.getMessage("activity.close.process.confirmation.question"),eventHandler,null,"activity.close.process.confirmation.ok",
-					"activity.close.process.confirmation.cancel");
+			final ProcessDataPane pdp = pdvc != null && pdvc.getProcessDataPane() != null ? pdvc.getProcessDataPane() : null;
+
+			VaadinUtility.displayConfirmationWindow(
+					application,getI18NSource(),
+					i18NSource.getMessage("activity.close.process.confirmation.title"),
+					i18NSource.getMessage("activity.close.process.confirmation.question"),
+					new String[] {
+							"activity.close.process.confirmation.ok",
+							pdp != null && pdp.canSaveProcessData() ? "activity.close.process.confirmation.save" : null,
+							"activity.close.process.confirmation.cancel"
+					},
+					new EventHandler[] {
+							eventHandler,
+							pdp != null && pdp.canSaveProcessData() ? new EventHandler() {
+								@Override
+								public void onEvent() {
+									if (pdp.saveProcessDataButtonAction()) {
+										eventHandler.onEvent();
+									}
+								}
+							} : null,
+							null,
+					},
+					null);
 		}
 		else
 		{

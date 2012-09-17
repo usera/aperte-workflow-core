@@ -371,16 +371,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		Button saveButton = VaadinUtility.link(i18NSource.getMessage("button.save.process.data"), new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
-                withErrorHandling(application, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (validateWidgetsAndSaveData(task)) {
-                            refreshTask();
-                            guiAction = GuiAction.SAVE_PERFORMED;
-                            initLayout(false);
-                        }
-                    }
-                });
+				saveProcessDataButtonAction();
 			}
 		});
         saveButton.addStyleName("with_message");
@@ -388,6 +379,22 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
         saveButton.setIcon(VaadinUtility.imageResource(application, "save.png"));
 		saveButton.setEnabled(isOwner);
 		return saveButton;
+	}
+
+	public boolean saveProcessDataButtonAction() {
+		final boolean[] result = { false };
+		withErrorHandling(application, new Runnable() {
+			@Override
+			public void run() {
+				if (validateWidgetsAndSaveData(task)) {
+					refreshTask();
+					guiAction = GuiAction.SAVE_PERFORMED;
+					initLayout(false);
+					result[0] = true;
+				}
+			}
+		});
+		return result[0];
 	}
 
 	private void refreshTask() {

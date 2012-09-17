@@ -410,7 +410,8 @@ public class VaadinUtility {
     public static void displayConfirmationWindow(Application application, I18NSource i18NSource, String title, String question, final EventHandler okEvent, final EventHandler cancelEvent) {
     	displayConfirmationWindow(application, i18NSource, title, question, okEvent, cancelEvent, i18NSource.getMessage("button.ok"), i18NSource.getMessage("button.cancel"));
     }
-    public static void displayConfirmationWindow(Application application, I18NSource i18NSource,
+
+	public static void displayConfirmationWindow(Application application, I18NSource i18NSource,
                                                  String title, String question,
                                                  final EventHandler okEvent,
                                                  final EventHandler cancelEvent, String okButtonLabel,
@@ -464,8 +465,60 @@ public class VaadinUtility {
         newConfirmationWindow.addComponent(vl);
 
         application.getMainWindow().addWindow(newConfirmationWindow);
-
     }
+
+	public static void displayConfirmationWindow(Application application, I18NSource i18NSource,
+												 String title, String question,
+												 final String[] labels,
+												 final EventHandler[] events, final EventHandler cancelEvent) {
+		final Window newConfirmationWindow = new Window(title);
+		newConfirmationWindow.setModal(true);
+		newConfirmationWindow.setBorder(0);
+		newConfirmationWindow.setClosable(false);
+		newConfirmationWindow.setWidth("500px");
+
+		VerticalLayout vl = new VerticalLayout();
+		vl.setSpacing(true);
+
+		HorizontalLayout hl = new HorizontalLayout();
+		hl.setSpacing(true);
+
+		for (int i = 0; i < events.length; ++i) {
+			final EventHandler buttonEvent = events[i];
+			final String buttonLabel = labels[i];
+
+			if (buttonLabel != null) {
+				Button button = button(i18NSource.getMessage(buttonLabel), null, "default", new Button.ClickListener() {
+					@Override
+					public void buttonClick(Button.ClickEvent event) {
+						newConfirmationWindow.getParent().removeWindow(newConfirmationWindow);
+
+						if (buttonEvent != null) {
+							buttonEvent.onEvent();
+						}
+					}
+				});
+				hl.addComponent(button);
+			}
+		}
+
+		if (cancelEvent != null) {
+			newConfirmationWindow.addListener(new Window.CloseListener() {
+				@Override
+				public void windowClose(Window.CloseEvent e) {
+					cancelEvent.onEvent();
+				}
+			});
+		}
+
+		vl.addComponent(new Label(question));
+		vl.addComponent(hl);
+		vl.setComponentAlignment(hl, Alignment.BOTTOM_CENTER);
+
+		newConfirmationWindow.addComponent(vl);
+
+		application.getMainWindow().addWindow(newConfirmationWindow);
+	}
 
     public static HorizontalLayout labelWithIcon(Resource image, String caption, String style, String description) {
         Embedded img = new Embedded(null, image);

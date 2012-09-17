@@ -32,6 +32,8 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
     private Application application;
 	private ProcessToolBpmSession bpmSession;
 
+	private ProcessDataPane pdp;
+
     public ProcessDataViewComponent(Application application, I18NSource messageSource, ViewController viewController) {
         this.application = application;
         this.messageSource = messageSource;
@@ -51,24 +53,41 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
                         if (canSaveProcessData) {
-                            VaadinUtility.displayConfirmationWindow(getApplication(), messageSource, messageSource.getMessage("activity.close.process.confirmation.title"),
-                                    messageSource.getMessage("activity.close.process.confirmation.question"), eventHandler, null,
-                                    "activity.close.process.confirmation.ok", "activity.close.process.confirmation.cancel");
+                            VaadinUtility.displayConfirmationWindow(
+									getApplication(),
+									messageSource,
+									messageSource.getMessage("activity.close.process.confirmation.title"),
+                                    messageSource.getMessage("activity.close.process.confirmation.question"),
+									new String[] {
+											"activity.close.process.confirmation.ok",
+											canSaveProcessData ? "activity.close.process.confirmation.save" : null,
+											"activity.close.process.confirmation.cancel"
+									},
+									new EventHandler[] {
+											saveEventHandler,
+											canSaveProcessData ? saveAndCloseEventHandler : null,
+											null,
+									},
+									null);
                         }
                         else {
-                            eventHandler.onEvent();
+                            saveEventHandler.onEvent();
                         }
                     }
 
-                    EventHandler eventHandler = new EventHandler() {
+                    EventHandler saveEventHandler = new EventHandler() {
                         @Override
                         public void onEvent() {
-                            setShowExitWarning(application, false);
-                            VaadinUtility.unregisterClosingWarning(application.getMainWindow());
-                            bpmSession.getEventBusManager().post(new ViewEvent(Type.ACTION_COMPLETE));
-                            viewController.displayPreviousView();
+							saveAndCloseAction(false);
                         }
-                    };
+					};
+
+					EventHandler saveAndCloseEventHandler = new EventHandler() {
+						@Override
+						public void onEvent() {
+							saveAndCloseAction(true);
+						}
+					};
                 });
 
         AligningHorizontalLayout toolbar = new AligningHorizontalLayout(Alignment.MIDDLE_RIGHT);
@@ -94,11 +113,23 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
         return toolbar;
     }
 
+	private void saveAndCloseAction(boolean save) {
+		if (save) {
+			if (!pdp.saveProcessDataButtonAction()) {
+				return;
+			}
+		}
+		setShowExitWarning(application, false);
+		VaadinUtility.unregisterClosingWarning(application.getMainWindow());
+		bpmSession.getEventBusManager().post(new ViewEvent(Type.ACTION_COMPLETE));
+		viewController.displayPreviousView();
+	}
+
     public void attachProcessDataPane(BpmTask task, ProcessToolBpmSession bpmSession) {
         removeAllComponents();
         titleLabel = new Label();
         this.bpmSession = bpmSession;
-        ProcessDataPane pdp = new ProcessDataPane(application, bpmSession, messageSource, task, new ProcessDataDisplayContext() {
+        this.pdp = new ProcessDataPane(application, bpmSession, messageSource, task, new ProcessDataDisplayContext() {
             @Override
             public void hide() {
                 setShowExitWarning(application, false);
@@ -131,4 +162,8 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
             ((GenericVaadinPortlet2BpmApplication) application).setShowExitWarning(show);
         }
     }
+
+	public ProcessDataPane getProcessDataPane() {
+		return pdp;
+	}
 }
