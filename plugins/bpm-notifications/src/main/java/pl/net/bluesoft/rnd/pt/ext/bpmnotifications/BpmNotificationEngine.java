@@ -29,12 +29,9 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.exception.GenericJDBCException;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.ProcessToolContextCallback;
@@ -72,6 +69,9 @@ public class BpmNotificationEngine implements BpmNotificationService
     private static final String SUBJECT_TEMPLATE_SUFFIX = "_subject";
     private static final String PROVIDER_TYPE = "mail.settings.provider.type";
     private static final String REFRESH_INTERVAL = "mail.settings.refresh.interval";
+    
+    /** Mail body encoding */
+    private static final String MAIL_ENCODING = "UTF-8";
     
     private static final Logger logger = Logger.getLogger(BpmNotificationEngine.class.getName());
 
@@ -536,7 +536,7 @@ public class BpmNotificationEngine implements BpmNotificationService
         message.setSentDate(new Date());
         //body
         MimeBodyPart messagePart = new MimeBodyPart();
-        messagePart.setContent(notification.getBody(), (notification.getSendAsHtml() ? "text/html" : "text/plain") + "; charset=\"iso-8859-1\"");
+        messagePart.setContent(notification.getBody(), (notification.getSendAsHtml() ? "text/html" : "text/plain") + "; charset=\""+MAIL_ENCODING+"\"");
         
         Multipart multipart = new MimeMultipart("alternative");
         multipart.addBodyPart(messagePart);

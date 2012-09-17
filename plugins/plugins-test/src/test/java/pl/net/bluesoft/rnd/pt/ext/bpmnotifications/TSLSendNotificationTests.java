@@ -1,22 +1,38 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.URLDataSource;
 import javax.mail.Authenticator;
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
+import org.hibernate.SQLQuery;
+import org.hibernate.Transaction;
+import org.hibernate.exception.GenericJDBCException;
+
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.IMailSessionProvider;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.testabstract.AperteDataSourceTestCase;
+import pl.net.bluesoft.util.lang.Strings;
 
 public class TSLSendNotificationTests extends AperteDataSourceTestCase 
 {
+	Integer threadCount =0;
+	
 	public void testEngineForTSL()
 	{
 		doTest(new AperteTestMethod() 
@@ -24,21 +40,63 @@ public class TSLSendNotificationTests extends AperteDataSourceTestCase
 			@Override
 			public void test() 
 			{
-				BpmNotificationEngine engine = new BpmNotificationEngine(registry);
+				final BpmNotificationEngine engine = new BpmNotificationEngine(registry);
 				registry.registerService(BpmNotificationService.class, engine, new Properties());
 				
 				try 
 				{
-					//engine.sendNotification("Default", "awf@bluesoft.net.pl", "awf@bluesoft.net.pl", "test", "testujemy");
+					
+					engine.addNotificationToSend("Default", "axa-mail@bluesoft.net.pl", "inz.pawlak@gmail.com", "test", "test", true);					
+					engine.addNotificationToSend("Default", "axa-mail@bluesoft.net.pl", "inz.pawlak@gmail.com", "test2", "test2", true);
 				} 
-				catch (Exception e) 
+				catch (Exception e1) 
 				{
-					e.printStackTrace();
-					fail("Error during mail processing: "+e.getMessage());
+					fail(e1.getMessage());
+
 				}
+				//ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession().buildLockRequest(LockOptions.UPGRADE);
+//				
+//				org.hibernate.Session session = registry.getSessionFactory().openSession();
+//				session.beginTransaction();
+//				SQLQuery query = session.createSQLQuery("select * from PT_EXT_BPM_NOTIFICATION for update nowait");
+//				query.addEntity(BpmNotification.class);
+				
+				Collection<BpmNotification> notificationsToSend = getNotificationsToSend();
+				Collection<BpmNotification> notificationsToSend2 = getNotificationsToSend();
+				
+				int i = 2;
+
 			}
 		});
 
+	}
+	
+	public static Collection<BpmNotification> getNotificationsToSend()
+	{
+		org.hibernate.Session session = registry.getSessionFactory().openSession();
+		Transaction transation = session.beginTransaction();
+		
+		SQLQuery query = session.createSQLQuery("select * from PT_EXT_BPM_NOTIFICATION for update NOWAIT");
+		query.addEntity(BpmNotification.class);
+		
+		/* Try aquire lock for notifications */
+		Collection<BpmNotification> notifications;
+		
+		try
+		{
+			notifications = query.list();
+			
+			//transation.commit();
+		}
+		/* Table is locked, return empty collection */
+		catch(GenericJDBCException ex)
+		{
+			transation.rollback();
+			
+			return new ArrayList<BpmNotification>();
+		}
+		
+		return notifications;
 	}
 	
 	public void test_1()
@@ -83,18 +141,29 @@ public class TSLSendNotificationTests extends AperteDataSourceTestCase
 			
 			Session session = Session.getInstance(props, auth);
 			session.setDebug(true);
-	
-			MimeMessage msg  = new MimeMessage(session);
-			msg.setText("test");
-			msg.setSubject("test");
-			msg.setFrom(new InternetAddress("axa-mail@bluesoft.net.pl"));
-			msg.addRecipient(Message.RecipientType.TO, new InternetAddress("mpawlak@bluesoft.net.pl"));
 			
+	        Message message = new MimeMessage(session);
+	        message.setFrom(new InternetAddress("axa-mail@bluesoft.net.pl"));
+	        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("axa-mail@bluesoft.net.pl"));
+	        message.setSubject("test");
+	        message.setSentDate(new Date());
+	        //body
+	        MimeBodyPart messagePart = new MimeBodyPart();
+	        messagePart.setContent("test <br><b>test gruby</b><br> test żołądków", (true ? "text/html" : "text/plain") + "; charset=\"UTF-8\"");
+	        
+	        Multipart multipart = new MimeMultipart("alternative");
+	        multipart.addBodyPart(messagePart);
+
+	        //zalaczniki
+	        int counter = 0;
+	        URL url;
+	        
+
+	        
+	        message.setContent(multipart);
+	        message.setSentDate(new Date());
 			
-    		String secureHost = props.getProperty("mail.smtp.host");
-    		String securePort = props.getProperty("mail.smtp.port");
-			
-    		Transport.send(msg);
+    		Transport.send(message);
     		
 //            Transport transport = session.getTransport("smtp");
 //            transport.connect(secureHost, Integer.parseInt(securePort), userName, userPassword);
