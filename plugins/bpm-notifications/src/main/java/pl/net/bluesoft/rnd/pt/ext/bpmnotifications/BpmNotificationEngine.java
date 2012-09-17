@@ -356,7 +356,10 @@ public class BpmNotificationEngine implements BpmNotificationService
 
             Locale locale = Strings.hasText(cfg.getLocale()) ? new Locale(cfg.getLocale()) : Locale.getDefault();
             I18NSource messageSource = I18NSourceFactory.createI18NSource(locale);
-            for (ProcessStateConfiguration st : pi.getDefinition().getStates()) {
+
+			pi = ctx.getProcessInstanceDAO().refresh(pi);
+
+			for (ProcessStateConfiguration st : pi.getDefinition().getStates()) {
                 if (task.getTaskName().equals(st.getName())) {
                     m.put("taskName", messageSource.getMessage(st.getDescription()));
                     break;
