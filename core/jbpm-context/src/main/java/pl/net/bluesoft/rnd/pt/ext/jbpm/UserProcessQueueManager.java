@@ -38,18 +38,12 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 	@Override
 	public void onQueueAssigne(MutableBpmTask bpmTask) 
 	{
-
 		Long processId = bpmTask.getProcessInstance().getId();
-		String creatorLogin = bpmTask.getCreator();
+		String taskIdString = bpmTask.getInternalTaskId();
 		
-		UserProcessQueue queueAssignedTask = new UserProcessQueue();
-		queueAssignedTask.setLogin(creatorLogin);
-		queueAssignedTask.setProcessId(processId);
-		queueAssignedTask.setQueueType(QueueType.OWN_IN_QUEUE);
-		queueAssignedTask.setTaskId(Long.parseLong(bpmTask.getInternalTaskId()));
-		
-		queueDao.saveOrUpdate(queueAssignedTask);
-		
+		/* There is at least one owner - creator by default */
+		for(String ownerLogin: bpmTask.getProcessInstance().getOwners())
+			updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_IN_QUEUE);
 	}
 	
 	@Override
