@@ -105,7 +105,7 @@ public class BpmNotificationsAdminPanel extends VerticalLayout implements ClickL
 					return;
 				}
 				
-				getService().addNotificationToSend("Default", sender, recipient, "Test E-mail", "This is test. Ignore it!", true);
+				getService().addNotificationToSend("Default", sender, recipient, "Test E-mail", "tekst <br><b>tekst html</b><br> tekst polski: żołądków", true);
 				informationNotification(i18NSource.getMessage("bpmnot.send.test.mail.sent"));
 			} 
 			catch (Exception e) 
