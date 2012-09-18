@@ -32,14 +32,22 @@ public class ApplicationPortlet2WithLoadingMessage extends ApplicationPortlet2 {
 		super.writeAjaxPageHtmlVaadinScripts(request, response,	writer,	application, themeName);
 	}	
 
-	public static void hideLoadingMessage(Window window, PortletApplicationContext2 context) {
-		String js = "if (document.getElementsByName) {" +
-				"	var elems = document.getElementsByName('%s');" +
-				"	for (var i = 0; i < elems.length; ++i) {" +
-				"		elems[i].style.display = 'none';" +
-				"	}" +
-				"}";
-		window.executeJavaScript(String.format(js, getLoaderTagId(context.getPortletConfig())));
+	public static void hideLoadingMessage(Window window, PortletApplicationContext2 context) 
+	{
+		/* Moved to theme */
+		/* We do not use getElementsByName becouse it doesn't work on IE */
+//		String js = "if (document.getElementsByTagName) { " +
+//						"var elements = document.getElementsByTagName('div'); " +
+//						"for(i = 0,iarr = 0; i < elements.length; i++){ " +
+//							"var att = elements[i].getAttribute('name'); " +
+//							"if(att == '%s'){ " +
+//								"elements[i].style.display = 'none'; " +
+//								"return; " +
+//							"} " +
+//						"} " +
+//					"} ";
+//		window.executeJavaScript(String.format(js, getLoaderTagId(context.getPortletConfig())));
+		window.executeJavaScript("hideLoadingMessage('"+getLoaderTagId(context.getPortletConfig())+"');");
 	}
 
 	private static String getLoaderTagId(PortletConfig config) {
