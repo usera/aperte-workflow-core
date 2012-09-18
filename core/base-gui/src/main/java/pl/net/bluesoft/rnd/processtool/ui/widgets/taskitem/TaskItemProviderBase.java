@@ -232,7 +232,7 @@ public class TaskItemProviderBase {
 	}
 
 	protected Component createCreateDateLabel(TaskItemProviderParams params) {
-		Date createDate = params.getProcessInstance().getCreateDate();
+		Date createDate = params.getProcessInstance().getRootProcessInstance().getCreateDate();
 		return labelWithIcon(params.getImage("/img/date_standard.png"), formatDate(createDate), "tti-date", params.getMessage("activity.creationDate"));
 	}
 
