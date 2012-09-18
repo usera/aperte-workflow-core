@@ -81,6 +81,7 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 	public void onProcessHalted(ProcessInstance processInstance, BpmTask task) 
 	{
 		//deleteProcessAllocations(processInstance);
+		/* NOP */
 		
 	}
 	
@@ -90,6 +91,9 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 		Long processId = bpmTask.getProcessInstance().getId();
 		String taskIdString = bpmTask.getInternalTaskId();
 		
+		/* Is task assigned to one of the owners? */
+		boolean taskAssignedToOneOfOwners = false;
+		
 		/* There is at least one owner - creator by default */
 		for(String ownerLogin: bpmTask.getProcessInstance().getOwners())
 		{
@@ -97,13 +101,18 @@ public class UserProcessQueueManager implements IUserProcessQueueManager
 			if(ownerLogin.equals(assignee))
 			{
 				updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_ASSIGNED);
+				taskAssignedToOneOfOwners = true;
 			}
 			
 			/* Assign owner process to someone else. Create queue element to owner "mine assigned to others"
 			 * and element to other person queue "others assigned to me" */
 			else
 			{
-				if(assignee != null)
+				/* If task is already assigned to assigne as it's own task or there is no assigne,
+				 * do not change queue to others-assigned */
+				boolean shouldAddToOthersAssignedQueue = !taskAssignedToOneOfOwners && assignee != null;
+				
+				if(shouldAddToOthersAssignedQueue)
 					updateUserProcessQueue(taskIdString, processId, assignee, QueueType.OTHERS_ASSIGNED);
 				
 				updateUserProcessQueue(taskIdString, processId, ownerLogin, QueueType.OWN_IN_PROGRESS); 
