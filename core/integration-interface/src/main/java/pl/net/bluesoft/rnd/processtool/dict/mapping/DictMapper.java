@@ -13,6 +13,7 @@ import pl.net.bluesoft.rnd.processtool.dict.mapping.metadata.item.ItemInfo;
 import pl.net.bluesoft.rnd.processtool.dict.mapping.metadata.item.PropertyInfo;
 import pl.net.bluesoft.rnd.processtool.dict.mapping.providers.DictEntryProvider;
 import pl.net.bluesoft.rnd.processtool.dict.mapping.providers.DictEntryProviderParams;
+import pl.net.bluesoft.rnd.processtool.dict.mapping.providers.LazyLoadDictEntryProvider;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Pair;
@@ -239,10 +240,18 @@ public class DictMapper {
 	public Container getContainer(String dictName, DictEntryFilter entryFilter) {
 		Pair<String, DictEntryFilter> key = new Pair<String, DictEntryFilter>(dictName, entryFilter);
 		if (!dictContainers.containsKey(key)) {
-			Map map = getDictEntryProvider(dictName).getKeyValueMap(entryFilter);
+			Map map = getKeyValueMap(dictName, entryFilter);
 			dictContainers.put(key, createContainer(map));
 		}
 		return dictContainers.get(key);
+	}
+
+	public Map getKeyValueMap(String dictName) {
+		return getDictEntryProvider(dictName).getKeyValueMap();
+	}
+
+	public Map getKeyValueMap(String dictName, DictEntryFilter entryFilter) {
+		return getDictEntryProvider(dictName).getKeyValueMap(entryFilter);
 	}
 
 	private IndexedContainer createContainer(Map<?,?> elements) {
@@ -281,7 +290,9 @@ public class DictMapper {
 	private DictEntryProvider getDictEntryProvider(String dictName) {
 		if (!dictEntryProviders.containsKey(dictName)) {
 			DictDescription desc = dictDescr.getDictDescription(dictName);
-			DictEntryProvider provider = desc.createDictEntryProvider();
+			DictEntryProvider provider = desc.isLazyLoad()
+					? new LazyLoadDictEntryProvider(desc)
+					: desc.createDictEntryProvider();
 
 			if (provider == null) {
 				throw new RuntimeException("Unable to determine DictionaryEntryProvider from given parameters");
