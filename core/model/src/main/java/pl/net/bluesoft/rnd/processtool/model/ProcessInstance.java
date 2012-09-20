@@ -309,6 +309,20 @@ public class ProcessInstance extends PersistentEntity {
         return attr != null ? ((ProcessInstanceSimpleAttribute)attr).getValue() : default_;
     }
 
+	public String getInheritedSimpleAttributeValue(String key) {
+		return getInheritedSimpleAttributeValue(key, null);
+	}
+
+	public String getInheritedSimpleAttributeValue(String key, String default_) {
+		for (ProcessInstance pi = this; pi != null; pi = pi.getParent()) {
+			ProcessInstanceAttribute attr = findAttributeByKey(key);
+			if (attr instanceof ProcessInstanceSimpleAttribute) {
+				return ((ProcessInstanceSimpleAttribute)attr).getValue();
+			}
+		}
+		return default_;
+	}
+
     public void setSimpleAttribute(String key, String value) {
         ProcessInstanceSimpleAttribute attr = (ProcessInstanceSimpleAttribute)findAttributeByKey(key);
         if (attr != null) {

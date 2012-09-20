@@ -323,21 +323,15 @@ public class BpmNotificationEngine implements BpmNotificationService
     }
 
 	private Collection<String> extractUserEmails(String notifyUserAttributes, ProcessToolContext ctx, ProcessInstance pi) {
+		pi = ctx.getProcessInstanceDAO().refresh(pi);
+
 		Set<String> emails = new HashSet<String>();
 		for (String attribute : notifyUserAttributes.split(",")) {
 			attribute = attribute.trim();
 			if(attribute.matches("#\\{.*\\}")){
 	        	String loginKey = attribute.replaceAll("#\\{(.*)\\}", "$1");
-	        	ProcessInstance parentPi = pi;
-				while (parentPi != null) {
-		        	try {
-		        		attribute = (String) ctx.getBpmVariable(parentPi, loginKey);
-		        		break;
-		        	} catch(RuntimeException e) {
-		        		parentPi = parentPi.getParent();
-		        	}
-	        	}
-				if(attribute.matches("#\\{.*\\}")) {
+	        	attribute = pi.getInheritedSimpleAttributeValue(loginKey);
+				if(attribute != null && attribute.matches("#\\{.*\\}")) {
 					continue;
 				}
 	        }
