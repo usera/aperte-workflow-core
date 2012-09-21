@@ -1123,6 +1123,10 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
 
            BpmTask userTask = null;
            BpmTask autoSkipTask = null;
+           
+           /* Is process finished */
+           boolean isProcessFinished = processInstance.getStatus().equals(ProcessStatus.FINISHED);
+           boolean isSubProcess = processInstance.getParent() != null;
 
            List<BpmTask> tasksAfterCompletion = null;
            if(startsSubprocess && processInstance.getChildren() != null) {
@@ -1165,6 +1169,10 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
            /* Task assigned to queue */
            if (userTask == null) 
            {
+        	   /* Process is finished, ask about parent process queues */
+        	   if(isProcessFinished && isSubProcess)
+        		   processInstance = processInstance.getParent();
+        	   
         	   /* Get task assigned to queues */
         	   Collection<BpmTask> queueTasks = getProcessTaskInQueues(ctx, processInstance);
         	   
