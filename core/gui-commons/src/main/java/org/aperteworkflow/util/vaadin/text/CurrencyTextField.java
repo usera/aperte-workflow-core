@@ -17,7 +17,7 @@ public class CurrencyTextField extends NumberTextField {
 		super();
 		setLocale(locale);
 		if(notDoubleErrorMessage != null)
-			addValidator(new LocalizedDoubleValidator(notDoubleErrorMessage));
+			addLocalizedDoubleValidator(notDoubleErrorMessage);
 	}
 
 	public CurrencyTextField(String caption, Locale locale, String notDoubleErrorMessage) {
@@ -29,9 +29,9 @@ public class CurrencyTextField extends NumberTextField {
 		setAllowsNegative(allowsNegative);
 		setLocale(locale);
 		if(notDoubleErrorMessage != null)
-			addValidator(new LocalizedDoubleValidator(notDoubleErrorMessage));
+			addLocalizedDoubleValidator(notDoubleErrorMessage);
 	}
-
+	
 	@Override
 	protected String getDecimalFormatString(){
 		return "#0.00";
