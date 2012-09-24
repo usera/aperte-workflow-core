@@ -84,12 +84,12 @@ public class NumberTextField extends TextField {
                     DecimalFormat decFormat = getDecimalFormat();
                     return decFormat.format(((Number) value).doubleValue());
                 }
-                return removeAlphaCharacters(value.toString().replace(',', '.'));
+                return removeAlphaCharacters(value.toString());
             }
 
             @Override
             public Object parse(String formattedValue) throws Exception {
-                return removeAlphaCharacters(formattedValue.replace(',', '.'));
+                return removeAlphaCharacters(formattedValue);
             }
         };
     }
@@ -97,13 +97,23 @@ public class NumberTextField extends TextField {
 	protected String removeAlphaCharacters(String value) {
 		StringBuilder sb = new StringBuilder();
 		boolean containsDigits = false;
+		
+		DecimalFormat decFormat = getDecimalFormat();
+		char decimentalSeparator = decFormat.getDecimalFormatSymbols().getDecimalSeparator();
+		
 		for (int i = 0; i < value.length(); ++i) {
 			char c = value.charAt(i);
 			if (allowsNegative && sb.length() == 0 && c == '-'){
 				sb.append('-');
 				containsDigits = true; //no, moze nie do końca zawiera cyfry, ale traktujemy to jako poprawne
 			}
-			if (Character.isDigit(c) || c == '.' || c == ',') {
+			if(c == ',' && c != decimentalSeparator)
+				c = decimentalSeparator;
+			else if(c == '.' && c != decimentalSeparator)
+				c = decimentalSeparator;
+			
+			if (Character.isDigit(c) || c == decimentalSeparator) 
+			{
 				sb.append(c);
 				if (Character.isDigit(c)) {
 					containsDigits = true;
