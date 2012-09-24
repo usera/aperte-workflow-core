@@ -73,17 +73,19 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 
 	public void onEvent(BpmEvent e) 
 	{
-		if(Type.NEW_PROCESS == e.getEventType())
+		if(Type.NEW_PROCESS == e.getEventType() || Type.END_PROCESS == e.getEventType())
 			logger.log(Level.INFO, "Received event " + e.getEventType() + " for process " + e.getProcessInstance().getId());
 		else if(Type.ASSIGN_TASK == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType())
 			logger.log(Level.INFO, "Received event " + e.getEventType() + " for task " + e.getProcessInstance().getExternalKey() + "/" + e.getTask().getTaskName());
 		
-        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() || Type.SIGNAL_PROCESS == e.getEventType()) 
+        if (Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType() ||
+			Type.SIGNAL_PROCESS == e.getEventType() || Type.END_PROCESS == e.getEventType())
         {
             boolean processStarted = BpmEvent.Type.NEW_PROCESS == e.getEventType();
+			boolean processEnded = BpmEvent.Type.END_PROCESS == e.getEventType();
             boolean enteringStep = Type.ASSIGN_TASK == e.getEventType() || Type.NEW_PROCESS == e.getEventType();
 			engine.onProcessStateChange(e.getTask(), e.getProcessInstance(),
-                    e.getUserData(), processStarted, enteringStep);
+                    e.getUserData(), processStarted, processEnded, enteringStep);
         }
 	}
 	

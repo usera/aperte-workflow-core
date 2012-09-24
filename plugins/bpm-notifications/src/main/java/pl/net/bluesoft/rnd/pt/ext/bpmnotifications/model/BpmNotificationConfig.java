@@ -24,6 +24,7 @@ public class BpmNotificationConfig extends PersistentEntity {
 	private boolean sendHtml;
     private String locale;
     private boolean notifyOnProcessStart;
+	private boolean notifyOnProcessEnd;
     private boolean onEnteringStep;
 	private String templateArgumentProvider;
 
@@ -35,7 +36,15 @@ public class BpmNotificationConfig extends PersistentEntity {
         this.notifyOnProcessStart = notifyOnProcessStart;
     }
 
-    public String getLocale() {
+	public boolean isNotifyOnProcessEnd() {
+		return notifyOnProcessEnd;
+	}
+
+	public void setNotifyOnProcessEnd(boolean notifyOnProcessEnd) {
+		this.notifyOnProcessEnd = notifyOnProcessEnd;
+	}
+
+	public String getLocale() {
         return locale;
     }
 

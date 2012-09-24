@@ -192,7 +192,8 @@ public class BpmNotificationEngine implements BpmNotificationService
     }
     
     
-    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted, boolean enteringStep) {
+    public void onProcessStateChange(BpmTask task, ProcessInstance pi, UserData userData, boolean processStarted,
+									 boolean processEnded, boolean enteringStep) {
         refreshConfigIfNecessary();
         ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 
@@ -208,6 +209,12 @@ public class BpmNotificationEngine implements BpmNotificationService
 //            		logger.info("Not matched notification #" + cfg.getId() + ": processStarted=" + processStarted );
             		continue;
             	}
+				if (processEnded != cfg.isNotifyOnProcessEnd()) {
+					continue;
+				}
+				if (cfg.isNotifyOnProcessEnd() && task.getProcessInstance().getParent() != null) {
+					continue;
+				}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
 //            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
                     continue;
