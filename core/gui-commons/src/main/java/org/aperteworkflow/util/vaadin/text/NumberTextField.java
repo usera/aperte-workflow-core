@@ -109,7 +109,11 @@ public class NumberTextField extends TextField {
     	// TODO Auto-generated method stub
     	try 
     	{
-			return getDecimalFormat().parseObject((String)super.getValue());
+    		Object value = super.getValue();
+    		if(value == null)
+    			return null;
+    		
+			return getDecimalFormat().parseObject((String)value);
 		} 
     	catch (ParseException e) 
     	{
@@ -179,7 +183,7 @@ public class NumberTextField extends TextField {
 	}
 
 	protected String getDecimalFormatString() {
-		return "0"+getDecimentalSeparator()+"##";
+		return "0.##";
 	}
 
 	protected DecimalFormat getDecimalFormat() {
