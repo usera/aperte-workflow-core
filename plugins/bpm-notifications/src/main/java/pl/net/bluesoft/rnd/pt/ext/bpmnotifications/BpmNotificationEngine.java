@@ -376,6 +376,7 @@ public class BpmNotificationEngine implements BpmNotificationService
         	assignee = ctx.getUserDataDAO().loadUserByLogin(task.getAssignee());
         
         m.put("processVisibleId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
+        m.put("processId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
         m.put("process", pi);
         m.put("user", userData);
         m.put("assignee", assignee);
