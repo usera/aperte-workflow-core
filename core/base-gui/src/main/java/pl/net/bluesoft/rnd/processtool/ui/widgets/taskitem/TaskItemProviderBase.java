@@ -17,6 +17,7 @@ import org.aperteworkflow.util.vaadin.VaadinUtility;
 
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
+import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
 import pl.net.bluesoft.rnd.processtool.ui.common.CssStyles;
 
@@ -237,7 +238,19 @@ public class TaskItemProviderBase {
 	}
 
 	protected Component createAssigneeLabel(TaskItemProviderParams params) {
-		String assignedName = (params.getTask().getOwner() != null && params.getTask().getOwner().getLogin() != null && params.getTask().getOwner().getLastName() != null) ? params.getTask().getOwner().getRealName() : params.getMessage("activity.assigned.empty");
+		String assignedName = null;
+
+		if (impl != null) {
+			assignedName = impl.getAssigneeName(params);
+		}
+
+		if (assignedName == null) {
+			UserData owner = params.getTask().getOwner();
+
+			assignedName = (owner != null && owner.getLogin() != null && owner.getLastName() != null)
+					? owner.getRealName()
+					: params.getMessage("activity.assigned.empty");
+		}
 		return labelWithIcon(params.getImage("/img/user_assigned.png"), assignedName, "tti-person", params.getMessage("activity.assigned"));
 	}
 
