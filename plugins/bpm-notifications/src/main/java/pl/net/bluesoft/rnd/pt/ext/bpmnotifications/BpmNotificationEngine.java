@@ -350,8 +350,8 @@ public class BpmNotificationEngine implements BpmNotificationService
 		return emails;
 	}
 
-    private Map prepareData(BpmTask task, ProcessInstance pi, UserData userData, BpmNotificationConfig cfg, ProcessToolContext ctx) {
-        Map m = new HashMap();
+    private Map<String, Object> prepareData(BpmTask task, ProcessInstance pi, UserData userData, BpmNotificationConfig cfg, ProcessToolContext ctx) {
+        Map<String, Object> m = new HashMap<String, Object>();
         if (task != null) {
             m.put("task", task);
 
@@ -368,6 +368,7 @@ public class BpmNotificationEngine implements BpmNotificationService
             }
 
             m.put("taskUrl", getTaskLink(task, ctx));
+            m.put("taskLink", getTaskLink(task, ctx));
         }
         
         UserData assignee = new UserData();

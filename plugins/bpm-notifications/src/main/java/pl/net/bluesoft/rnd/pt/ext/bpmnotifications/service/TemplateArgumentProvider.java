@@ -10,5 +10,5 @@ import java.util.Map;
 public interface TemplateArgumentProvider {
 	String getName();
 
-	void getArguments(Map<String, String> arguments, TemplateArgumentProviderParams params);
+	void getArguments(Map<String, Object> arguments, TemplateArgumentProviderParams params);
 }
