@@ -48,6 +48,7 @@ public class SendMailStep implements ProcessToolProcessStep {
 		data.put("processVisibleId", processId);
 		data.put("user", user);  
 		data.put("latestComment", getLatestComment(step.getProcessInstance()));
+		data.put("creator", step.getProcessInstance().getCreator());
 
         try {
         	EmailSender.sendEmail(service, user.getEmail(), template, data);
