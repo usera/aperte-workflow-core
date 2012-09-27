@@ -63,7 +63,7 @@ org.apache.soap.util.net,
 
 org.hibernate,
 org.hibernate.proxy,
-
+org.hibernate.stat,
 org.w3c.dom,
 
 org.xml.sax,
