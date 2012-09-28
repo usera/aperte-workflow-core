@@ -94,17 +94,28 @@ public abstract class AbstractLiferayServlet extends HttpServlet
 	{
 		try 
 		{
+			User userByScreenName = null;
+			
 			/* Try to authorized user by given servlet request */
 			long userId = PortalUtil.getUserId(req);
 			
 			/* Request is not bound with any active liferay session */
 			if(userId == 0)
 			{
+				userId = PortalUtil.getBasicAuthUserId(req);
+				if(userId == 0)
+					userByScreenName = PortalUtil.getUser(req);
+				else
+					userByScreenName = UserLocalServiceUtil.getUserById(userId);
+			}
+			else
+				userByScreenName = UserLocalServiceUtil.getUserById(userId);
+			
+			if(userByScreenName == null)
+			{
 				logger.warning("Failed to authorize user");
 				return null;
 			}
-			
-			User userByScreenName = UserLocalServiceUtil.getUserById(userId);
 			logger.info("Successfully authorized user: " + userByScreenName.getScreenName());
 			
 			return userByScreenName;
