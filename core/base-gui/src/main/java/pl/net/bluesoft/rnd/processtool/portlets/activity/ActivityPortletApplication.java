@@ -4,11 +4,14 @@ import static pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmConstants.REQUES
 
 import java.util.Map;
 
+import javax.servlet.http.HttpSession;
+
 import org.aperteworkflow.util.vaadin.GenericVaadinPortlet2BpmApplication;
 
 import pl.net.bluesoft.rnd.processtool.ui.activity.ActivityMainPane;
 import pl.net.bluesoft.rnd.processtool.ui.utils.QueuesPanelRefresherUtil;
 
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
 
@@ -39,7 +42,6 @@ public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplicat
         });
 		getMainWindow().setContent(amp);
 		getMainWindow().addListener((CloseListener)this);
-		
 	}
 
 	@Override
@@ -55,5 +57,20 @@ public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplicat
 		QueuesPanelRefresherUtil.unregisterUser(getMainWindow(), user.getLogin());
 	}
 	
+    public static SystemMessages getSystemMessages() 
+    {
+    	/* Fix na wyskakujace, przerazajace, czerwone okienko dotyczace
+    	 * wygasnicia sesji 
+    	 */
+    	CustomizedSystemMessages msgs = new CustomizedSystemMessages();
+    	msgs.setSessionExpiredNotificationEnabled(false);
+    	msgs.setSessionExpiredMessage(null);
+    	msgs.setSessionExpiredCaption(null);
+    	
+    	msgs.setAuthenticationErrorCaption(null);
+    	msgs.setAuthenticationErrorMessage(null);
+    	msgs.setAuthenticationErrorNotificationEnabled(false);
+    	return msgs;
+    }
 	
 }
