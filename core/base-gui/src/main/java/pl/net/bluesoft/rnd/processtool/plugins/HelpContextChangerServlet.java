@@ -59,13 +59,13 @@ public class HelpContextChangerServlet extends AbstractLiferayServlet
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException 
 	{
-		if(!isAuthorizationRequired())
-			return;
-		
-		boolean isUserAuthorized = authorizeUserByRequest(req, resp);
-		
-		if(!isUserAuthorized)
-			return;
+		if(isAuthorizationRequired())
+		{
+			boolean isUserAuthorized = authorizeUserByRequest(req, resp);
+			
+			if(!isUserAuthorized)
+				return;
+		}
 		
 		processRequest(req, resp);
 	}
@@ -73,13 +73,13 @@ public class HelpContextChangerServlet extends AbstractLiferayServlet
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException 
 	{
-		if(!isAuthorizationRequired())
-			return;
-		
-		boolean isUserAuthorized = authorizeUserByRequest(req, resp);
-		
-		if(!isUserAuthorized)
-			return;
+		if(isAuthorizationRequired())
+		{
+			boolean isUserAuthorized = authorizeUserByRequest(req, resp);
+			
+			if(!isUserAuthorized)
+				return;
+		}
 		
 		processRequest(req, resp);
 	}
