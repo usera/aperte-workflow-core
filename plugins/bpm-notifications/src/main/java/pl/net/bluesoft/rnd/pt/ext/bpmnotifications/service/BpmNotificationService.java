@@ -16,7 +16,7 @@ public interface BpmNotificationService
 
     String findTemplate(String templateName);
 
-    String processTemplate(String templateName, Map data);
+    String processTemplate(String templateName, Map<String, Object> data);
 
 	void registerTemplateArgumentProvider(TemplateArgumentProvider provider);
 	void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider);

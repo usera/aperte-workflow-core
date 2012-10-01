@@ -1,6 +1,5 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications;
 
-import static pl.net.bluesoft.rnd.util.TaskUtil.getTaskLink;
 import static pl.net.bluesoft.util.lang.Strings.hasText;
 
 import java.net.URL;
@@ -8,11 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -39,7 +36,6 @@ import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
 import pl.net.bluesoft.rnd.processtool.model.BpmTask;
 import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
-import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.facade.NotificationsFacade;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
@@ -47,13 +43,10 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProviderParams;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.DatabaseMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.IMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates.MailTemplateProvider;
-import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.util.lang.Strings;
 
 /**
@@ -81,8 +74,9 @@ public class BpmNotificationEngine implements BpmNotificationService
     private long refrshInterval;
 
     private ProcessToolBpmSession bpmSession;
-
-	private final Set<TemplateArgumentProvider> argumentProviders = new HashSet<TemplateArgumentProvider>();
+    
+    /** Data provider for standard e-mail template */
+    private TemplateDataProvider templateDataProvider;
     
     private ProcessToolRegistry registry;
     
@@ -127,6 +121,7 @@ public class BpmNotificationEngine implements BpmNotificationService
     {
     	/* Register simple providers */
     	templateProvider = new  MailTemplateProvider();
+    	templateDataProvider = new TemplateDataProvider();
     	
     	readRefreshIntervalFromSettings();
     	
@@ -158,8 +153,6 @@ public class BpmNotificationEngine implements BpmNotificationService
     public void handleNotificationsWithContext()
     {
     	logger.info("[NOTIFICATIONS JOB] Checking awaiting notifications... ");
-    	
-    	ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();
 
 		try
 		{
@@ -216,7 +209,7 @@ public class BpmNotificationEngine implements BpmNotificationService
 					continue;
 				}
                 if (hasText(cfg.getProcessTypeRegex()) && !pi.getDefinitionName().toLowerCase().matches(cfg.getProcessTypeRegex().toLowerCase())) {
-//            		logger.info("Not matched notification #" + cfg.getId() + ": pi.getDefinitionName()=" + pi.getDefinitionName() );
+//            		logger.info("Not matched notification #" + cfg.getId() + ":pra pi.getDefinitionName()=" + pi.getDefinitionName() );
                     continue;
                 }
                 if (!(
@@ -262,7 +255,7 @@ public class BpmNotificationEngine implements BpmNotificationService
                 
                 BpmNotificationTemplate template = templateProvider.getBpmNotificationTemplate(templateName);
 
-                Map data = prepareData(task, pi, userData, cfg, ctx);
+                Map<String, Object> data = templateDataProvider.prepareData(bpmSession, task, pi, userData, cfg, ctx);
                 String body = processTemplate(templateName, data);
                 String subject = processTemplate(templateName + SUBJECT_TEMPLATE_SUFFIX, data);
 
@@ -350,63 +343,17 @@ public class BpmNotificationEngine implements BpmNotificationService
 		return emails;
 	}
 
-    private Map<String, Object> prepareData(BpmTask task, ProcessInstance pi, UserData userData, BpmNotificationConfig cfg, ProcessToolContext ctx) {
-        Map<String, Object> m = new HashMap<String, Object>();
-        if (task != null) {
-            m.put("task", task);
-
-            Locale locale = Strings.hasText(cfg.getLocale()) ? new Locale(cfg.getLocale()) : Locale.getDefault();
-            I18NSource messageSource = I18NSourceFactory.createI18NSource(locale);
-
-			pi = ctx.getProcessInstanceDAO().refresh(pi);
-
-			for (ProcessStateConfiguration st : pi.getDefinition().getStates()) {
-                if (task.getTaskName().equals(st.getName())) {
-                    m.put("taskName", messageSource.getMessage(st.getDescription()));
-                    break;
-                }
-            }
-
-            m.put("taskUrl", getTaskLink(task, ctx));
-            m.put("taskLink", getTaskLink(task, ctx));
-        }
-        
-        UserData assignee = new UserData();
-        if(task.getAssignee() != null)
-        	assignee = ctx.getUserDataDAO().loadUserByLogin(task.getAssignee());
-        
-        m.put("processVisibleId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
-        m.put("processId", Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
-        m.put("process", pi);
-        m.put("user", userData);
-        m.put("assignee", assignee);
-        m.put("session", bpmSession);
-        m.put("context", ctx);
-        m.put("config", cfg);
-
-		if (hasText(cfg.getTemplateArgumentProvider())) {
-			for (TemplateArgumentProvider argumentProvider : argumentProviders) {
-				if (cfg.getTemplateArgumentProvider().equalsIgnoreCase(argumentProvider.getName())) {
-					TemplateArgumentProviderParams params = new TemplateArgumentProviderParams();
-					params.setProcessInstance(pi);
-					argumentProvider.getArguments(m, params);
-					break;
-				}
-			}
-		}
-
-        return m;
-    }
-
 
 	@Override
-	public void registerTemplateArgumentProvider(TemplateArgumentProvider provider) {
-		argumentProviders.add(provider);
+	public void registerTemplateArgumentProvider(TemplateArgumentProvider provider) 
+	{
+		templateDataProvider.registerTemplateArgumentProvider(provider);
 	}
 
 	@Override
-	public void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider) {
-		argumentProviders.add(provider);
+	public void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider) 
+	{
+		templateDataProvider.unregisterTemplateArgumentProvider(provider);
 	}
 
 	@Override
@@ -414,7 +361,8 @@ public class BpmNotificationEngine implements BpmNotificationService
 		cacheUpdateTime = 0;
 	}
 
-    public synchronized void refreshConfigIfNecessary() {
+    @SuppressWarnings("unchecked")
+	public synchronized void refreshConfigIfNecessary() {
         if (cacheUpdateTime + refrshInterval < System.currentTimeMillis()) {
             Session session = ProcessToolContext.Util.getThreadProcessToolContext().getHibernateSession();
             configCache = session
@@ -593,7 +541,7 @@ public class BpmNotificationEngine implements BpmNotificationService
 	}
 
 	@Override
-	public String processTemplate(String templateName, Map data)
+	public String processTemplate(String templateName, Map<String, Object> data)
 	{
 		refreshConfigIfNecessary();
 		return templateProvider.processTemplate(templateName,data);

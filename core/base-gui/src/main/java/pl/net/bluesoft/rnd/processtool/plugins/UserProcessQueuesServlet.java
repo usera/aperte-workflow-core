@@ -47,22 +47,6 @@ public class UserProcessQueuesServlet extends HttpServlet
 		ProcessToolRegistry reg = (ProcessToolRegistry) getServletContext().getAttribute(ProcessToolRegistry.class.getName());
 		resp.setContentType("application/json");
 		
-		try
-		{
-			long basicAuthUserId = PortalUtil.getBasicAuthUserId(req);
-			User user = PortalUtil.getUser(req);
-		}
-		catch(PortalException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(SystemException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		PrintWriter out = resp.getWriter();
 		String formatString = req.getParameter("format");
 		Format format;
