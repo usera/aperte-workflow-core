@@ -113,7 +113,13 @@ public class NumberTextField extends TextField {
     		if(value == null)
     			return null;
     		
-			return getDecimalFormat().parseObject((String)value);
+    		if(value instanceof String)
+    		{
+    			Object parsedObject = getDecimalFormat().parseObject((String)value);
+    			return parsedObject;
+    		}
+    		else 
+    			return getDecimalFormat().parseObject(getDecimalFormat().format(value));
 		} 
     	catch (ParseException e) 
     	{
