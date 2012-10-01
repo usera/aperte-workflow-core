@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
+import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
 import com.vaadin.data.Property;
@@ -40,6 +41,7 @@ public class NumberTextField extends TextField {
 
 	public NumberTextField(String caption) {
 		super(caption);
+		setLocale(I18NSource.ThreadUtil.getThreadI18nSource().getLocale());
 		alignRight();
 		attachListeners();
 	}
@@ -181,7 +183,7 @@ public class NumberTextField extends TextField {
 		private void checkValue(String propValue) {
 			if (Strings.hasText(propValue)) {
 				String value = removeAlphaCharacters(propValue);
-				if (!value.equals(propValue)) {
+				if (!value.equals(propValue) && !value.replace(',', '.').equals(propValue.replace(',', '.'))) {
 					setValue(value);
 				}
 			}
