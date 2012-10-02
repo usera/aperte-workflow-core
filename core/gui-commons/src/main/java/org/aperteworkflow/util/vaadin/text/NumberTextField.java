@@ -1,29 +1,18 @@
 package org.aperteworkflow.util.vaadin.text;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.ParseException;
-
-import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-import pl.net.bluesoft.util.lang.Strings;
-
 import com.vaadin.data.Property;
 import com.vaadin.data.util.PropertyFormatter;
-import com.vaadin.data.validator.AbstractStringValidator;
 import com.vaadin.data.validator.DoubleValidator;
 import com.vaadin.data.validator.IntegerValidator;
-import com.vaadin.event.FieldEvents.BlurEvent;
-import com.vaadin.event.FieldEvents.BlurListener;
-import com.vaadin.event.FieldEvents.FocusEvent;
-import com.vaadin.event.FieldEvents.FocusListener;
-import com.vaadin.event.FieldEvents.TextChangeEvent;
-import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.event.FieldEvents.*;
 import com.vaadin.ui.TextField;
+import pl.net.bluesoft.util.lang.Strings;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 public class NumberTextField extends TextField {
 	private DecimalFormat decimalFormat;
-	private char decimentalSeparator;
 	private boolean allowsNegative;
 	
 	public boolean isAllowsNegative() {
@@ -41,7 +30,6 @@ public class NumberTextField extends TextField {
 
 	public NumberTextField(String caption) {
 		super(caption);
-		setLocale(I18NSource.ThreadUtil.getThreadI18nSource().getLocale());
 		alignRight();
 		attachListeners();
 	}
@@ -74,7 +62,6 @@ public class NumberTextField extends TextField {
 
 	public void addDoubleValidator(String errorMessage) {
 		addValidator(new LocalizedDoubleValidator(errorMessage));
-		//getDecimalFormat().setParseBigDecimal(true);
 	}
 
 	public void addIntegerValidator(String errorMessage) {
@@ -89,50 +76,25 @@ public class NumberTextField extends TextField {
     protected PropertyFormatter getPropertyFormatter(Property newDataSource) {
         return new PropertyFormatter(newDataSource) {
             @Override
-            public String format(Object value) 
-            {
-            	return getDecimalFormat().format(value);
+            public String format(Object value) {
+                if (value == null) {
+                    return getNullRepresentation();
+                }
+                if (value instanceof Number) {
+                    DecimalFormat decFormat = getDecimalFormat();
+                    return decFormat.format(((Number) value).doubleValue());
+                }
+                return removeAlphaCharacters(value.toString().replace(',', '.'));
             }
 
             @Override
-            public Object parse(String formattedValue) throws Exception 
-            {
-            	if(formattedValue == null)
-            		return 0;
-            	
-                return getDecimalFormat().parseObject(formattedValue);
+            public Object parse(String formattedValue) throws Exception {
+                return removeAlphaCharacters(formattedValue.replace(',', '.'));
             }
         };
     }
-    
-    @Override
-    public Object getValue() 
-    {
-    	// TODO Auto-generated method stub
-    	try 
-    	{
-    		Object value = super.getValue();
-    		if(value == null)
-    			return null;
-    		
-    		if(value instanceof String)
-    		{
-    			Object parsedObject = getDecimalFormat().parseObject((String)value);
-    			return parsedObject;
-    		}
-    		else 
-    			return getDecimalFormat().parseObject(getDecimalFormat().format(value));
-		} 
-    	catch (ParseException e) 
-    	{
-			return null;
-		}
-    }
 
-	protected String removeAlphaCharacters(String input) 
-	{
-		String value = cleanSeparators(input);
-		
+	protected String removeAlphaCharacters(String value) {
 		StringBuilder sb = new StringBuilder();
 		boolean containsDigits = false;
 		for (int i = 0; i < value.length(); ++i) {
@@ -141,7 +103,7 @@ public class NumberTextField extends TextField {
 				sb.append('-');
 				containsDigits = true; //no, moze nie do końca zawiera cyfry, ale traktujemy to jako poprawne
 			}
-			if (Character.isDigit(c) || c == getDecimentalSeparator()) {
+			if (Character.isDigit(c) || c == '.' || c == ',') {
 				sb.append(c);
 				if (Character.isDigit(c)) {
 					containsDigits = true;
@@ -183,7 +145,7 @@ public class NumberTextField extends TextField {
 		private void checkValue(String propValue) {
 			if (Strings.hasText(propValue)) {
 				String value = removeAlphaCharacters(propValue);
-				if (!value.equals(propValue) && !value.replace(',', '.').equals(propValue.replace(',', '.'))) {
+				if (!value.equals(propValue)) {
 					setValue(value);
 				}
 			}
@@ -196,76 +158,33 @@ public class NumberTextField extends TextField {
 
 	protected DecimalFormat getDecimalFormat() {
 		if(decimalFormat == null)
-		{
-			decimalFormat = getLocale() != null ? (DecimalFormat)NumberFormat.getInstance(getLocale()) : (DecimalFormat)NumberFormat.getInstance();
-			decimentalSeparator = decimalFormat.getDecimalFormatSymbols().getDecimalSeparator(); 
-		}
+			decimalFormat = getLocale() != null ? new DecimalFormat(getDecimalFormatString(), new DecimalFormatSymbols(getLocale())) : new DecimalFormat(getDecimalFormatString());
 		return decimalFormat;
 	}
 
 	public void setDecimalFormat(DecimalFormat decimalFormat) {
 		this.decimalFormat = decimalFormat;
 	}
-	
-	public void addLocalizedDoubleValidator(String message)
-	{
-		this.addValidator(new LocalizedDoubleValidator(message));
-	}
-	
-	public void addLocalizedIntegerValidator(String message)
-	{
-		this.addValidator(new LocalizedIntegerValidator(message));
-	}
 
-	private class LocalizedDoubleValidator extends DoubleValidator {
+	public static final class LocalizedDoubleValidator extends DoubleValidator {
 		public LocalizedDoubleValidator(String errorMessage) {
 			super(errorMessage);
 		}
 
 		@Override
 		protected boolean isValidString(String value) {
-			try 
-			{
-				String localizedValue = getDecimalFormat().parseObject(value).toString();
-				return super.isValidString(localizedValue);
-			} 
-			catch (ParseException e) {
-				return false;
-			}
+			return super.isValidString(value == null ? null : value.replace(",", "."));
 		}
 	}
 
-	private class LocalizedIntegerValidator extends IntegerValidator {
+	public static final class LocalizedIntegerValidator extends IntegerValidator {
 		public LocalizedIntegerValidator(String errorMessage) {
 			super(errorMessage);
 		}
 
 		@Override
 		protected boolean isValidString(String value) {
-			try 
-			{
-				String localizedValue = getDecimalFormat().parseObject(value).toString();
-				return super.isValidString(localizedValue);
-			} 
-			catch (ParseException e) {
-				return false;
-			}
+			return super.isValidString(value == null ? null : value.replace(",", "."));
 		}
-	}
-	
-	public char getDecimentalSeparator()
-	{
-		return decimentalSeparator;
-	}
-	
-	public String cleanSeparators(String input)
-	{
-		if(input == null)
-			return null;
-		
-		if(getDecimentalSeparator() == ',')
-			return input.replace('.', getDecimentalSeparator());
-		else
-			return input.replace(',', getDecimentalSeparator());	
 	}
 }
