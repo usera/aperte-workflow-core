@@ -1,5 +1,7 @@
 package org.aperteworkflow.help.impl;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.vaadin.jonatan.contexthelp.ContextHelp;
 import org.vaadin.jonatan.contexthelp.Placement;
 
@@ -91,6 +93,8 @@ public class HelpUtility {
 			String dictionaryItemKey = key;
 			String dictionaryItemValue = dictItem == null ? "" : dictItem.getValueForCurrentDate().getValue().toString();
 			
+			String escapedValue = StringEscapeUtils.escapeHtml4(dictionaryItemValue);
+			
 			
 			messageBuilder.append("<br/>");
 			messageBuilder.append("<input type=\"button\" value=\""+i18NSource.getMessage("help.popup.edit")+"\" name=\"editButton\" onClick=\"showEditHelpContextPopup('");
@@ -102,7 +106,7 @@ public class HelpUtility {
 			messageBuilder.append("','");
 			messageBuilder.append(dictionaryItemKey);
 			messageBuilder.append("','");
-			messageBuilder.append(dictionaryItemValue);
+			messageBuilder.append(escapedValue);
 			messageBuilder.append("')\" />");
 			
 			
