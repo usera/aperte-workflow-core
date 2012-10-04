@@ -26,11 +26,11 @@ import org.osgi.framework.*;
 
 import com.thoughtworks.xstream.XStream;
 
-import pl.net.bluesoft.rnd.poutils.cquery.func.F;
 import pl.net.bluesoft.rnd.processtool.plugins.*;
 import pl.net.bluesoft.rnd.processtool.steps.ProcessToolProcessStep;
 import pl.net.bluesoft.rnd.util.i18n.impl.PropertiesBasedI18NProvider;
 import pl.net.bluesoft.rnd.util.i18n.impl.PropertyLoader;
+import pl.net.bluesoft.util.lang.cquery.func.F;
 
 import java.io.*;
 import java.net.URL;
@@ -44,9 +44,9 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static pl.net.bluesoft.rnd.poutils.cquery.CQuery.from;
 import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.*;
 import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
+import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
 
 public class PluginHelper implements PluginManager, SearchProvider {
 
