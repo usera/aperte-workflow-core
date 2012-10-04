@@ -44,6 +44,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolWidget;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.event.WidgetEventBus;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.util.lang.Lang;
 import pl.net.bluesoft.util.lang.Strings;
 import pl.net.bluesoft.util.lang.TaskWatch;
 
@@ -490,7 +491,7 @@ public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
 			@Override
 			public int compare(ProcessStateWidget o1, ProcessStateWidget o2) {
 				if (o1.getPriority().equals(o2.getPriority())) {
-					return new Long(o1.getId()).compareTo(o2.getId());
+					return Lang.compare(o1.getId(), o2.getId());
 				}
 				return o1.getPriority().compareTo(o2.getPriority());
 			}

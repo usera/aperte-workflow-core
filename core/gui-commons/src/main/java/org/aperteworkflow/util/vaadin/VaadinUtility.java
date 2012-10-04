@@ -380,7 +380,7 @@ public class VaadinUtility {
     }
 
     public static String widgetsErrorMessage(I18NSource i18NSource, Map<ProcessToolDataWidget, Collection<String>> errorMap) {
-        String errorMessage = "<ul>";
+        StringBuilder errorMessage = new StringBuilder("<ul>");
         for (ProcessToolDataWidget w : errorMap.keySet()) {
             Collection<String> col = errorMap.get(w);
             String caption = null;
@@ -388,24 +388,26 @@ public class VaadinUtility {
                 caption = ((BaseProcessToolWidget) w).getAttributeValue("caption");
             }
             if (caption != null) {
-                errorMessage += "<li>" + i18NSource.getMessage(caption) + "<ul>";
+                errorMessage.append("<li>").append(i18NSource.getMessage(caption)).append("<ul>");
             }
             for (String m : col) {
-                errorMessage += "<li>" + i18NSource.getMessage(m) + "</li>\n";
+                errorMessage.append("<li>").append(i18NSource.getMessage(m)).append("</li>\n");
             }
             if (caption != null) {
-                errorMessage += "</ul></li>";
+                errorMessage.append("</ul></li>");
             }
         }
-        errorMessage += "</ul>";
-        return errorMessage;
+        errorMessage.append("</ul>");
+        return errorMessage.toString();
     }
+
     public static String formErrorMessage(Collection<String> errorMap) {
-        String errorMessage = "<ul>";
-        for (String msg : errorMap)
-            errorMessage += "<li>" + msg + "</li>\n";
-        errorMessage += "</ul>";
-        return errorMessage;
+        StringBuilder errorMessage = new StringBuilder("<ul>");
+        for (String msg : errorMap) {
+            errorMessage.append("<li>").append(msg).append("</li>\n");
+		}
+        errorMessage.append("</ul>");
+        return errorMessage.toString();
     }
 
     public static void displayConfirmationWindow(Application application, I18NSource i18NSource, String title, String question, final EventHandler okEvent, final EventHandler cancelEvent) {
