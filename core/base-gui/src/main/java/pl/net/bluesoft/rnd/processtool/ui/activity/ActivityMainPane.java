@@ -40,6 +40,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UriFragmentUtility;
 import com.vaadin.ui.UriFragmentUtility.FragmentChangedEvent;
@@ -76,7 +77,7 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		this.bpmSession = bpmSession;
 		this.resourceCache = new ResourceCache(application);
 
-		setWidth("100%");
+		setWidth(100, Sizeable.UNITS_PERCENTAGE);
 		initLayout();
 	}
 
@@ -122,7 +123,7 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 						showHideButton2);
 
 		leftPanelTrigger = new LeftPanelVisibilityTrigger(leftPanel, true);
-		leftPanel.setWidth("300px");
+		leftPanel.setWidth(300, Sizeable.UNITS_PIXELS);
 		showHideButton0.addListener(leftPanelTrigger);
 		showHideButton1.addListener(leftPanelTrigger);
 		showHideButton2.addListener(leftPanelTrigger);

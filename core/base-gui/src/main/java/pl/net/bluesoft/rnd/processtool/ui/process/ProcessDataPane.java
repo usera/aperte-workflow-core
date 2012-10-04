@@ -48,9 +48,11 @@ import pl.net.bluesoft.util.lang.Strings;
 import pl.net.bluesoft.util.lang.TaskWatch;
 
 import com.vaadin.Application;
+import com.vaadin.terminal.Sizeable;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
@@ -60,7 +62,7 @@ import com.vaadin.ui.VerticalLayout;
  * 
  * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
  */
-public class ProcessDataPane extends VerticalLayout implements WidgetContextSupport {
+public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
 	private Logger logger = Logger.getLogger(ProcessDataPane.class.getName());
 
 	private ProcessToolBpmSession bpmSession;
@@ -94,7 +96,6 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		refreshTask();
 		prepare();
 
-		setSpacing(true);
 		setMargin(new MarginInfo(false, false, true, true));
 		initLayout(false);
 	}
@@ -134,7 +135,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		final ProcessToolContext ctx = getCurrentContext();
 
 		removeAllComponents();
-		setWidth("100%");
+		setWidth(100, Sizeable.UNITS_PERCENTAGE);
 		dataWidgets.clear();
 
 		boolean processRunning = bpmSession.isProcessRunning(task.getInternalProcessId(), ctx);
@@ -171,10 +172,9 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 
 		Label stateDescription = new Label(getMessage(stateConfiguration.getDescription()));
 		stateDescription.addStyleName("h1 color processtool-title");
-        stateDescription.setWidth("100%");
+        stateDescription.setWidth(100, Sizeable.UNITS_PERCENTAGE);
 
         addComponent(stateDescription);
-        setComponentAlignment(stateDescription, Alignment.MIDDLE_LEFT);
 
 		if (Strings.hasText(stateConfiguration.getCommentary())) {
 			addComponent(new Label(getMessage(stateConfiguration.getCommentary()), Label.CONTENT_XHTML));
@@ -231,16 +231,13 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		logger.log(Level.INFO, watch.printSummary());
 
 		addComponent(vl);
-		setExpandRatio(vl, 1.0f);
 
 		if (isOwner) {
 			HorizontalLayout buttonLayout = getButtonsPanel(stateConfiguration);
 			addComponentAsFirst(buttonLayout);
-			setComponentAlignment(buttonLayout, Alignment.BOTTOM_LEFT);
 
 			buttonLayout = getButtonsPanel(stateConfiguration);
 			addComponent(buttonLayout);
-			setComponentAlignment(buttonLayout, Alignment.TOP_LEFT);
 		}
 	}
 	
@@ -333,7 +330,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 
 		AligningHorizontalLayout buttonLayout = new AligningHorizontalLayout(Alignment.MIDDLE_RIGHT);
 		buttonLayout.setMargin(new MarginInfo(false, true, false, true));
-		buttonLayout.setWidth("100%");
+		buttonLayout.setWidth(100, Sizeable.UNITS_PERCENTAGE);
 
 		for (final ProcessStateAction a : actionList) {
 			final ProcessToolActionButton actionButton = makeButton(a);
@@ -346,7 +343,7 @@ public class ProcessDataPane extends VerticalLayout implements WidgetContextSupp
 		}
 
 		buttonLayout.addComponentAsFirst(new Label() {{
-			setWidth("100%");
+			setWidth(100, Sizeable.UNITS_PERCENTAGE);
 		}});
 
 		buttonLayout.recalculateExpandRatios();

@@ -82,7 +82,7 @@ public class VaadinUtility {
     public static VerticalLayout verticalLayout(com.vaadin.ui.Component... components) {
         VerticalLayout vl = new VerticalLayout();
         vl.setSpacing(true);
-        vl.setWidth("100%");
+        vl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         if (components != null) {
             for (com.vaadin.ui.Component c : components) {
                 if (c != null) {
@@ -100,7 +100,7 @@ public class VaadinUtility {
         }
         cb.setValue(false);
         cb.setImmediate(true);
-        cb.setWidth("100%");
+        cb.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         return cb;
     }
 
@@ -112,13 +112,14 @@ public class VaadinUtility {
         select.setContainerDataSource(container);
         select.setItemCaptionMode(Select.ITEM_CAPTION_MODE_PROPERTY);
         select.setItemCaptionPropertyId(itemCaptionPropertyId);
+        select.setSizeUndefined();
         select.setFilteringMode(AbstractSelect.Filtering.FILTERINGMODE_CONTAINS);
         return select;
     }
 
     public static Panel panel(String title, com.vaadin.ui.Component... components) {
         Panel p = new Panel();
-        p.setWidth("100%");
+        p.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         p.setCaption(title);
         for (com.vaadin.ui.Component c : components) {
             p.addComponent(c);
@@ -128,13 +129,13 @@ public class VaadinUtility {
 
     public static Label label(String message, int width) {
         Label l = new Label(message);
-        l.setWidth(width + "px");
+        l.setWidth(width, Sizeable.UNITS_PIXELS);
         return l;
     }
 
     public static HorizontalLayout horizontalLayout(com.vaadin.ui.Component c1, com.vaadin.ui.Component c2) {
         HorizontalLayout hl = new HorizontalLayout();
-        hl.setWidth("100%");
+        hl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         hl.setSpacing(true);
         hl.addComponent(c1);
         hl.addComponent(c2);
@@ -145,7 +146,7 @@ public class VaadinUtility {
 
     public static HorizontalLayout horizontalLayout(Alignment alignment, com.vaadin.ui.Component... components) {
         HorizontalLayout hl = new HorizontalLayout();
-        hl.setWidth("100%");
+        hl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         hl.setSpacing(true);
         if (components != null && components.length > 0) {
             for (com.vaadin.ui.Component c : components) {
@@ -215,7 +216,7 @@ public class VaadinUtility {
 
     public static VerticalLayout wrapPagedTable(I18NSource messageSource, LocalizedPagedTable table) {
         VerticalLayout tableCarrier = new VerticalLayout();
-        tableCarrier.setWidth("100%");
+        tableCarrier.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         tableCarrier.addComponent(table);
         tableCarrier.addComponent(tableControls(messageSource, table));
         return tableCarrier;
@@ -327,7 +328,7 @@ public class VaadinUtility {
 
     public static Button refreshIcon(final Application application, final Refreshable refreshable) {
         Button b = refreshIcon(application);
-        b.setWidth("18px");
+        b.setWidth(18, Sizeable.UNITS_PIXELS);
         b.addListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
@@ -420,7 +421,7 @@ public class VaadinUtility {
         newConfirmationWindow.setModal(true);
         newConfirmationWindow.setBorder(0);
         newConfirmationWindow.setClosable(false);
-        newConfirmationWindow.setWidth("500px");
+        newConfirmationWindow.setWidth(500, Sizeable.UNITS_PIXELS);
 
         VerticalLayout vl = new VerticalLayout();
         vl.setSpacing(true);
@@ -475,7 +476,7 @@ public class VaadinUtility {
 		newConfirmationWindow.setModal(true);
 		newConfirmationWindow.setBorder(0);
 		newConfirmationWindow.setClosable(false);
-		newConfirmationWindow.setWidth("500px");
+		newConfirmationWindow.setWidth(500, Sizeable.UNITS_PIXELS);
 
 		VerticalLayout vl = new VerticalLayout();
 		vl.setSpacing(true);
@@ -529,7 +530,7 @@ public class VaadinUtility {
             label.setStyleName(style);
         }
         HorizontalLayout hl = VaadinUtility.horizontalLayout(Alignment.MIDDLE_LEFT, img, label);
-        hl.setWidth("-1px");
+        hl.setWidth(-1, Sizeable.UNITS_PIXELS);
         return hl;
     }
 
@@ -557,7 +558,7 @@ public class VaadinUtility {
 
     public static Label htmlLabel(String message, int width) {
          Label l = new Label(message, Label.CONTENT_XHTML);
-         l.setWidth(width + "px");
+         l.setWidth(width, Sizeable.UNITS_PIXELS);
          return l;
      }
 
@@ -567,7 +568,7 @@ public class VaadinUtility {
 
      public static HorizontalLayout hl(com.vaadin.ui.Component... components) {
          HorizontalLayout hl = new HorizontalLayout();
-         hl.setWidth("100%");
+         hl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
          hl.setSpacing(true);
          for (Component c : components) {
              hl.addComponent(c);
