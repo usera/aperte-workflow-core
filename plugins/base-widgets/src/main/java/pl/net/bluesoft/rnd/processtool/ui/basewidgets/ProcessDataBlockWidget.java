@@ -43,9 +43,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolWidget;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.*;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.impl.BaseProcessToolVaadinWidget;
-import pl.net.bluesoft.rnd.processtool.ui.widgets.impl.BaseProcessToolWidget;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
-import pl.net.bluesoft.util.lang.StringUtil;
 import pl.net.bluesoft.util.lang.Strings;
 
 import java.io.ByteArrayInputStream;
@@ -603,10 +601,9 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
 
                         mainPanel.removeAllComponents();
                         for (WidgetElement we : widgetsDefinitionElement.getWidgets()) {
-                            AbstractComponent component = processWidgetElement(widgetsDefinitionElement, we, mainPanel);
-
+                            processWidgetElement(widgetsDefinitionElement, we, mainPanel);
                         } 
-                    	}
+					}
                     }
                 });
         }

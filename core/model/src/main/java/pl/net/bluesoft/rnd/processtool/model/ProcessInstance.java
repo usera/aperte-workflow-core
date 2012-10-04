@@ -278,12 +278,12 @@ public class ProcessInstance extends PersistentEntity {
 		if(attribute == null) {
 			try {
 				attribute = attrClass.newInstance();
+				addAttribute(attribute);
 			} catch (InstantiationException e) {
 				e.printStackTrace();
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
 			}
-			addAttribute(attribute);
 		}
 		return attribute;	
 	}

@@ -100,8 +100,9 @@ public class TemplateDataProvider
         
         /* Add assigne */
         UserData assignee = new UserData();
-        if(task.getAssignee() != null)
+        if(task != null && task.getAssignee() != null) {
         	assignee = ctx.getUserDataDAO().loadUserByLogin(task.getAssignee());
+		}
         
         templateData.put(_PROCESS_VISIBLE_ID, Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());
         templateData.put(_PROCESS_ID, Strings.hasText(pi.getExternalKey()) ? pi.getExternalKey() : pi.getInternalId());

@@ -63,7 +63,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 	private ActivityMainPane activityMainPane;
 	private VerticalLayout taskList;
-	private EventListener<BpmEvent> bpmEventListener = null;
 	private Tree substitutionsTree;
 	private Panel substitutionsPanel;
 	private TaskWatch watch;
@@ -75,7 +74,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private boolean refreshRequested; 
 
 	protected boolean onEvent = false;
-	private EventListener<ViewEvent> viewEventListener;
 
 	public ActivityQueuesPane(ActivityMainPane activityMainPane)
 	{
@@ -91,36 +89,33 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		addComponent(taskList);
 
 		//listen for BPM events - they usually mean there can be something changed in processes list
-		if(bpmEventListener == null){
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, bpmEventListener = new EventListener<BpmEvent>(){
-				@Override
-				public void onEvent(BpmEvent e){
-					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null){
-						synchronized (this) {
-							refreshRequested = true;
-						}
+		activityMainPane.getBpmSession().getEventBusManager().subscribe(BpmEvent.class, new EventListener<BpmEvent>(){
+			@Override
+			public void onEvent(BpmEvent e){
+				if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null){
+					synchronized (this) {
+						refreshRequested = true;
 					}
 				}
-			});
-		}
+			}
+		});
 		//listen for ViewEvent ACTION_COMPLETE - it means BPM processing is done, so if there were some BPM events before, now is the time to refresh data.
-		if(viewEventListener == null){
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(ViewEvent.class, viewEventListener = new EventListener<ViewEvent>(){
-				@Override
-				public void onEvent(ViewEvent e) {
-					if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getEventType().equals(ViewEvent.Type.ACTION_COMPLETE)){
-						synchronized(this) {
-							if(refreshRequested) {
-								refreshRequested = false;
-								onEvent = true;
-								refreshData();
-								onEvent = false;
-							}
+
+		activityMainPane.getBpmSession().getEventBusManager().subscribe(ViewEvent.class, new EventListener<ViewEvent>(){
+			@Override
+			public void onEvent(ViewEvent e) {
+				if(ActivityQueuesPane.this.isVisible() && ActivityQueuesPane.this.getApplication() != null && e.getEventType().equals(ViewEvent.Type.ACTION_COMPLETE)){
+					synchronized(this) {
+						if(refreshRequested) {
+							refreshRequested = false;
+							onEvent = true;
+							refreshData();
+							onEvent = false;
 						}
 					}
 				}
-			});		
-		}
+			}
+		});
 	}
 
 	@Override
@@ -147,7 +142,6 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 	public void internalRefreshData() 
 	{
-		
 		taskList.removeAllComponents();
 
 		ProcessToolContext ctx = ProcessToolContext.Util.getThreadProcessToolContext();

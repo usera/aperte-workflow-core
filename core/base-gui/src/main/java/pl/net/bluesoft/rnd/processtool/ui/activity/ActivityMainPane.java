@@ -187,12 +187,13 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 			public Component render(Map<String,?> viewData)
 			{
 				ProcessInstanceFilter filter = (ProcessInstanceFilter)viewData.get("filter");
-				if(filter != null)
-				{
+				if(filter != null) {
 					pane.setTitle(filter.getName());
 				}
 				pane.setFilter(filter);
-				pane.setUserData(filter.getFilterOwner());
+				if (filter != null) {
+					pane.setUserData(filter.getFilterOwner());
+				}
 				leftPanelTrigger.show();
 				return pane.init();
 			}

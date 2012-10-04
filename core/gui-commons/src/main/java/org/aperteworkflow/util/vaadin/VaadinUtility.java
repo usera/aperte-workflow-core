@@ -12,7 +12,6 @@ import com.vaadin.terminal.gwt.server.PortletApplicationContext2;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.Window.Notification;
-import com.vaadin.ui.themes.BaseTheme;
 import com.vaadin.ui.themes.Reindeer;
 import org.aperteworkflow.util.vaadin.ui.table.LocalizedPagedTable;
 import org.vaadin.dialogs.ConfirmDialog;
@@ -36,8 +35,6 @@ import static org.aperteworkflow.util.vaadin.VaadinExceptionHandler.Util.withErr
  * @author tlipski@bluesoft.net.pl
  */
 public class VaadinUtility {
-
-
     public static final String SIMPLE_DATE_FORMAT_STRING = "yyyy-MM-dd";
     public static final String FULL_DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
     private static final String REGISTER_CLOSE_WARNING = " registerCloseHandler(function() { return \"%s\"; }); ";
@@ -58,9 +55,8 @@ public class VaadinUtility {
             factory = (ProcessToolRegistry) portletCtx.getPortletConfig()
                     .getPortletContext()
                     .getAttribute(ProcessToolRegistry.class.getName());
-
         }
-        return factory.getProcessToolContextFactory();
+        return factory != null ? factory.getProcessToolContextFactory() : null;
     }
 
     public static HorizontalLayout horizontalLayout(String width, com.vaadin.ui.Component... components) {

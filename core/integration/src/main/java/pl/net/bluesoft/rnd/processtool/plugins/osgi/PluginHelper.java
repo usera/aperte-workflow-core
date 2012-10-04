@@ -855,7 +855,9 @@ public class PluginHelper implements PluginManager, SearchProvider {
             }
 			finally {
 				try {
-					jar.close();
+					if (jar != null) {
+						jar.close();
+					}
 				}
 				catch (IOException e) {
 				}
@@ -1039,13 +1041,17 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
             is.reset();
             FileOutputStream fos = new FileOutputStream(tempFile);
-            byte[] buf = new byte[1024];
-            int len = 0;
-            while ((len = is.read(buf)) >= 0) {
-                fos.write(buf, 0, len);
-            }
-            fos.flush();
-            fos.close();
+            try {
+				byte[] buf = new byte[1024];
+				int len;
+				while ((len = is.read(buf)) >= 0) {
+					fos.write(buf, 0, len);
+				}
+				fos.flush();
+			}
+			finally {
+            	fos.close();
+			}
 
             File dest = new File(pluginsDir, filename);
             if (!tempFile.renameTo(dest)) {

@@ -1,28 +1,21 @@
 package pl.net.bluesoft.rnd.processtool.plugins;
 
+import com.thoughtworks.xstream.XStream;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
+import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider;
+import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider.UsersQueuesSize;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-
-import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider;
-import pl.net.bluesoft.rnd.processtool.plugins.util.UserProcessQueuesSizeProvider.UsersQueuesSize;
-
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.model.User;
-import com.liferay.portal.util.PortalUtil;
-import com.thoughtworks.xstream.XStream;
 
 /**
  * Servlet which provides logic to get all avaiable user process queues
@@ -72,14 +65,14 @@ public class UserProcessQueuesServlet extends HttpServlet
 
 
 		switch (format) {
-			case XML: 
-			{
+			case XML: {
 				out.write(xstream.toXML(usersQueues));
+				break;
 			}
-			case JSON: 
-			{
+			case JSON: {
 				mapper.configure(Feature.INDENT_OUTPUT, true);
 				mapper.writeValue(out, usersQueues);
+				break;
 			}
 		}
 

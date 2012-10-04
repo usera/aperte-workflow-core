@@ -134,7 +134,7 @@ public class DictionaryItemValuesField extends CustomField {
 
     @Override
     protected void setInternalValue(Object newValue) {
-        if (newValue != null && !(newValue instanceof Collection)) {
+        if (!(newValue instanceof Collection)) {
             throw new IllegalArgumentException("Unable to handle non-collection values");
         }
         originalValue = new ArrayList<ProcessDBDictionaryItemValue>((Collection<? extends ProcessDBDictionaryItemValue>) newValue);

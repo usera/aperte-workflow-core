@@ -123,7 +123,7 @@ public abstract class AbstractProcessToolSession
         newProcessInstance.setKeyword(keyword);
         newProcessInstance.setStatus(ProcessStatus.NEW);
 
-        if (creator != null) {
+        {
             ProcessInstanceSimpleAttribute attr = new ProcessInstanceSimpleAttribute();
             attr.setKey("creator");
             attr.setValue(creator.getLogin());

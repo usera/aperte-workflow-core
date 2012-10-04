@@ -30,7 +30,6 @@ public class ActivityFiltersPane extends Panel implements VaadinUtility.Refresha
 
 	private ActivityMainPane activityMainPane;
 	private GridLayout filterList;
-	private EventListener<FilterChangedEvent> filterEventSubscriber = null;
 
 	public ActivityFiltersPane(ActivityMainPane activityMainPane) {
 		this.activityMainPane = activityMainPane;
@@ -45,18 +44,14 @@ public class ActivityFiltersPane extends Panel implements VaadinUtility.Refresha
 		addComponent(filterList);
 		refreshData();
 
-		if (filterEventSubscriber == null) {
-			activityMainPane.getBpmSession().getEventBusManager().subscribe(FilterChangedEvent.class,
-                    filterEventSubscriber = new EventListener<FilterChangedEvent>() {
-				@Override
-				public void onEvent(FilterChangedEvent e) {
-                    if (ActivityFiltersPane.this.isVisible() && ActivityFiltersPane.this.getApplication() != null) {
-                        refreshData();
-                    }
-                }
-			});
-		}
-
+		activityMainPane.getBpmSession().getEventBusManager().subscribe(FilterChangedEvent.class, new EventListener<FilterChangedEvent>() {
+			@Override
+			public void onEvent(FilterChangedEvent e) {
+				if (ActivityFiltersPane.this.isVisible() && ActivityFiltersPane.this.getApplication() != null) {
+					refreshData();
+				}
+			}
+		});
 	}
 
 

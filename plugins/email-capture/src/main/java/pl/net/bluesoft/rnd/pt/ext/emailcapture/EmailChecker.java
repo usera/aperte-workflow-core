@@ -90,13 +90,18 @@ public class EmailChecker {
 
     private void processMessage(Message msg, EmailCheckerConfiguration cfg, ProcessToolBpmSession toolBpmSession) throws MessagingException, IOException {
         String subject = msg.getSubject();
-        String recipients = "";
-        if (msg.getHeader("To") != null) for (String h : msg.getHeader("To")) {
-            recipients += h + ",";
-        }
-        if (msg.getHeader("Cc") != null) for (String h : msg.getHeader("Cc")) {
-            recipients += h + ",";
-        }
+        StringBuilder recipientBuilder = new StringBuilder();
+		if (msg.getHeader("To") != null) {
+			for (String h : msg.getHeader("To")) {
+				recipientBuilder.append(h).append(",");
+			}
+		}
+		if (msg.getHeader("Cc") != null) {
+			for (String h : msg.getHeader("Cc")) {
+				recipientBuilder.append(h).append(",");
+			}
+		}
+		String recipients = recipientBuilder.toString();
         StringBuilder senderBuilder = new StringBuilder();
 		if (msg.getFrom() != null) {
 			for (Address a : msg.getFrom()) {
@@ -142,7 +147,7 @@ public class EmailChecker {
             }
             if (existingPi == null) {
                 if (hasText(rule.getRecipientRegexp())) {
-                    if (recipients == null || !recipients.matches(rule.getRecipientRegexp())) {
+                    if (recipients == null || recipients.isEmpty() || !recipients.matches(rule.getRecipientRegexp())) {
                         continue;
                     }
                 }

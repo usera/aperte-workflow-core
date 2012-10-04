@@ -102,14 +102,23 @@ public class WidgetInfoLoader {
             for (Class widgetClass : sortedWidgets.get(bundleName)) {
             	 widgets.add(new WidgetItem(widgetClass,DEFAULT_PERMISSIONS,bundleItem));
             }
-            
-            while (widgets.remove(null));
-            if (widgets.size() > 0) {
+
+			removeNulls(widgets);
+
+			if (widgets.size() > 0) {
                 availableWidgets.put(bundleItem, widgets);
             }
         }
 
 		return availableWidgets;
+	}
+
+	private static void removeNulls(Collection<WidgetItem> widgets) {
+		for (;;) {
+			if (widgets.remove(null)) {
+				return;
+			}
+		}
 	}
 
 }
