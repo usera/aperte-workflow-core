@@ -461,8 +461,7 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
         setupWidget(widgetsDefinitionElement, mainPanel);
 
         for (WidgetElement we : widgetsDefinitionElement.getWidgets()) {
-            AbstractComponent component = processWidgetElement(widgetsDefinitionElement, we, mainPanel);
-
+            processWidgetElement(widgetsDefinitionElement, we, mainPanel);
         }
         loadDictionaries();
         loadProcessInstanceDictionaries();
@@ -473,8 +472,7 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
             mainPanel.removeAllComponents();
             try {
                 for (WidgetElement we : widgetsDefinitionElement.getWidgets()) {
-                    AbstractComponent component = processWidgetElement(widgetsDefinitionElement, we, mainPanel);
-
+                    processWidgetElement(widgetsDefinitionElement, we, mainPanel);
                 }
             } catch (Exception e) {
                 handleException(getMessage("widget.process_data_block.editor.validation.script.error"), e);
@@ -700,9 +698,9 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
         return select;
     }
 
-    private void processScriptElement(Select select, ScriptElement script) {
-        throw new RuntimeException("Not implemented yet!");
-    }
+//    private void processScriptElement(Select select, ScriptElement script) {
+//        throw new RuntimeException("Not implemented yet!");
+//    }
 
     private Form createFormField(FormWidgetElement fwe) {
         FormLayout layout = new FormLayout();
@@ -734,8 +732,9 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
                 rta.setReadOnly(true);
                 rta.setHeight(null);
             }
-            if (taw.getValue() != null)
+            if (taw.getValue() != null) {
                 rta.setValue(taw.getValue());
+			}
 
             component = rta;
         } else {
@@ -747,7 +746,6 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
                 ta.setMaxLength(taw.getLimit());
             }
 
-            component = ta;
             if (nvl(taw.getRequired(), false)) {
                 ta.setRequired(true);
                 if (hasText(taw.getCaption())) {
@@ -756,8 +754,9 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
                     ta.setRequiredError(getMessage("processdata.block.field-required-error"));
                 }
             }
-            if (taw.getValue() != null)
+            if (taw.getValue() != null) {
                 ta.setValue(taw.getValue());
+			}
 
             component = ta;
         }

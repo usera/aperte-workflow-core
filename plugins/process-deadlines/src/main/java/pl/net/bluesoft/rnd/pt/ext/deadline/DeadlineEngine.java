@@ -195,12 +195,10 @@ public class DeadlineEngine {
         ProcessToolBpmSession bpmSession = ctx.getProcessToolSessionFactory().createAutoSession();
         List<BpmTask> tasks = bpmSession.findProcessTasks(pi, ctx);
         for (BpmTask task : tasks) {
-            Map<String, UserData> notifyUsers = null;
             if (task.getTaskName().equals(processDeadline.getTaskName())) {
                 String assigneeLogin = task.getAssignee();
-                if (notifyUsers == null) {
-                    notifyUsers = prepareUsersForNotification(ctx, assigneeLogin, processDeadline);
-                }
+				Map<String, UserData> notifyUsers = prepareUsersForNotification(ctx, assigneeLogin, processDeadline);
+
                 // everything is good, unless it’s not
 				I18NSource messageSource = getI18NSource();
                 ProcessStateConfiguration st = ctx.getProcessDefinitionDAO().getProcessStateConfiguration(task);

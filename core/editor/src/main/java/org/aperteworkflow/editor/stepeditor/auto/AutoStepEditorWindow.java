@@ -115,9 +115,9 @@ public class AutoStepEditorWindow extends AbstractStepEditorWindow {
 		return null;
 	}
 
-    private boolean isPropertyEmpty(Object value) {
-        return (value == null || value.toString().trim().isEmpty());
-    }
+//    private boolean isPropertyEmpty(Object value) {
+//        return (value == null || value.toString().trim().isEmpty());
+//    }
 
 	private String getJsonToSave() {
         // encode the properties with base64 and drop the empty values

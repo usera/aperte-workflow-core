@@ -80,7 +80,7 @@ public class FilesChecker {
 
         for (FilesCheckerRuleConfiguration rule : cfg.getRules()) {
             ProcessInstance existingPi = null;
-            if (existingPi == null && hasText(rule.getProcessIdSubjectLookupRegexp())) {
+            if (hasText(rule.getProcessIdSubjectLookupRegexp())) {
                 Matcher m = java.util.regex.Pattern.compile(rule.getProcessIdSubjectLookupRegexp()).matcher(dir.getName());
                 if (m.matches()) {
                     String processId = m.group(1);
@@ -130,8 +130,7 @@ public class FilesChecker {
                             existingPi.getInternalId(), rule.getRootFolderPath());
                     if (StringUtil.hasText(rule.getSubFolder()))
                         mainFolder = sessionFacade.createFolderIfNecessary(rule.getSubFolder(), mainFolder.getPath());
-                    folderId = mainFolder.getId();
-
+//                    folderId = mainFolder.getId();
                 } else {
                     mainFolder = sessionFacade.getFolderById(folderId);
                 }

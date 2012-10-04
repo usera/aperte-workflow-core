@@ -97,10 +97,14 @@ public class EmailChecker {
         if (msg.getHeader("Cc") != null) for (String h : msg.getHeader("Cc")) {
             recipients += h + ",";
         }
-        String sender = "";
-        if (msg.getFrom() != null) for (Address a : msg.getFrom()) {
-            sender += a.toString() + ",";
-        }
+        StringBuilder senderBuilder = new StringBuilder();
+		if (msg.getFrom() != null) {
+			for (Address a : msg.getFrom()) {
+				senderBuilder.append(a.toString()).append(",");
+			}
+		}
+		String sender = senderBuilder.toString();
+
         String description = subject + ", from: " + recipients + ", sent by: " + sender;
         logger.fine("Processing message: " + description);
 
@@ -143,7 +147,7 @@ public class EmailChecker {
                     }
                 }
                 if (hasText(rule.getSenderRegexp())) {
-                    if (sender == null || !sender.matches(rule.getSenderRegexp())) {
+                    if (sender == null || sender.isEmpty() || !sender.matches(rule.getSenderRegexp())) {
                         continue;
                     }
                 }

@@ -41,9 +41,9 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		String userPassword = mailSession.getProperties().getProperty("mail.smtp.password");
 		String isDebug = mailSession.getProperties().getProperty("mail.debug");
 		
-		String portString = mailSession.getProperties().getProperty("mail.smtp.port");
-		String protocol = mailSession.getProperties().getProperty("mail.transport.protocol");
-		String host = mailSession.getProperties().getProperty("mail.smtp.host");
+//		String portString = mailSession.getProperties().getProperty("mail.smtp.port");
+//		String protocol = mailSession.getProperties().getProperty("mail.transport.protocol");
+//		String host = mailSession.getProperties().getProperty("mail.smtp.host");
 		
 		
 		if(isDebug != null && isDebug.equals("true"))
@@ -62,7 +62,7 @@ public class JndiMailSessionProvider implements IMailSessionProvider
 		
 		Authenticator authenticator = new JndiAuthenticator(userName, userPassword);
 		
-		Session session = mailSession.getInstance(mailSession.getProperties(), authenticator);
+		/*Session session = */mailSession.getInstance(mailSession.getProperties(), authenticator);
 		
 //		PasswordAuthentication authentication = new PasswordAuthentication(userName,userPassword);
 //

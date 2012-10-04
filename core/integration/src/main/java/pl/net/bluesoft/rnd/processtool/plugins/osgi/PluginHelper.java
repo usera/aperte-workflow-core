@@ -845,13 +845,21 @@ public class PluginHelper implements PluginManager, SearchProvider {
 
     private void dependencyWiseInstallBundles(List<String> installableBundlePaths, String pluginsDir) {
         for (String installBundlePath : installableBundlePaths) {
+			JarFile jar = null;
             try {
-                JarFile jar = new JarFile(installBundlePath);
+                jar = new JarFile(installBundlePath);
                 updatePackageInfo(getBundleInfo(installBundlePath), jar.getManifest());
             }
             catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
+			finally {
+				try {
+					jar.close();
+				}
+				catch (IOException e) {
+				}
+			}
         }
 
         Map<String, Set<String>> deps = getDependencyMap(pluginsDir);

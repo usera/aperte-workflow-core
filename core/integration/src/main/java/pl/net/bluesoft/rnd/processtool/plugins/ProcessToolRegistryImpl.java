@@ -622,27 +622,35 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
 	}
 
     @Override
-       public void registerTaskItemProvider(Class<?> cls) {
-           AliasName annotation = cls.getAnnotation(AliasName.class);
-   		if (annotation != null) {
-   			TASK_ITEM_REGISTRY.put(annotation.name(), (Class<? extends TaskItemProvider>) cls);
-               logger.warning("Registered task item alias: " + annotation.name() + " -> " + cls.getName());
-   		}
-       }
+	public void registerTaskItemProvider(Class<?> cls) {
+		AliasName annotation = cls.getAnnotation(AliasName.class);
+		if (annotation != null) {
+			TASK_ITEM_REGISTRY.put(annotation.name(), (Class<? extends TaskItemProvider>) cls);
+			logger.warning("Registered task item alias: " + annotation.name() + " -> " + cls.getName());
+		}
+	}
 
-       @Override
-       public void unregisterTaskItemProvider(Class<?> cls) {
-           TASK_ITEM_REGISTRY.remove(cls);
-       }
+	@Override
+	public void unregisterTaskItemProvider(Class<?> cls) {
+		unregisterTaskItemProvider(cls.getName());
+		AliasName annotation = cls.getAnnotation(AliasName.class);
+		if (annotation != null) {
+			unregisterTaskItemProvider(annotation.name());
+		}
+	}
 
-       @Override
-       public TaskItemProvider makeTaskItemProvider(String name) throws IllegalAccessException, InstantiationException {
-           Class<? extends TaskItemProvider> aClass = TASK_ITEM_REGISTRY.get(name);
-           if (aClass == null) {
-   			throw new IllegalAccessException("No class nicknamed by: " + name);
-   		}
-           return aClass.newInstance();
-       }
+	public void unregisterTaskItemProvider(String name) {
+		TASK_ITEM_REGISTRY.remove(name);
+	}
+
+	@Override
+	public TaskItemProvider makeTaskItemProvider(String name) throws IllegalAccessException, InstantiationException {
+		Class<? extends TaskItemProvider> aClass = TASK_ITEM_REGISTRY.get(name);
+		if (aClass == null) {
+			throw new IllegalAccessException("No class nicknamed by: " + name);
+		}
+		return aClass.newInstance();
+	}
 
        @Override
        public void registerGlobalDictionaries(InputStream is) {
