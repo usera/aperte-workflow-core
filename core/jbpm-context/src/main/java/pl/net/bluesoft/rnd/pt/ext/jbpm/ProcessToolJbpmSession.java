@@ -955,8 +955,10 @@ public class ProcessToolJbpmSession extends AbstractProcessToolSession
            });
    		final Map<String, ProcessInstance> instances = ctx.getProcessInstanceDAO().getProcessInstanceByInternalIdMap(tasksByProcessId.keySet());
    		final List<BpmTask> result = new ArrayList<BpmTask>();
-   		for (final String processId : tasksByProcessId.keySet()) {
-   			List<Task> processTasks = tasksByProcessId.get(processId);
+		for (Map.Entry<String, List<Task>> entry : tasksByProcessId.entrySet()) {
+			final String processId = entry.getKey();
+			List<Task> processTasks = entry.getValue();
+
    			result.addAll(new Mapcar<Task, BpmTask>(processTasks) {
    				@Override
    				public BpmTask lambda(Task task) {

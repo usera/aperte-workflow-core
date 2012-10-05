@@ -84,10 +84,11 @@ public class AutoStepEditorWindow extends AbstractStepEditorWindow {
             );
             // decode base64 and drop empty properties
             if (propertiesMap != null && !propertiesMap.isEmpty()) {
-                Iterator<String> it = propertiesMap.keySet().iterator();
+				Iterator<Map.Entry<String, Object>> it = propertiesMap.entrySet().iterator();
                 while (it.hasNext()) {
-                    String propertyName = it.next();
-                    Object encodedValue = propertiesMap.get(propertyName);
+					Map.Entry<String, Object> e = it.next();
+					String propertyName = e.getKey();
+                    Object encodedValue = e.getValue();
                     if (encodedValue == null) {
                         it.remove();
                         continue;
@@ -123,10 +124,11 @@ public class AutoStepEditorWindow extends AbstractStepEditorWindow {
         // encode the properties with base64 and drop the empty values
         Map<String, Object> propertiesMap = propertiesPanel.getPropertiesMap();
         if (propertiesMap != null && !propertiesMap.isEmpty()) {
-            Iterator<String> it = propertiesMap.keySet().iterator();
+			Iterator<Map.Entry<String, Object>> it = propertiesMap.entrySet().iterator();
             while (it.hasNext()) {
-                String propertyName = it.next();
-                Object propertyValue = propertiesMap.get(propertyName);
+				Map.Entry<String, Object> e = it.next();
+                String propertyName = e.getKey();
+                Object propertyValue = e.getValue();
                 if (propertyValue == null) {
                     it.remove();
                     continue;

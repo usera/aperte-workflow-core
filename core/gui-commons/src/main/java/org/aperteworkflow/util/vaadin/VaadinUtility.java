@@ -176,8 +176,8 @@ public class VaadinUtility {
         table.setColumnCollapsingAllowed(false);
         table.setSortDisabled(true);
         if (customColumns != null) {
-            for (String key : customColumns.keySet()) {
-                table.addGeneratedColumn(key, customColumns.get(key));
+			for (Map.Entry<String, ColumnGenerator> entry : customColumns.entrySet()) {
+                table.addGeneratedColumn(entry.getKey(), entry.getValue());
             }
         }
         table.setContainerDataSource(dataSource);
@@ -199,8 +199,8 @@ public class VaadinUtility {
             table.addListener(itemClickListener);
         }
         if (customViewColumns != null && !customViewColumns.isEmpty()) {
-            for (String columnId : customViewColumns.keySet()) {
-                table.addGeneratedColumn(columnId, customViewColumns.get(columnId));
+			for (Map.Entry<String, ColumnGenerator> entry : customViewColumns.entrySet()) {
+                table.addGeneratedColumn(entry.getKey(), entry.getValue());
             }
         }
         table.setVisibleColumns(visibleViewColumns);
@@ -377,8 +377,9 @@ public class VaadinUtility {
 
     public static String widgetsErrorMessage(I18NSource i18NSource, Map<ProcessToolDataWidget, Collection<String>> errorMap) {
         StringBuilder errorMessage = new StringBuilder("<ul>");
-        for (ProcessToolDataWidget w : errorMap.keySet()) {
-            Collection<String> col = errorMap.get(w);
+		for (Map.Entry<ProcessToolDataWidget, Collection<String>> entry : errorMap.entrySet()) {
+			ProcessToolDataWidget w = entry.getKey();
+            Collection<String> col = entry.getValue();
             String caption = null;
             if (w instanceof BaseProcessToolWidget) {
                 caption = ((BaseProcessToolWidget) w).getAttributeValue("caption");

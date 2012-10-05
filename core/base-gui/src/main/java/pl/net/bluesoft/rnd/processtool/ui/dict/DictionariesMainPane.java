@@ -266,8 +266,7 @@ public class DictionariesMainPane extends VerticalLayout implements ProcessToolB
     private void prepareDistinctDictionaryNameContainer(BeanItemContainer<ProcessDBDictionary> distinctNameContainer,
             Map<String, Set<ProcessDBDictionary>> localizedDictionariesMap) {
         Locale locale = i18NSource.getLocale();
-        for (String key : localizedDictionariesMap.keySet()) {
-            Set<ProcessDBDictionary> dictSet = localizedDictionariesMap.get(key);
+		for (Set<ProcessDBDictionary> dictSet : localizedDictionariesMap.values()) {
             if (dictSet != null && !dictSet.isEmpty()) {
                 boolean addedEntry = false;
                 for (ProcessDBDictionary dict : dictSet) {
@@ -391,8 +390,8 @@ public class DictionariesMainPane extends VerticalLayout implements ProcessToolB
                 }
                 else {
                     StringBuilder sb = new StringBuilder();
-                    for (Field field : messages.keySet()) {
-                        sb.append(messages.get(field)).append("<br/>");
+					for (String msg : messages.values()) {
+                        sb.append(msg).append("<br/>");
                     }
                     validationNotification(application, i18NSource, sb.toString());
                 }

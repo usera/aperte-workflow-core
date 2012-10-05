@@ -118,8 +118,9 @@ public class LdapBridge {
             }
         }
         if (!ldapServerMappings.isEmpty() && ldapUserAttributes != null && !ldapUserAttributes.isEmpty()) {
-            for (Long companyId : ldapServerMappings.keySet()) {
-                Set<Long> ids = ldapServerMappings.get(companyId);
+			for (Map.Entry<Long, Set<Long>> entry : ldapServerMappings.entrySet()) {
+				Long companyId = entry.getKey();
+                Set<Long> ids = entry.getValue();
                 for (Long ldapServerId : ids) {
                     LdapContext context;
                     try {
@@ -128,10 +129,10 @@ public class LdapBridge {
                     catch (Exception e) {
                         throw new LiferayBridge.LiferayBridgeException(e);
                     }
-                    if (context == null) {
-                        logger.warning("Could not initialize LDAP context: [ldapServerId, companyId] = [" + ldapServerId + ", " + companyId + "]");
-                    }
-                    else {
+//                    if (context == null) {
+//                        logger.warning("Could not initialize LDAP context: [ldapServerId, companyId] = [" + ldapServerId + ", " + companyId + "]");
+//                    }
+//                    else {
                         try {
                             updateUserPropertiesMap(result, context, ldapServerId, companyId, ldapUserAttributes);
                         }
@@ -146,7 +147,7 @@ public class LdapBridge {
                                 throw new LiferayBridge.LiferayBridgeException(e);
                             }
                         }
-                    }
+//                    }
                 }
             }
         }
@@ -258,9 +259,9 @@ public class LdapBridge {
     public static Binding getUser(long ldapServerId, long companyId, String screenName) throws Exception {
         String postfix = getPropertyPostfix(ldapServerId);
         LdapContext ldapContext = getContext(ldapServerId, companyId);
-        if (ldapContext == null) {
-            return null;
-        }
+//        if (ldapContext == null) {
+//            return null;
+//        }
 
         NamingEnumeration<SearchResult> enu = null;
         try {
