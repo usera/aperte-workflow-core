@@ -4,6 +4,7 @@ import com.vaadin.Application;
 import org.aperteworkflow.ui.view.GenericPortletViewRenderer;
 import org.aperteworkflow.util.vaadin.TransactionProvider;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class GenericUserPortletPanel extends GenericPortletPanel {
 	public GenericUserPortletPanel(Application application, I18NSource i18NSource, ProcessToolBpmSession bpmSession,
 								   TransactionProvider transactionProvider, String portletKey, String[] viewKeys) {
 		super(application, i18NSource, bpmSession, transactionProvider, portletKey);
-		this.viewKeys = viewKeys;
+		this.viewKeys = Lang2.noCopy(viewKeys);
 		buildView();
 	}
 

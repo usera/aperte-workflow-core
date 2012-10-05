@@ -9,6 +9,7 @@ import org.aperteworkflow.ui.help.HelpProvider;
 import org.vaadin.jonatan.contexthelp.ContextHelp;
 import org.vaadin.jonatan.contexthelp.Placement;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import java.util.HashMap;
@@ -129,7 +130,7 @@ public class HelpProviderImpl implements HelpProvider {
     @Override
     public Field stripFieldFromHelp(Field f) {
         if (isFieldWithHelp(f)) {
-            return ((FieldWithHelp)f).getField();
+            return Lang2.assumeType(f, FieldWithHelp.class).getField();
         } else {
             return f;
         }
@@ -137,6 +138,5 @@ public class HelpProviderImpl implements HelpProvider {
 
     public boolean isFieldWithHelp(Field f) {
         return f instanceof FieldWithHelp;
-
     }
 }

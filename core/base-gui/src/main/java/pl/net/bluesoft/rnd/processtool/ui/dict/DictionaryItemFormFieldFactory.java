@@ -9,6 +9,7 @@ import com.vaadin.ui.Field;
 import com.vaadin.ui.TextField;
 import pl.net.bluesoft.rnd.processtool.model.dict.db.ProcessDBDictionaryItem;
 import pl.net.bluesoft.rnd.processtool.ui.dict.fields.DictionaryItemValuesField;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import java.util.Set;
@@ -35,7 +36,7 @@ public class DictionaryItemFormFieldFactory extends DefaultFieldFactory {
         if (!isPropertyVisible(propertyId)) {
             return null;
         }
-        BeanItem<ProcessDBDictionaryItem> beanItem = (BeanItem<ProcessDBDictionaryItem>) item;
+        BeanItem<ProcessDBDictionaryItem> beanItem = Lang2.assumeType(item, BeanItem.class);
         ProcessDBDictionaryItem bean = beanItem.getBean();
         Field field = "dbValues".equals(propertyId) ? new DictionaryItemValuesField(application, source, bean.getValueType())
                 : new TextField(source.getMessage("dict.item." + propertyId));
