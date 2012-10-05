@@ -22,25 +22,24 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProp
  */
 public class DatabaseMailSessionProvider implements IMailSessionProvider
 {
-    
 	private Logger logger = Logger.getLogger(DatabaseMailSessionProvider.class.getName());
 	
 	private Map<String, Properties> persistentMailProperties = new HashMap<String, Properties>();
 	private Properties mailProperties;
-    
+
 	@Override
 	public javax.mail.Session getSession(String profileName)
 	{
-		Boolean profileExists = hasText(profileName) && persistentMailProperties.containsKey(profileName);
-		Properties properties = null;
+		Boolean profileExists = hasText(profileName) && getPersistentMailProperties().containsKey(profileName);
+		Properties properties;
 		
 		if(profileExists)
 		{
-			properties = persistentMailProperties.get(profileName);
+			properties = getPersistentMailProperties().get(profileName);
 		}
 		else
 		{
-			properties = mailProperties;
+			properties = getMailProperties();
 			logger.warning("Warning, profile "+profileName+" doesn't exist in configuration, using default from mail.properties!");
 		}
 		
@@ -139,8 +138,16 @@ public class DatabaseMailSessionProvider implements IMailSessionProvider
             }
         }     
     }
-    
-    private String getStringValueFromBoolean(Boolean value)
+
+	private synchronized Map<String, Properties> getPersistentMailProperties() {
+		return persistentMailProperties;
+	}
+
+	private synchronized Properties getMailProperties() {
+		return mailProperties;
+	}
+
+	private String getStringValueFromBoolean(Boolean value)
     {
     	if(value == null)
     		return "false";
