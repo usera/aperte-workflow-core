@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.pt.utils.lang;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 
 /**
@@ -19,6 +20,13 @@ public class Lang2 {
 	public static String[] toStringArray(Collection<String> collection) {
 		if (collection != null) {
 			return collection.toArray(new String[collection.size()]);
+		}
+		return null;
+	}
+
+	public static <T> T[] toObjectArray(Collection<T> collection, Class<T> clazz) {
+		if (collection != null) {
+			return collection.toArray((T[])Array.newInstance(clazz, collection.size()));
 		}
 		return null;
 	}

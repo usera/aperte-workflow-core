@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.processtool.ui.generic;
 
 import com.vaadin.ui.*;
 import org.aperteworkflow.ui.view.GenericPortletViewRenderer;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 import java.util.Collection;
@@ -60,7 +61,7 @@ public class GenericUserPortletSettingsPanel extends VerticalLayout {
 	}
 
 	public String[] getSelectedViewKeys() {
-		return from((Collection<String>)select.getValue()).toArray(new String[]{});
+		return Lang2.toStringArray(from((Collection<String>)select.getValue()));
 	}
 
 	private String getMessage(String key) {

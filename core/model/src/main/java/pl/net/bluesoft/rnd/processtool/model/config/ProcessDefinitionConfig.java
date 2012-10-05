@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.processtool.model.config;
 
 import pl.net.bluesoft.rnd.processtool.model.PersistentEntity;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -57,7 +58,7 @@ public class ProcessDefinitionConfig extends PersistentEntity implements Seriali
     }
 
     public void setProcessLogo(byte[] processLogo) {
-        this.processLogo = processLogo;
+        this.processLogo = Lang2.noCopy(processLogo);
     }
 
     public String getTaskItemClass() {

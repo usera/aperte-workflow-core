@@ -1,5 +1,7 @@
 package pl.net.bluesoft.rnd.processtool.model;
 
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -25,7 +27,7 @@ public class ProcessInstanceAttachmentAttribute extends ProcessInstanceAttribute
     }
 
     public void setData(byte[] data) {
-        this.data = data;
+        this.data = Lang2.noCopy(data);
     }
 
     public String getMimeType() {

@@ -43,6 +43,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolWidget;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.*;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.impl.BaseProcessToolVaadinWidget;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
@@ -315,7 +316,8 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
                         component.setReadOnly(false);
                     }
                     if (Date.class.isAssignableFrom(component.getType())) {
-                        Date v = new SimpleDateFormat(((DateWidgetElement) element).getFormat()).parse(String.valueOf(value));
+						DateWidgetElement dwe = Lang2.assumeType(element, DateWidgetElement.class);
+						Date v = new SimpleDateFormat(dwe.getFormat()).parse(String.valueOf(value));
                         component.setValue(v);
                     } else if (String.class.isAssignableFrom(component.getType())) {
                         component.setValue(nvl(value, ""));
@@ -370,10 +372,9 @@ public class ProcessDataBlockWidget extends BaseProcessToolVaadinWidget implemen
 
     private void loadProcessInstanceDictionaries() {
         new ComponentEvaluator<AbstractSelect>(instanceDictContainers) {
-
             @Override
             public void evaluate(AbstractSelect component, WidgetElement element) throws Exception {
-                AbstractSelectWidgetElement aswe = (AbstractSelectWidgetElement) element;
+                AbstractSelectWidgetElement aswe = Lang2.assumeType(element, AbstractSelectWidgetElement.class);
                 String dictAttribute = aswe.getDictionaryAttribute();
                 ProcessInstanceDictionaryAttribute dict = (ProcessInstanceDictionaryAttribute) processInstance.findAttributeByKey(dictAttribute);
                 if (dict != null) {

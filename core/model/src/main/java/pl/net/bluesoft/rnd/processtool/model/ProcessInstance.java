@@ -20,6 +20,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 
 /**
  * Entity representing process instance data. It should be persisted in appropriate database.
@@ -380,14 +381,8 @@ public class ProcessInstance extends PersistentEntity {
     }
 
     public void setActiveTasks(BpmTask[] activeTasks) {
-        this.activeTasks = activeTasks;
+        this.activeTasks = Lang2.noCopy(activeTasks);
     }
-
-    public <T extends ProcessInstanceAttribute> Set<T>  findAttributesByClassAndKey(Class<T> clazz, String key){
-//      TODO
-        return null;
-    }
-
 
 	public Set<ProcessInstance> getChildren() {
 		return children;

@@ -2,6 +2,7 @@ package pl.net.bluesoft.rnd.processtool.model.dict;
 
 import org.apache.commons.collections.CollectionUtils;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.pt.utils.lang.Lang2;
 
 import java.util.*;
 
@@ -16,11 +17,11 @@ public class MultiLevelDictionary implements ProcessDictionary<String, String> {
 	private Collection<ProcessDictionaryItem<String, String>> allItems;
 
 	public MultiLevelDictionary(ProcessDictionary... dictionaries) {
-		this.dictionaries = dictionaries;
+		this.dictionaries = Lang2.noCopy(dictionaries);
 	}
 
 	public MultiLevelDictionary(List<ProcessDictionary> dictionaries) {
-		this(dictionaries.toArray(new ProcessDictionary[]{}));
+		this(Lang2.toObjectArray(dictionaries, ProcessDictionary.class));
 	}
 
 	@Override
