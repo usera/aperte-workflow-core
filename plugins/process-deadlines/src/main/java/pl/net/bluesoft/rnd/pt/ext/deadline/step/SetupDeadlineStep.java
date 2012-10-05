@@ -26,7 +26,7 @@ import pl.net.bluesoft.util.lang.Strings;
 @AliasName(name = "SetupDeadlineStep")
 public class SetupDeadlineStep implements ProcessToolProcessStep {
     public static final String DEFAULT_TEMPLATE_NAME = "deadlineEmailTemplate";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd"); // multithread correctness
 
     private static final Logger logger = Logger.getLogger(SetupDeadlineStep.class.getName());
 

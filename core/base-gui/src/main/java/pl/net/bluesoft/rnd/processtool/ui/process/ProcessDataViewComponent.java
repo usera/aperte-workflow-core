@@ -21,6 +21,7 @@ import org.aperteworkflow.util.vaadin.VaadinUtility;
 import org.aperteworkflow.util.vaadin.VaadinUtility.Refreshable;
 import org.aperteworkflow.util.vaadin.ui.AligningHorizontalLayout;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class ProcessDataViewComponent extends VerticalLayout implements Refreshable {
@@ -60,12 +61,12 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
                                     messageSource.getMessage("activity.close.process.confirmation.question"),
 									new String[] {
 											"activity.close.process.confirmation.ok",
-											canSaveProcessData ? "activity.close.process.confirmation.save" : null,
+											"activity.close.process.confirmation.save",
 											"activity.close.process.confirmation.cancel"
 									},
 									new EventHandler[] {
 											saveEventHandler,
-											canSaveProcessData ? saveAndCloseEventHandler : null,
+											saveAndCloseEventHandler,
 											null,
 									},
 									null);
@@ -75,19 +76,8 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
                         }
                     }
 
-                    EventHandler saveEventHandler = new EventHandler() {
-                        @Override
-                        public void onEvent() {
-							saveAndCloseAction(false);
-                        }
-					};
-
-					EventHandler saveAndCloseEventHandler = new EventHandler() {
-						@Override
-						public void onEvent() {
-							saveAndCloseAction(true);
-						}
-					};
+                    EventHandler saveEventHandler = new SaveEventHandler();
+					EventHandler saveAndCloseEventHandler = new SaveAndCloseEventHandler();
                 });
 
         AligningHorizontalLayout toolbar = new AligningHorizontalLayout(Alignment.MIDDLE_RIGHT);
@@ -165,5 +155,19 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
 
 	public ProcessDataPane getProcessDataPane() {
 		return pdp;
+	}
+
+	private class SaveEventHandler implements EventHandler, Serializable {
+		@Override
+		public void onEvent() {
+			saveAndCloseAction(false);
+		}
+	}
+
+	private class SaveAndCloseEventHandler implements EventHandler, Serializable {
+		@Override
+		public void onEvent() {
+			saveAndCloseAction(true);
+		}
 	}
 }

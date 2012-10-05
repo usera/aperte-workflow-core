@@ -24,6 +24,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.impl.BaseProcessToolVaadinWidg
 import pl.net.bluesoft.rnd.processtool.ui.widgets.impl.BaseProcessToolWidget;
 import pl.net.bluesoft.util.lang.FormatUtil;
 import pl.net.bluesoft.util.lang.Formats;
+import pl.net.bluesoft.util.lang.Lang;
 
 
 import java.util.*;
@@ -211,10 +212,11 @@ public class ProcessCommentsWidget extends BaseProcessToolVaadinWidget implement
 	private void displayCommentDetails(Component component, final BeanItem<ProcessComment> bi) {
 		final Form f = getCommentDetailsForm(bi,
 		                                     isOwner &&
-				                                     (hasPermission("EDIT") &&
-						                                     bi.getBean().getAuthor().getId() == bpmSession.getUser(ProcessToolContext.Util.getThreadProcessToolContext()).getId())
-				                                     || bi.getBean().getId() == null
-				                                     || hasPermission("EDIT_ALL"));
+											 (hasPermission("EDIT") && Lang.equals(
+													 bi.getBean().getAuthor().getId(),
+													 bpmSession.getUser(ProcessToolContext.Util.getThreadProcessToolContext()).getId()))
+											 || bi.getBean().getId() == null
+											 || hasPermission("EDIT_ALL"));
 
 		final Window newCommentWindow = new Window(getMessage("processdata.comments.comment.edit.title"));
 		newCommentWindow.setModal(true);

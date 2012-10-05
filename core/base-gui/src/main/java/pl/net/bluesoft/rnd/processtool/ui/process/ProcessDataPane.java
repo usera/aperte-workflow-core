@@ -6,6 +6,7 @@ import static pl.net.bluesoft.util.lang.Formats.nvl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,28 +108,7 @@ public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
         if (helpProviderFactory != null)
             helpFactory = helpProviderFactory.getInstance(application, task.getProcessDefinition(), true, "step_help");
 
-		actionCallback = new ProcessToolActionCallback() {
-			private void actionCompleted(GuiAction guiAction, ProcessStateAction action) {
-				ProcessDataPane.this.guiAction = guiAction;
-				refreshTask();
-				initLayout(action.getAutohide());
-			}
-
-			@Override
-			public void actionPerformed(ProcessStateAction action) {
-				actionCompleted(GuiAction.ACTION_PERFORMED, action);
-			}
-
-			@Override
-			public void actionFailed(ProcessStateAction action) {
-				actionCompleted(GuiAction.ACTION_FAILED, action);
-			}
-
-			@Override
-			public WidgetContextSupport getWidgetContextSupport() {
-				return ProcessDataPane.this;
-			}
-		};
+		actionCallback = new MyProcessToolActionCallback();
 	}
 
 	/** Odśwież odśwież widok po zmianie kroku lub procesu */
@@ -618,4 +598,26 @@ public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
 		return processToolWidget;
 	}
 
+	private class MyProcessToolActionCallback implements ProcessToolActionCallback, Serializable {
+		private void actionCompleted(GuiAction guiAction, ProcessStateAction action) {
+			ProcessDataPane.this.guiAction = guiAction;
+			refreshTask();
+			initLayout(action.getAutohide());
+		}
+
+		@Override
+		public void actionPerformed(ProcessStateAction action) {
+			actionCompleted(GuiAction.ACTION_PERFORMED, action);
+		}
+
+		@Override
+		public void actionFailed(ProcessStateAction action) {
+			actionCompleted(GuiAction.ACTION_FAILED, action);
+		}
+
+		@Override
+		public WidgetContextSupport getWidgetContextSupport() {
+			return ProcessDataPane.this;
+		}
+	}
 }

@@ -19,7 +19,7 @@ public class ThreadSafeCachingI18NSource implements I18NSource {
 
 	public ThreadSafeCachingI18NSource(I18NSource i18NSource) {
 		this.i18NSource = i18NSource;
-		this.propertyCaches = new Map[499]; // prime
+		this.propertyCaches = new Map[499];
 		for (int i = 0; i < propertyCaches.length; ++i) {
 			propertyCaches[i] = new HashMap<String, String>();
 		}
@@ -29,16 +29,18 @@ public class ThreadSafeCachingI18NSource implements I18NSource {
 		if (key == null) {
 			return null;
 		}
-		int idx = Math.abs(key.hashCode()) % propertyCaches.length;
-		return getCachedMessage(propertyCaches[idx], key);
+		return getCachedMessage(propertyCaches[getIdx(key)], key);
 	}
 
 	public String getMessage(String key, String defaultValue) {
 		if (key == null) {
 			return defaultValue;
 		}
-		int idx = Math.abs(key.hashCode()) % propertyCaches.length;
-		return getCachedMessage(propertyCaches[idx], key, defaultValue);
+		return getCachedMessage(propertyCaches[getIdx(key)], key, defaultValue);
+	}
+
+	private int getIdx(String key) {
+		return (int)(Math.abs((long)key.hashCode()) % propertyCaches.length);
 	}
 
 	private synchronized String getCachedMessage(Map<String, String> cachedProperties, String key) {
