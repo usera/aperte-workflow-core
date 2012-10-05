@@ -3,6 +3,7 @@ package pl.net.bluesoft.rnd.processtool.model;
 import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
 
 import java.util.Calendar;
+import java.util.Comparator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,7 +23,7 @@ import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
  */
 @Entity
 @Table(name = "pt_process_instance_log")
-public class ProcessInstanceLog extends PersistentEntity implements Comparable<ProcessInstanceLog> {
+public class ProcessInstanceLog extends PersistentEntity {
     public enum LogType {
         START, CLAIM, ACTION, INFO
     }
@@ -147,11 +148,12 @@ public class ProcessInstanceLog extends PersistentEntity implements Comparable<P
 		this.logType = logType;
 	}
 
-	@Override
-	public int compareTo(ProcessInstanceLog o) 
-	{
-		return nvl(o.getEntryDate(), Calendar.getInstance()).compareTo(nvl(entryDate, Calendar.getInstance()));
-	}
+	public static final Comparator<ProcessInstanceLog> DEFAULT_COMPARATOR = new Comparator<ProcessInstanceLog>() {
+		@Override
+		public int compare(ProcessInstanceLog o1, ProcessInstanceLog o2) {
+			return nvl(o2.getEntryDate(), Calendar.getInstance()).compareTo(nvl(o1.getEntryDate(), Calendar.getInstance()));
+		}
+	};
 
 	public String getExecutionId()
 	{

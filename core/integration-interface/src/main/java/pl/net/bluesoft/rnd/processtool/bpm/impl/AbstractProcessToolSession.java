@@ -317,7 +317,7 @@ public abstract class AbstractProcessToolSession
                 }
             }
         }
-        java.util.Collections.sort(res);
+        java.util.Collections.sort(res, ProcessDefinitionConfig.DEFAULT_COMPARATOR);
         return res;
     }
 

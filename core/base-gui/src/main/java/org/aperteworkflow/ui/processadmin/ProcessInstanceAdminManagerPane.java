@@ -577,7 +577,7 @@ public class ProcessInstanceAdminManagerPane extends VerticalLayout implements R
         pi = ProcessToolContext.Util.getThreadProcessToolContext().getProcessInstanceDAO().getProcessInstance(pi.getId());
 
         List<ProcessInstanceLog> processLogs = new ArrayList<ProcessInstanceLog>(pi.getProcessLogs());
-        Collections.sort(processLogs);
+        Collections.sort(processLogs, ProcessInstanceLog.DEFAULT_COMPARATOR);
         VerticalLayout vl = new VerticalLayout();
         HorizontalLayout hl;
         for (ProcessInstanceLog pil : processLogs) {
