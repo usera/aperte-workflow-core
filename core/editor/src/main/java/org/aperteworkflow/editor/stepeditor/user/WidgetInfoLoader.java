@@ -116,7 +116,7 @@ public class WidgetInfoLoader {
 
 	private static void removeNulls(Collection<WidgetItem> widgets) {
 		for (;;) {
-			if (widgets.remove(null)) {
+			if (!widgets.remove(null)) {
 				return;
 			}
 		}
