@@ -64,6 +64,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.AliasName;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.taskitem.TaskItemProvider;
 import pl.net.bluesoft.rnd.util.func.Func;
 import pl.net.bluesoft.rnd.util.i18n.I18NProvider;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.util.i18n.impl.PropertiesBasedI18NProvider;
 import pl.net.bluesoft.rnd.util.i18n.impl.PropertyLoader;
 import pl.net.bluesoft.util.cache.Caches;
@@ -403,12 +404,14 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
 
 	public void registerI18NProvider(I18NProvider i18Provider, String providerId) {
 		I18N_PROVIDER_REGISTRY.put(providerId, i18Provider);
+		I18NSourceFactory.invalidateCache();
         logger.warning("Registered I18NProvider: " + providerId);
     }
 
     public void unregisterI18NProvider(String providerId) {
 		I18N_PROVIDER_REGISTRY.remove(providerId);
-        logger.warning("Registered I18NProvider: " + providerId);
+		I18NSourceFactory.invalidateCache();
+		logger.warning("Unregistered I18NProvider: " + providerId);
 	}
 
 	public Collection<I18NProvider> getI18NProviders() {

@@ -1,6 +1,7 @@
 package pl.net.bluesoft.rnd.util.i18n.impl;
 
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -47,9 +48,7 @@ public class ThreadSafeCachingI18NSource implements I18NSource {
 		String p = cachedProperties.get(key);
 		if (p == null) {
 			p = i18NSource.getMessage(key);
-			if (p != null && !p.equals(key)) {
-				cachedProperties.put(key, p);
-			}
+			handleSearchResult(cachedProperties, key, p);
 		}
 		return p;
 	}
@@ -58,11 +57,18 @@ public class ThreadSafeCachingI18NSource implements I18NSource {
 		String p = cachedProperties.get(key);
 		if (p == null) {
 			p = i18NSource.getMessage(key, defaultValue);
-			if (p != null && !p.equals(key)) {
-				cachedProperties.put(key, p);
-			}
+			handleSearchResult(cachedProperties, key, p);
 		}
 		return p;
+	}
+
+	private void handleSearchResult(Map<String, String> cachedProperties, String key, String p) {
+		if (p != null && !p.equals(key)) {
+			cachedProperties.put(key, p);
+		}
+		else {
+			I18NSourceFactory.fireMissingKey(this, key);
+		}
 	}
 
 	@Override
