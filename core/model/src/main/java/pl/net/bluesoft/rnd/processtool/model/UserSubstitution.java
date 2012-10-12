@@ -15,6 +15,9 @@ import java.util.Date;
 @Entity
 @Table(name="pt_user_substitution")
 public class UserSubstitution extends PersistentEntity {
+	public static final String _USER = "user";
+	public static final String _USER_SUBSTITUTE = "userSubstitute";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
     private UserData user;
