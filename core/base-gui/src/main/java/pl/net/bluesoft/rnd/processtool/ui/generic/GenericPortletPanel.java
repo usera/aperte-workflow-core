@@ -101,6 +101,7 @@ public abstract class GenericPortletPanel extends VerticalLayout {
 		params.setContext(ProcessToolContext.Util.getThreadProcessToolContext());
 		params.setBpmSession(bpmSession);
 		params.setI18NSource(i18NSource);
+		params.setApplication(application);
 		return params;
 	}
 

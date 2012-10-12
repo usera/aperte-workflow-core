@@ -356,7 +356,7 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			/* button id for the refresher */
 			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueProcessQueueId(qus.queue.getName(), user.getLogin());
 			
-			String desc = getMessage(qus.queue.getDescription());
+			String desc = getMessageNoBlank(qus.queue.getDescription());
 			/* The name of the queue */
 			String name = getMessage(USER_QUEUE_PREFIX+qus.queue.getName());
 
@@ -504,9 +504,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private Button createQueueButton(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
 	{
 		long processCount = q.getProcessCount();
-		String desc = getMessage(q.getDescription());
+		String desc = getMessageNoBlank(q.getDescription());
 		/* The name of the queue */
-		String queueName = activityMainPane.getI18NSource().getMessage(USER_QUEUE_PREFIX+q.getName(), "");
+		String queueName = getMessage(USER_QUEUE_PREFIX+q.getName());
 		
 		/* button id for the refresher */
 		String buttonId = QueuesPanelRefresherUtil.getQueueProcessQueueId(q.getName());
@@ -533,7 +533,17 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 	private String getMessage(String title)
 	{
-		return activityMainPane.getI18NSource().getMessage(title, "");
+		return getMessage(title, "");
+	}
+
+	private String getMessage(String title, String default_)
+	{
+		return activityMainPane.getI18NSource().getMessage(title, default_);
+	}
+
+	private String getMessageNoBlank(String title)
+	{
+		return getMessage(title, title);
 	}
 
 	private void queueClicked(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
