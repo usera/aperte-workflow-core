@@ -34,6 +34,6 @@ public class BpmAdminPortletRender implements GenericPortletViewRenderer {
 
 	@Override
 	public Object render(RenderParams params) {
-		return new BpmNotificationsAdminPanel(params);
+		return new BpmNotificationsAdminPanel(params.getI18NSource(), params.getContext().getRegistry());
 	}
 }

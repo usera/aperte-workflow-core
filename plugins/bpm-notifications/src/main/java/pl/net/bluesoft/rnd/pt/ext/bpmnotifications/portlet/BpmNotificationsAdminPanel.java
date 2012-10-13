@@ -1,125 +1,52 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet;
 
-import static com.vaadin.ui.Window.Notification.POSITION_CENTERED;
-import static com.vaadin.ui.Window.Notification.TYPE_HUMANIZED_MESSAGE;
-
-import com.vaadin.Application;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Window.Notification;
-import com.vaadin.ui.VerticalLayout;
-import org.aperteworkflow.ui.view.RenderParams;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.TabSheet;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
-import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet.components.*;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
 /**
- * Bpm Notifications admin panel
- * 
- * @author polszewski@bluesoft.net.pl
- * @author mpawlak@bluesoft.net.pl
+ * User: POlszewski
+ * Date: 2012-10-12
+ * Time: 21:19
  */
-public class BpmNotificationsAdminPanel extends VerticalLayout implements ClickListener
-{
+public class BpmNotificationsAdminPanel extends CustomComponent implements TabSheet.SelectedTabChangeListener {
+	private TabSheet tabSheet;
+
 	private I18NSource i18NSource;
 	private ProcessToolRegistry registry;
-	
-	private HorizontalLayout sendTestEmailLayout;
-	private TextField senderTextField;
-	private TextField recipientTextField;
-	
-	private Button refreshCachesBtn;
-	private Button sendTestEmailButton;
 
-	public BpmNotificationsAdminPanel(RenderParams params) {
-		this.i18NSource = params.getI18NSource();
-		this.registry = params.getContext().getRegistry();
-		
-		initComponents();
-		buildLayout();
+	public BpmNotificationsAdminPanel(I18NSource i18NSource, ProcessToolRegistry registry) {
+		this.i18NSource = i18NSource;
+		this.registry = registry;
+
+		setCompositionRoot(buildLayout());
 	}
 
-	private void buildLayout() 
-	{
-		setWidth("100%");
-		setSpacing(true);
-		
-		sendTestEmailLayout.addComponent(senderTextField);
-		sendTestEmailLayout.addComponent(recipientTextField);
-		sendTestEmailLayout.addComponent(sendTestEmailButton);
-		
-		addComponent(refreshCachesBtn);
-		addComponent(sendTestEmailLayout);
-	}
-	
-	private void initComponents()
-	{
-		refreshCachesBtn = new Button(i18NSource.getMessage(i18NSource.getMessage("bpmnot.refresh.config.cache")));
-		refreshCachesBtn.addListener((ClickListener)this);
-		
-		sendTestEmailLayout = new HorizontalLayout();
-		sendTestEmailLayout.setSpacing(true);
-		
-		senderTextField = new TextField();
-		senderTextField.setWidth(150, UNITS_PIXELS);
-		senderTextField.setInputPrompt(i18NSource.getMessage("bpmnot.send.test.mail.sender"));
-		
-		recipientTextField = new TextField();
-		recipientTextField.setInputPrompt(i18NSource.getMessage("bpmnot.send.test.mail.recipient"));
-		recipientTextField.setWidth(150, UNITS_PIXELS);
-		
-		sendTestEmailButton = new Button(i18NSource.getMessage("bpmnot.send.test.mail.send.button"));
-		sendTestEmailButton.addListener((ClickListener)this);
+	private Component buildLayout() {
+		tabSheet = new TabSheet();
+		tabSheet.setWidth("100%");
+		tabSheet.setImmediate(true);
+		tabSheet.addListener(this);
+
+		tabSheet.addTab(new MailPropertiesPanel(i18NSource), getMessage("Ustawienia konta"));
+		tabSheet.addTab(new TemplatePanel(i18NSource), getMessage("Szablony"));
+		tabSheet.addTab(new NotificationPanel(i18NSource), getMessage("Powiadomienia"));
+		tabSheet.addTab(new OthersPanel(i18NSource, registry), getMessage("Pozostałe"));
+
+		return tabSheet;
 	}
 
-	private BpmNotificationService getService() {
-		return registry.getRegisteredService(BpmNotificationService.class);
+	private String getMessage(String key) {
+		return i18NSource.getMessage(key);
 	}
 
 	@Override
-	public void buttonClick(ClickEvent event) 
-	{
-		if(event.getButton().equals(refreshCachesBtn))
-		{
-			getService().invalidateCache();
-		}
-		else if(event.getButton().equals(sendTestEmailButton))
-		{
-			try 
-			{
-				String sender = (String)senderTextField.getValue();
-				String recipient = (String)recipientTextField.getValue();
-				
-				if(sender == null || sender.isEmpty())
-				{
-					informationNotification(i18NSource.getMessage("bpmnot.send.test.mail.sender.empty"));
-					return;
-				}
-				
-				if(recipient == null || recipient.isEmpty())
-				{
-					informationNotification(i18NSource.getMessage("bpmnot.send.test.mail.recipient.empty"));
-					return;
-				}
-				
-				getService().addNotificationToSend("Default", sender, recipient, "Test E-mail", "tekst <br><b>tekst html</b><br> tekst polski: żołądków", true);
-				informationNotification(i18NSource.getMessage("bpmnot.send.test.mail.sent"));
-			} 
-			catch (Exception e) 
-			{
-				informationNotification("Problem: "+e.getMessage());
-			}
-		}
-		
+	public void selectedTabChange(TabSheet.SelectedTabChangeEvent event) {
+		((DataLoadable)tabSheet.getSelectedTab()).loadData();
+		// TODO
+		System.out.println("Data load");
 	}
-	
-    public void informationNotification(String message) {
-        Notification notification = new Notification("<b>" + message + "</b>", TYPE_HUMANIZED_MESSAGE);
-        notification.setPosition(POSITION_CENTERED);
-        notification.setDelayMsec(5);
-        this.getWindow().showNotification(notification);
-    }
 }
