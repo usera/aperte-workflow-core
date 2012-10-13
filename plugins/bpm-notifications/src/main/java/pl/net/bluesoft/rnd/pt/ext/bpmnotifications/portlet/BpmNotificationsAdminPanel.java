@@ -45,8 +45,8 @@ public class BpmNotificationsAdminPanel extends CustomComponent implements TabSh
 
 	@Override
 	public void selectedTabChange(TabSheet.SelectedTabChangeEvent event) {
-		((DataLoadable)tabSheet.getSelectedTab()).loadData();
-		// TODO
-		System.out.println("Data load");
+		if (tabSheet.getSelectedTab() instanceof DataLoadable) {
+			((DataLoadable)tabSheet.getSelectedTab()).loadData();
+		}
 	}
 }

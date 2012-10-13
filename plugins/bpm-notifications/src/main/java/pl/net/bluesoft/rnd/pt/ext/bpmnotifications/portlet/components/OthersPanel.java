@@ -15,7 +15,7 @@ import static com.vaadin.ui.Window.Notification.TYPE_HUMANIZED_MESSAGE;
  *
  * @author mpawlak@bluesoft.net.pl
  */
-public class OthersPanel extends VerticalLayout implements DataLoadable, Button.ClickListener {
+public class OthersPanel extends VerticalLayout implements Button.ClickListener {
 	private Button refreshCachesBtn;
 
 	private TextField senderTextField;
@@ -59,10 +59,6 @@ public class OthersPanel extends VerticalLayout implements DataLoadable, Button.
 		sendTestEmailLayout.addComponent(sendTestEmailButton);
 
 		addComponent(sendTestEmailLayout);
-	}
-
-	@Override
-	public void loadData() {
 	}
 
 	@Override
