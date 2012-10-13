@@ -4,6 +4,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextField;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationMailPropertiesDAO;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
@@ -30,8 +31,8 @@ public class MailPropertiesPanel extends ItemEditorLayout<BpmNotificationMailPro
 	private CheckBox startTls;
 	private CheckBox debug;
 
-	public MailPropertiesPanel(I18NSource i18NSource) {
-		super(BpmNotificationMailProperties.class, i18NSource);
+	public MailPropertiesPanel(I18NSource i18NSource, ProcessToolRegistry registry) {
+		super(BpmNotificationMailProperties.class, i18NSource, registry);
 		buildLayout();
 	}
 

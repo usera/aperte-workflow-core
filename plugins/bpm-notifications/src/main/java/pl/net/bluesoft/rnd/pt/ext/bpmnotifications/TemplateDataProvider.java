@@ -3,11 +3,7 @@ package pl.net.bluesoft.rnd.pt.ext.bpmnotifications;
 import static pl.net.bluesoft.rnd.util.TaskUtil.getTaskLink;
 import static pl.net.bluesoft.util.lang.Strings.hasText;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
@@ -136,4 +132,7 @@ public class TemplateDataProvider
 		argumentProviders.add(provider);
 	}
 
+	public Collection<TemplateArgumentProvider> getTemplateArgumentProviders() {
+		return Collections.unmodifiableCollection(argumentProviders);
+	}
 }

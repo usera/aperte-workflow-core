@@ -4,6 +4,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationTemplateDAO;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
@@ -21,8 +22,8 @@ public class TemplatePanel extends ItemEditorLayout<BpmNotificationTemplate> {
 	private TextField templateSubject;
 	private TextArea templateBody;
 
-	public TemplatePanel(I18NSource i18NSource) {
-		super(BpmNotificationTemplate.class, i18NSource);
+	public TemplatePanel(I18NSource i18NSource, ProcessToolRegistry registry) {
+		super(BpmNotificationTemplate.class, i18NSource, registry);
 		buildLayout();
 	}
 

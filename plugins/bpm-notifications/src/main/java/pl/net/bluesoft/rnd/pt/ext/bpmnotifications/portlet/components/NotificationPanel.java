@@ -1,12 +1,25 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet.components;
 
 import com.vaadin.ui.*;
+import org.hibernate.Hibernate;
+import pl.net.bluesoft.rnd.processtool.model.config.ProcessDefinitionConfig;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationConfigDAO;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationMailPropertiesDAO;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationTemplateDAO;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationMailProperties;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.util.lang.cquery.func.F;
 
+import java.util.Collection;
 import java.util.List;
+
+import static pl.net.bluesoft.rnd.processtool.ProcessToolContext.Util.getThreadProcessToolContext;
+import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
 
 /**
  * User: POlszewski
@@ -14,9 +27,9 @@ import java.util.List;
  * Time: 21:23
  */
 public class NotificationPanel extends ItemEditorLayout<BpmNotificationConfig> {
-	private TextField profileName;
-	private TextField templateName;
-	private TextField templateArgumentProvider;
+	private Select profileName;
+	private Select templateName;
+	private Select templateArgumentProvider;
 	private CheckBox active;
 	private CheckBox sendHtml;
 	private TextField localeField;
@@ -31,8 +44,13 @@ public class NotificationPanel extends ItemEditorLayout<BpmNotificationConfig> {
 	private TextField notifyEmailAddresses;
 	private TextField notifyUserAttributes;
 
-	public NotificationPanel(I18NSource i18NSource) {
-		super(BpmNotificationConfig.class, i18NSource);
+	private List<BpmNotificationMailProperties> mailProperties;
+	private List<BpmNotificationTemplate> mailTemplates;
+	private Collection<ProcessDefinitionConfig> processDefinitions;
+	private Collection<TemplateArgumentProvider> templateArgumentProviders;
+
+	public NotificationPanel(I18NSource i18NSource, ProcessToolRegistry registry) {
+		super(BpmNotificationConfig.class, i18NSource, registry);
 		buildLayout();
 	}
 
@@ -40,9 +58,9 @@ public class NotificationPanel extends ItemEditorLayout<BpmNotificationConfig> {
 	protected Component createItemDetailsLayout() {
 		FormLayout formLayout = new FormLayout();
 
-		formLayout.addComponent(profileName = textField("Profil", 400));
-		formLayout.addComponent(templateName = textField("Szablon", 400));
-		formLayout.addComponent(templateArgumentProvider = textField("Dostawca parametrów", 400));
+		formLayout.addComponent(profileName = select("Profil", 400));
+		formLayout.addComponent(templateName = select("Szablon", 400));
+		formLayout.addComponent(templateArgumentProvider = select("Dostawca parametrów", 400));
 		formLayout.addComponent(active = checkBox("Aktywny"));
 		formLayout.addComponent(sendHtml = checkBox("Wyślij jako HTML"));
 		formLayout.addComponent(localeField = textField("Locale"));
@@ -127,7 +145,36 @@ public class NotificationPanel extends ItemEditorLayout<BpmNotificationConfig> {
 
 	@Override
 	protected void prepareData() {
-		// TODO zaladowanie definicji procesow + szablonow maili + profili
+		mailProperties = new BpmNotificationMailPropertiesDAO().findAll();
+
+		mailTemplates = new BpmNotificationTemplateDAO().findAll();
+
+		processDefinitions = getThreadProcessToolContext()
+				.getProcessDefinitionDAO().getActiveConfigurations();
+		for (ProcessDefinitionConfig processDefinition : processDefinitions) {
+			Hibernate.initialize(processDefinition.getStates());
+		}
+
+		templateArgumentProviders = getService().getTemplateArgumentProviders();
+
+		bindValues(profileName, from(mailProperties).select(new F<BpmNotificationMailProperties, String>() {
+			@Override
+			public String invoke(BpmNotificationMailProperties x) {
+				return x.getProfileName();
+			}
+		}).ordered().toList());
+		bindValues(templateName, from(mailTemplates).select(new F<BpmNotificationTemplate, String>() {
+			@Override
+			public String invoke(BpmNotificationTemplate x) {
+				return x.getTemplateName();
+			}
+		}));
+		bindValues(templateArgumentProvider, from(templateArgumentProviders).select(new F<TemplateArgumentProvider, String>() {
+			@Override
+			public String invoke(TemplateArgumentProvider x) {
+				return x.getName();
+			}
+		}));
 	}
 
 	@Override
@@ -142,7 +189,13 @@ public class NotificationPanel extends ItemEditorLayout<BpmNotificationConfig> {
 
 	@Override
 	protected BpmNotificationConfig createItem() {
-		return new BpmNotificationConfig();
+		BpmNotificationConfig item = new BpmNotificationConfig();
+		item.setActive(true);
+		item.setLocale(I18NSource.ThreadUtil.getThreadI18nSource().getLocale().toString());
+		if (mailProperties.size() == 1) {
+			item.setProfileName(mailProperties.get(0).getProfileName());
+		}
+		return item;
 	}
 
 	@Override

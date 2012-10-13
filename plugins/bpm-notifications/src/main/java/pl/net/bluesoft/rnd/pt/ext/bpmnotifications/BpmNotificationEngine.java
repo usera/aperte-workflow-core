@@ -357,6 +357,11 @@ public class BpmNotificationEngine implements BpmNotificationService
 	}
 
 	@Override
+	public Collection<TemplateArgumentProvider> getTemplateArgumentProviders() {
+		return templateDataProvider.getTemplateArgumentProviders();
+	}
+
+	@Override
 	public synchronized void invalidateCache() {
 		cacheUpdateTime = 0;
 	}

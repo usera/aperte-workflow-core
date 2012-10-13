@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -20,6 +21,7 @@ public interface BpmNotificationService
 
 	void registerTemplateArgumentProvider(TemplateArgumentProvider provider);
 	void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider);
+	Collection<TemplateArgumentProvider> getTemplateArgumentProviders();
 
 	void invalidateCache();
 }
