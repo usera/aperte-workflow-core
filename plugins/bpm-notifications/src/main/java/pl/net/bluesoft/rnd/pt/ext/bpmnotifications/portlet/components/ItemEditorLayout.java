@@ -4,10 +4,13 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.*;
 import pl.net.bluesoft.rnd.processtool.model.PersistentEntity;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Lang;
 import pl.net.bluesoft.util.lang.cquery.func.F;
 
+import java.util.Collection;
 import java.util.List;
 
 import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
@@ -21,6 +24,7 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		implements DataLoadable, Button.ClickListener, Property.ValueChangeListener {
 	private Class<ItemType> itemClass;
 	private I18NSource i18NSource;
+	private ProcessToolRegistry registry;
 
 	private ListSelect itemSelect;
 	private Button saveButton;
@@ -28,9 +32,10 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 
 	private Long itemId;
 
-	public ItemEditorLayout(Class<ItemType> itemClass, I18NSource i18NSource) {
+	public ItemEditorLayout(Class<ItemType> itemClass, I18NSource i18NSource, ProcessToolRegistry registry) {
 		this.itemClass = itemClass;
 		this.i18NSource = i18NSource;
+		this.registry = registry;
 	}
 
 	protected void buildLayout() {
@@ -41,7 +46,7 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		itemSelect.setWidth("250px");
 		itemSelect.setNullSelectionAllowed(false);
 		itemSelect.setContainerDataSource(new BeanItemContainer<ItemType>(itemClass));
-		itemSelect.setRows(10);
+		itemSelect.setRows(15);
 		itemSelect.setImmediate(true);
 		itemSelect.addListener(this);
 
@@ -147,6 +152,10 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		return i18NSource.getMessage(key);
 	}
 
+	protected BpmNotificationService getService() {
+		return registry.getRegisteredService(BpmNotificationService.class);
+	}
+
 	protected TextField textField(String caption, int width) {
 		TextField textField = textField(caption);
 		if (width >= 0) {
@@ -183,6 +192,30 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 
 	protected CheckBox checkBox(String caption) {
 		return new CheckBox(getMessage(caption));
+	}
+
+	protected Select select(String caption, int width) {
+		Select select = select(caption);
+		if (width >= 0) {
+			select.setWidth(width, UNITS_PIXELS);
+		}
+		else {
+			select.setWidth(100, UNITS_PERCENTAGE);
+		}
+		return select;
+	}
+
+	protected Select select(String caption) {
+		return new Select(getMessage(caption));
+	}
+
+	protected void bindValues(Select select, Collection<String> values) {
+		select.removeAllItems();
+		for (String value : values) {
+			if (value != null) {
+				select.addItem(value);
+			}
+		}
 	}
 
 	protected String getString(Field field) {
