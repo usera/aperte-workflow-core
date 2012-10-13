@@ -49,6 +49,7 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		/* Register scheduler for notifications sending */
 		schedulerActivator.scheduleNotificationsSend(engine);
 	
+		getViewRegistry(registry).registerGenericPortletViewRenderer("admin", BpmAdminPortletRender.INSTANCE);
 		getViewRegistry(registry).registerGenericPortletViewRenderer("user", BpmAdminPortletRender.INSTANCE);
 	}
 	
@@ -61,7 +62,8 @@ public class Activator implements BundleActivator, EventListener<BpmEvent> {
 		registry.getEventBusManager().unsubscribe(BpmEvent.class, this);
 		registry.getEventBusManager().unsubscribe(MailEvent.class, mailEventListener);
 		mailEventListener = null;
-		
+
+		getViewRegistry(registry).unregisterGenericPortletViewRenderer("admin", BpmAdminPortletRender.INSTANCE);
 		getViewRegistry(registry).unregisterGenericPortletViewRenderer("user", BpmAdminPortletRender.INSTANCE);
 	}
 

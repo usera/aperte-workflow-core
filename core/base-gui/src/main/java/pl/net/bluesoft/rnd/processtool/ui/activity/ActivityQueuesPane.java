@@ -533,17 +533,12 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 
 	private String getMessage(String title)
 	{
-		return getMessage(title, "");
-	}
-
-	private String getMessage(String title, String default_)
-	{
-		return activityMainPane.getI18NSource().getMessage(title, default_);
+		return activityMainPane.getI18NSource().getMessage(title, "");
 	}
 
 	private String getMessageNoBlank(String title)
 	{
-		return getMessage(title, title);
+		return activityMainPane.getI18NSource().getMessage(title, title);
 	}
 
 	private void queueClicked(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
