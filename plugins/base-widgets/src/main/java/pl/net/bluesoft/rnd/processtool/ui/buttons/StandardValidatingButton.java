@@ -126,8 +126,7 @@ public class StandardValidatingButton extends BaseProcessToolVaadinActionButton 
 		super.saveData(task);
 		ProcessInstance pi = task.getProcessInstance();
 		
-		if(pi.getSimpleAttributeValue("commentAdded") == null)
-			pi.setSimpleAttribute("commentAdded", "false");
+		pi.setSimpleAttribute("commentAdded", "false");
 	}
 
 	private void showSkipSavingDialog(final PerformedActionParams params) {
