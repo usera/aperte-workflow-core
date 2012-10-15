@@ -42,11 +42,15 @@ import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotification;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.BpmNotificationService;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentDescription;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.DatabaseMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.IMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.sessions.JndiMailSessionProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.templates.MailTemplateProvider;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.util.NotificationHistory;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.NotificationHistoryEntry;
+import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 import pl.net.bluesoft.util.lang.Strings;
 
 /**
@@ -85,13 +89,15 @@ public class BpmNotificationEngine implements BpmNotificationService
     
     /** Provider for email templates */
     private MailTemplateProvider templateProvider;
+
+	private NotificationHistory history = new NotificationHistory(1000);
     
     public BpmNotificationEngine(ProcessToolRegistry registry)
     {
     	this.registry = registry;
     	
     	
-    	init();
+    	try {init();}catch (Exception e){}
     }
     
     /** Initialize all providers and configurations */
@@ -362,6 +368,16 @@ public class BpmNotificationEngine implements BpmNotificationService
 	}
 
 	@Override
+	public List<TemplateArgumentDescription> getDefaultArgumentDescriptions(I18NSource i18NSource) {
+		return templateDataProvider.getDefaultArgumentDescriptions(i18NSource);
+	}
+
+	@Override
+	public List<NotificationHistoryEntry> getNotificationHistoryEntries() {
+		return history.getRecentEntries();
+	}
+
+	@Override
 	public synchronized void invalidateCache() {
 		cacheUpdateTime = 0;
 	}
@@ -445,6 +461,8 @@ public class BpmNotificationEngine implements BpmNotificationService
         notification.setAttachments(attachmentsString.toString());
         
         NotificationsFacade.addNotificationToBeSent(notification);
+
+		history.notificationEnqueued(notification);
     }
     
     
@@ -477,11 +495,15 @@ public class BpmNotificationEngine implements BpmNotificationService
 	    	{
 	    		Transport.send(message);
 	    	}
-	    	
-	    	 logger.info("Emails sent");
+
+			history.notificationSent(notification);
+
+	    	logger.info("Emails sent");
         }
         catch (Exception e) 
         {
+			history.errorWhileSendingNotification(notification, e);
+
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }

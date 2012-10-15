@@ -1,6 +1,9 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service;
 
+import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +25,10 @@ public interface BpmNotificationService
 	void registerTemplateArgumentProvider(TemplateArgumentProvider provider);
 	void unregisterTemplateArgumentProvider(TemplateArgumentProvider provider);
 	Collection<TemplateArgumentProvider> getTemplateArgumentProviders();
+
+	List<TemplateArgumentDescription> getDefaultArgumentDescriptions(I18NSource i18NSource);
+
+	List<NotificationHistoryEntry> getNotificationHistoryEntries();
 
 	void invalidateCache();
 }

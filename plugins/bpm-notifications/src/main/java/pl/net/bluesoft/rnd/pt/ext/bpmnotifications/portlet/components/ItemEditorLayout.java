@@ -46,11 +46,12 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		itemSelect.setWidth("250px");
 		itemSelect.setNullSelectionAllowed(false);
 		itemSelect.setContainerDataSource(new BeanItemContainer<ItemType>(itemClass));
-		itemSelect.setRows(15);
+		itemSelect.setRows(20);
 		itemSelect.setImmediate(true);
 		itemSelect.addListener(this);
 
 		Component itemDetails = createItemDetailsLayout();
+		Component infoLayout = createInfoLayout();
 		saveButton = new Button(getMessage("Zapisz"));
 		saveButton.addListener((Button.ClickListener)this);
 		newButton = new Button(getMessage("Nowy"));
@@ -59,11 +60,18 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		VerticalLayout rightLayout = new VerticalLayout();
 		rightLayout.setSpacing(true);
 		rightLayout.addComponent(itemDetails);
+		if (infoLayout != null) {
+			rightLayout.addComponent(infoLayout);
+		}
 		rightLayout.addComponent(hl(saveButton, newButton));
 
 		addComponent(itemSelect);
 		addComponent(rightLayout);
 		setExpandRatio(rightLayout, 1);
+	}
+
+	protected Component createInfoLayout() {
+		return null;
 	}
 
 	protected abstract Component createItemDetailsLayout();
@@ -132,6 +140,7 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		}
 		saveDetails(item);
 		saveItem(item);
+		getService().invalidateCache();
 		doLoadData(item.getId());
 	}
 
@@ -149,7 +158,11 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 	}
 
 	protected String getMessage(String key) {
-		return i18NSource.getMessage(key);
+		return key != null ? i18NSource.getMessage(key) : key;
+	}
+
+	public I18NSource getI18NSource() {
+		return i18NSource;
 	}
 
 	protected BpmNotificationService getService() {
@@ -226,7 +239,16 @@ public abstract class ItemEditorLayout<ItemType extends PersistentEntity> extend
 		return field.booleanValue();
 	}
 
-	protected static HorizontalLayout hl(Component... components) {
+	protected HorizontalLayout hl(String caption, Component... components) {
+		HorizontalLayout hl = hl(components);
+		for (Component component : components) {
+			hl.setComponentAlignment(component, Alignment.MIDDLE_LEFT);
+		}
+		hl.setCaption(getMessage(caption));
+		return hl;
+	}
+
+	protected HorizontalLayout hl(Component... components) {
 		HorizontalLayout hl = new HorizontalLayout();
 		hl.setSpacing(true);
 		for (Component component : components) {

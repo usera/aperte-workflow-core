@@ -12,6 +12,7 @@ import pl.net.bluesoft.rnd.processtool.model.ProcessInstance;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.model.config.ProcessStateConfiguration;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationConfig;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentDescription;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProviderParams;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
@@ -134,5 +135,27 @@ public class TemplateDataProvider
 
 	public Collection<TemplateArgumentProvider> getTemplateArgumentProviders() {
 		return Collections.unmodifiableCollection(argumentProviders);
+	}
+
+	public List<TemplateArgumentDescription> getDefaultArgumentDescriptions(I18NSource i18NSource) {
+		return Arrays.asList(
+				descr(_PROCESS_VISIBLE_ID, "Process visible id, external process key or internal id if external doesn't exist", i18NSource),
+				descr(_PROCESS_ID, "Process id in database", i18NSource),
+				descr(_PROCESS, "Process instance, you can access all process properties if seperatre by dot", i18NSource),
+				descr(_USER, "Current assignee instance (UserData), you can access all process properties if seperatre by dot.", i18NSource),
+				descr(_ASSIGNEE, "Current assignee instance (UserData), you can access all process properties if seperatre by dot.", i18NSource),
+				descr(_CREATOR, "Process creator instance (UserData), you can access all process properties if seperatre by dot.", i18NSource),
+				descr(_SESSION, "Current session instance, do not use in template", i18NSource),
+				descr(_CONTEXT, "Current context instance, do not use in template", i18NSource),
+				descr(_CONFIG, "Current template config instance, do not use in template ", i18NSource),
+				descr(_TASK, "If task exists, this is instance of current BpmTask", i18NSource),
+				descr(_TASK_NAME, "If task exists, this is the name of current BpmTask", i18NSource),
+				descr(_TASK_URL, "If task exists, this is url link for webbrowser to this task", i18NSource),
+				descr(_TASK_LINK, "If task exists, this is url link for webbrowser to this task", i18NSource)
+		);
+	}
+
+	private TemplateArgumentDescription descr(String name, String i18NKey, I18NSource i18NSource) {
+		return new TemplateArgumentDescription(name, i18NSource.getMessage(i18NKey));
 	}
 }

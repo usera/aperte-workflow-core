@@ -34,6 +34,7 @@ public class BpmNotificationsAdminPanel extends CustomComponent implements TabSh
 		tabSheet.addTab(new MailPropertiesPanel(i18NSource, registry), getMessage("Ustawienia konta"));
 		tabSheet.addTab(new TemplatePanel(i18NSource, registry), getMessage("Szablony"));
 		tabSheet.addTab(new NotificationPanel(i18NSource, registry), getMessage("Powiadomienia"));
+		tabSheet.addTab(new NotificationHistoryPanel(i18NSource, registry), getMessage("Wysłane powiadomienia"));
 		tabSheet.addTab(new OthersPanel(i18NSource, registry), getMessage("Pozostałe"));
 
 		return tabSheet;

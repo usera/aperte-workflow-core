@@ -1,14 +1,15 @@
 package pl.net.bluesoft.rnd.pt.ext.bpmnotifications.portlet.components;
 
-import com.vaadin.ui.Component;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.TextField;
+import com.vaadin.ui.*;
 import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.dao.BpmNotificationTemplateDAO;
 import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.model.BpmNotificationTemplate;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentDescription;
+import pl.net.bluesoft.rnd.pt.ext.bpmnotifications.service.TemplateArgumentProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
 
+import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,6 +22,7 @@ public class TemplatePanel extends ItemEditorLayout<BpmNotificationTemplate> {
 	private TextField templateSender;
 	private TextField templateSubject;
 	private TextArea templateBody;
+	private Label argumentInfoLabel;
 
 	public TemplatePanel(I18NSource i18NSource, ProcessToolRegistry registry) {
 		super(BpmNotificationTemplate.class, i18NSource, registry);
@@ -40,12 +42,53 @@ public class TemplatePanel extends ItemEditorLayout<BpmNotificationTemplate> {
 	}
 
 	@Override
+	protected Component createInfoLayout() {
+		argumentInfoLabel = new Label("", Label.CONTENT_XHTML);
+		return argumentInfoLabel;
+	}
+
+	@Override
 	protected void clearDetails() {
 		templateName.setReadOnly(false);
 		templateName.setValue(null);
 		templateSender.setValue(null);
 		templateSubject.setValue(null);
 		templateBody.setValue(null);
+	}
+
+	@Override
+	protected void prepareData() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<b>")
+			.append(getMessage("Poniższe parametry możesz umieścić w dowolnym szablonie:"))
+			.append("</b>");
+
+		getParamDesc(sb, getService().getDefaultArgumentDescriptions(getI18NSource()));
+
+		for (TemplateArgumentProvider argumentProvider : getService().getTemplateArgumentProviders()) {
+			sb.append("<b>")
+				.append(MessageFormat.format(getMessage("Dodatkowo dostawca parametrów <i>{0}</i> udostępnia:"), argumentProvider.getName()))
+				.append("</b>");
+
+			getParamDesc(sb, argumentProvider.getArgumentDescriptions(getI18NSource()));
+		}
+
+		argumentInfoLabel.setValue(sb.toString());
+	}
+
+	private void getParamDesc(StringBuilder sb, List<TemplateArgumentDescription> argDescriptions) {
+		sb.append("<ul>");
+		for (TemplateArgumentDescription defaultArg : argDescriptions) {
+
+			sb.append("<li>")
+				.append("${")
+				.append(defaultArg.getName())
+				.append("} - ")
+				.append(defaultArg.getDescription())
+				.append("</li>");
+		}
+		sb.append("</ul>");
 	}
 
 	@Override

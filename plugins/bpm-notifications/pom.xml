@@ -53,6 +53,12 @@
             <version>${vaadin.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.aperteworkflow</groupId>
+            <artifactId>gui-commons</artifactId>
+            <version>2.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -91,6 +97,9 @@
                             pl.net.bluesoft.rnd.pt.ext.sched.service,
                             pl.net.bluesoft.rnd.processtool.plugins,
                             pl.net.bluesoft.rnd.processtool.plugins.osgi,
+                            org.aperteworkflow.util.vaadin,
+                            org.aperteworkflow.util.vaadin.ui,
+                            org.aperteworkflow.util.vaadin.ui.table,
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
                         <Bundle-Activator>pl.net.bluesoft.rnd.pt.ext.bpmnotifications.Activator</Bundle-Activator>
