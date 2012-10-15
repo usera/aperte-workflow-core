@@ -19,22 +19,22 @@ public class NotificationHistory {
 		this.maxEntries = maxEntries;
 	}
 
-	public void notificationEnqueued(BpmNotification notification) {
+	public synchronized void notificationEnqueued(BpmNotification notification) {
 		getEntry(notification).setEnqueueDate(new Date());
 	}
 
-	public void notificationSent(BpmNotification notification) {
+	public synchronized void notificationSent(BpmNotification notification) {
 		getEntry(notification).setSendDate(new Date());
 	}
 
-	public void errorWhileSendingNotification(BpmNotification notification, Exception e) {
+	public synchronized void errorWhileSendingNotification(BpmNotification notification, Exception e) {
 		NotificationHistoryEntry entry = getEntry(notification);
 		entry.setSendDate(new Date());
 		entry.setSendingException(e);
 	}
 
-	public List<NotificationHistoryEntry> getRecentEntries() {
-		return Collections.unmodifiableList(entries);
+	public synchronized List<NotificationHistoryEntry> getRecentEntries() {
+		return new ArrayList<NotificationHistoryEntry>(entries);
 	}
 
 	private NotificationHistoryEntry getEntry(BpmNotification notification) {

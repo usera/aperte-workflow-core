@@ -134,7 +134,7 @@ public class TemplateDataProvider
 	}
 
 	public Collection<TemplateArgumentProvider> getTemplateArgumentProviders() {
-		return Collections.unmodifiableCollection(argumentProviders);
+		return new ArrayList<TemplateArgumentProvider>(argumentProviders);
 	}
 
 	public List<TemplateArgumentDescription> getDefaultArgumentDescriptions(I18NSource i18NSource) {
