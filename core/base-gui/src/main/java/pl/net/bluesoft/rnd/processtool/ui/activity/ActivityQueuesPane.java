@@ -3,6 +3,7 @@ package pl.net.bluesoft.rnd.processtool.ui.activity;
 import static org.aperteworkflow.util.vaadin.VaadinExceptionHandler.Util.withErrorHandling;
 import static org.aperteworkflow.util.vaadin.VaadinUtility.horizontalLayout;
 import static org.aperteworkflow.util.vaadin.VaadinUtility.refreshIcon;
+import static pl.net.bluesoft.util.lang.Strings.hasText;
 import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
 
 import java.text.MessageFormat;
@@ -356,11 +357,9 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			/* button id for the refresher */
 			String buttonId = QueuesPanelRefresherUtil.getSubstitutedQueueProcessQueueId(qus.queue.getName(), user.getLogin());
 			
-			String desc = getMessageNoBlank(qus.queue.getDescription());
-			/* The name of the queue */
-			String name = getMessage(USER_QUEUE_PREFIX+qus.queue.getName());
+			String desc = getQueueDescr(qus.queue);
 
-			container.getItem(qus).getItemProperty("name").setValue(desc + " " + name + " (" + count + ")");
+			container.getItem(qus).getItemProperty("name").setValue(desc + " (" + count + ")");
 			container.getItem(qus).getItemProperty("enabled").setValue(count > 0);
 			container.getItem(qus).getItemProperty("description").setValue(desc);
 			container.getItem(qus).getItemProperty("queueUserSession").setValue(qus);
@@ -504,14 +503,12 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 	private Button createQueueButton(final ProcessQueue q, final ProcessToolBpmSession bpmSession, final UserData user)
 	{
 		long processCount = q.getProcessCount();
-		String desc = getMessageNoBlank(q.getDescription());
-		/* The name of the queue */
-		String queueName = getMessage(USER_QUEUE_PREFIX+q.getName());
-		
+		String desc = getQueueDescr(q);
+
 		/* button id for the refresher */
 		String buttonId = QueuesPanelRefresherUtil.getQueueProcessQueueId(q.getName());
 		
-		Button qb = new Button(desc + " " + queueName + " (" + processCount + ")");
+		Button qb = new Button(desc + " (" + processCount + ")");
 		qb.setDescription(desc);
 		qb.setStyleName(BaseTheme.BUTTON_LINK);
 		
@@ -529,6 +526,26 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 			}
 		});
 		return qb;
+	}
+
+	private String getQueueDescr(ProcessQueue q) {
+		String desc = getMessage(q.getDescription());
+		/* The name of the queue */
+		String queueName = getMessage(USER_QUEUE_PREFIX+q.getName());
+
+		boolean nonblankDesc = hasText(desc);
+		boolean nonblankQueueName = hasText(queueName);
+
+		if (nonblankDesc && nonblankQueueName) {
+			return desc + " " + queueName;
+		}
+		if (nonblankDesc) {
+			return desc;
+		}
+		if (nonblankQueueName) {
+			return queueName;
+		}
+		return getMessageNoBlank(q.getDescription());
 	}
 
 	private String getMessage(String title)
