@@ -47,12 +47,12 @@ public class I18NSourceFactory {
 		}
 	}
 
-	static {
-		addListener(new MissingKeyListener() {
-			@Override
-			public void missingKey(I18NSource i18NSource, String key) {
-				Logger.getLogger("I18N").severe("Missing key " + key);
-			}
-		});
-	}
+//	static {
+//		addListener(new MissingKeyListener() {
+//			@Override
+//			public void missingKey(I18NSource i18NSource, String key) {
+//				Logger.getLogger("I18N").severe("Missing key " + key);
+//			}
+//		});
+//	}
 }
