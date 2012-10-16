@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.processtool.view.impl;
 
+import com.vaadin.terminal.Sizeable;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
@@ -36,7 +37,7 @@ public class BasicViewController implements ViewController {
 	private static final Logger logger = Logger.getLogger(BasicViewController.class.getName());
 
 	public BasicViewController(ViewRenderer baseViewRenderer) {
-		viewContainer.setWidth("100%");
+		viewContainer.setWidth(100, Sizeable.UNITS_PERCENTAGE);
 		baseViewId = baseViewRenderer.getViewId();
 		rendererMap.put(baseViewId, baseViewRenderer);
 		currentViewId = baseViewId;
@@ -110,7 +111,7 @@ public class BasicViewController implements ViewController {
 			throw new RuntimeException(e);
 		}
 		
-		comp.setWidth("100%");
+		comp.setWidth(100, Sizeable.UNITS_PERCENTAGE);
 		viewContainer.removeAllComponents();
 		viewContainer.addComponent(comp);
 		viewContainer.setExpandRatio(comp, 1.0f);

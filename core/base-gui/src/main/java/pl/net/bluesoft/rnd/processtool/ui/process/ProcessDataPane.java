@@ -54,7 +54,6 @@ import com.vaadin.terminal.Sizeable;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
@@ -64,7 +63,7 @@ import com.vaadin.ui.VerticalLayout;
  * 
  * @author tlipski@bluesoft.net.pl, mpawlak@bluesoft.net.pl
  */
-public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
+public class ProcessDataPane extends VerticalLayout implements WidgetContextSupport {
 	private Logger logger = Logger.getLogger(ProcessDataPane.class.getName());
 
 	private ProcessToolBpmSession bpmSession;
@@ -167,7 +166,7 @@ public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
 
 		final VerticalLayout vl = new VerticalLayout();
 		vl.setSpacing(true);
-
+		vl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
         List<ProcessStateWidget> widgets = new ArrayList<ProcessStateWidget>(stateConfiguration.getWidgets());
         Collections.sort(widgets, new WidgetPriorityComparator());
         
@@ -212,6 +211,7 @@ public class ProcessDataPane extends CssLayout implements WidgetContextSupport {
 		logger.log(Level.INFO, watch.printSummary());
 
 		addComponent(vl);
+		setExpandRatio(vl,1f);
 
 		if (isOwner) {
 			HorizontalLayout buttonLayout = getButtonsPanel(stateConfiguration);

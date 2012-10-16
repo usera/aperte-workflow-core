@@ -43,7 +43,7 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
     }
 
     private void init() {
-        setWidth("100%");
+        setWidth(100, UNITS_PERCENTAGE);
         setSpacing(true);
         setMargin(true);
     }
@@ -81,7 +81,7 @@ public class ProcessDataViewComponent extends VerticalLayout implements Refresha
                 });
 
         AligningHorizontalLayout toolbar = new AligningHorizontalLayout(Alignment.MIDDLE_RIGHT);
-        toolbar.setWidth("100%");
+        toolbar.setWidth(100, UNITS_PERCENTAGE);
         toolbar.setMargin(false);
         toolbar.setSpacing(false);
 

@@ -42,7 +42,7 @@ public abstract class AbstractListPane extends VerticalLayout implements VaadinU
     public AbstractListPane init() {
         removeAllComponents();
 
-        setWidth("100%");
+        setWidth(100, UNITS_PERCENTAGE);
         setMargin(true);
         setSpacing(true);
 

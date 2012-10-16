@@ -1,5 +1,6 @@
 package pl.net.bluesoft.rnd.processtool.ui.basewidgets;
 
+import com.vaadin.terminal.Sizeable;
 import com.vaadin.ui.*;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinRenderable;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolVaadinWidget;
@@ -36,7 +37,7 @@ public class VerticalLayoutWidget extends BaseProcessToolVaadinWidget implements
     public VerticalLayoutWidget() {
         vl.setMargin(true);
         vl.setSpacing(true);
-        vl.setWidth(100, AbstractComponent.UNITS_PERCENTAGE);
+        vl.setWidth(100, Sizeable.UNITS_PERCENTAGE);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class VerticalLayoutWidget extends BaseProcessToolVaadinWidget implements
                 vl.addComponent(new Label("<pre>" + baos.toString() + "</pre>", CONTENT_XHTML));
                 vl.addStyleName("error");
                 p.addComponent(vl);
-                p.setHeight("150px");
+                p.setHeight(150, Sizeable.UNITS_PIXELS);
                 component = p;
             }
 			if (component != null) {
@@ -75,12 +76,18 @@ public class VerticalLayoutWidget extends BaseProcessToolVaadinWidget implements
 						p.addComponent(component);
 						vl.addComponent(p);
 						vl.setExpandRatio(p, 1.0f);
-						p.setWidth(100, AbstractComponent.UNITS_PERCENTAGE);
-					} else {
+						p.setWidth(100, Sizeable.UNITS_PERCENTAGE);
+					} else 
+					{
 						vl.addComponent(component);
+						vl.setExpandRatio(component, 1.0f);
+						
 					}
-				}  else {
+				}  
+				else 
+				{
 					vl.addComponent(component);
+					vl.setExpandRatio(component, 1.0f);
 				}
 			}
         }

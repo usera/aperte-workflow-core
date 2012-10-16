@@ -61,7 +61,7 @@ import pl.net.bluesoft.util.lang.Strings;
  */
 public class BpmNotificationEngine implements BpmNotificationService 
 {
-    private static final long CONFIG_DEFAULT_CACHE_REFRESH_INTERVAL = 60 * 60 * 1000;
+    private static final long CONFIG_DEFAULT_CACHE_REFRESH_INTERVAL = 5* 1000;
     
     private static final String SUBJECT_TEMPLATE_SUFFIX = "_subject";
     private static final String PROVIDER_TYPE = "mail.settings.provider.type";
