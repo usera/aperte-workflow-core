@@ -83,6 +83,8 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 
 	private void initLayout()
 	{
+		horizontalLayout = new HorizontalLayout();
+		
 		uriFragmentUtility.addListener(new FragmentChangedListener()
 		{
 			@Override
@@ -130,7 +132,6 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 
 		ComponentContainer viewContainer = viewController.getViewContainer();
 
-		horizontalLayout = new HorizontalLayout();
 		horizontalLayout.setWidth(100,Sizeable.UNITS_PERCENTAGE);
 		horizontalLayout.addComponent(leftPanel);
 		horizontalLayout.addComponent(viewContainer);
@@ -476,11 +477,19 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		{
 			if(showPanel)
 			{
+				/* Fix for tab sheet - without those line, it doesn't expand */
+				leftPanel.setWidth(300, Sizeable.UNITS_PIXELS);
 				show();
+				horizontalLayout.setSizeFull();
+				horizontalLayout.requestRepaintAll();
 			}
 			else
 			{
+				/* Fix for tab sheet - without those line, it doesn't expand */
+				leftPanel.setWidth(0, Sizeable.UNITS_PIXELS);
 				hide();
+				horizontalLayout.setSizeFull();
+				horizontalLayout.requestRepaintAll();
 			}
 		}
 
