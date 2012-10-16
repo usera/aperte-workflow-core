@@ -545,7 +545,11 @@ public class ActivityQueuesPane extends Panel implements VaadinUtility.Refreshab
 		if (nonblankQueueName) {
 			return queueName;
 		}
-		return getMessageNoBlank(q.getDescription());
+		desc = getMessageNoBlank(q.getDescription());
+		if (hasText(desc)) {
+			return desc;
+		}
+		return q.getName();
 	}
 
 	private String getMessage(String title)
