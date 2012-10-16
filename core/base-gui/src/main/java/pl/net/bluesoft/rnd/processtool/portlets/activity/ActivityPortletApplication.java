@@ -70,6 +70,11 @@ public class ActivityPortletApplication extends GenericVaadinPortlet2BpmApplicat
     	msgs.setAuthenticationErrorCaption(null);
     	msgs.setAuthenticationErrorMessage(null);
     	msgs.setAuthenticationErrorNotificationEnabled(false);
+    	
+    	msgs.setCommunicationErrorCaption(null);
+    	msgs.setCommunicationErrorMessage(null);
+    	msgs.setCommunicationErrorNotificationEnabled(false);
+    	
     	return msgs;
     }
 	
