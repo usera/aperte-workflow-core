@@ -1,31 +1,47 @@
 package org.aperteworkflow.util.vaadin;
 
-import com.vaadin.Application;
-import com.vaadin.service.ApplicationContext;
-import com.vaadin.terminal.gwt.server.PortletApplicationContext2;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Window;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.EventRequest;
+import javax.portlet.EventResponse;
+import javax.portlet.PortletSession;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+
 import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.liferay.PortalBridge;
+
 import pl.net.bluesoft.rnd.processtool.ProcessToolContext;
 import pl.net.bluesoft.rnd.processtool.bpm.ProcessToolBpmSession;
-import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.rnd.processtool.model.UserData;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolGuiCallback;
 import pl.net.bluesoft.rnd.util.i18n.I18NSource;
+import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
 import pl.net.bluesoft.util.eventbus.EventListener;
 import pl.net.bluesoft.util.eventbus.listenables.Listenable;
 import pl.net.bluesoft.util.eventbus.listenables.ListenableSupport;
 import pl.net.bluesoft.util.lang.Strings;
 
-import javax.portlet.*;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static org.aperteworkflow.util.vaadin.ApplicationPortlet2WithLoadingMessage.hideLoadingMessage;
+import com.vaadin.Application;
+import com.vaadin.service.ApplicationContext;
+import com.vaadin.terminal.gwt.server.PortletApplicationContext2;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Window;
 
 /**
  * @author tlipski@bluesoft.net.pl
@@ -91,7 +107,6 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
             if (loginRequired) {
                 window.removeAllComponents();
                 window.addComponent(new Label(getMessage("please.log.in")));
-                hideLoadingMessage(window, (PortletApplicationContext2) getContext());
                 return;
             }
         } else {
@@ -111,7 +126,6 @@ public abstract class GenericVaadinPortlet2BpmApplication extends Application im
         }
         initialized = true;
         renderPortlet();
-        hideLoadingMessage(window, (PortletApplicationContext2) getContext());
         handleRequestListeners();
     }
 
