@@ -26,6 +26,7 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static com.vaadin.ui.Window.Notification.*;
@@ -580,58 +581,71 @@ public class VaadinUtility {
         return new Embedded(null, new FileResource(file, application));
     }
 
-
     public static String getLocalizedMessage(String key) {
-      return I18NSource.ThreadUtil.getLocalizedMessage(key);
-  }
+		return I18NSource.ThreadUtil.getLocalizedMessage(key);
+  	}
 
 
-    public static <T extends Component> T styled(T c, String style) {
-        c.addStyleName(style);
-        return c;
-    }
+	public static <T extends Component> T styled(T c, String style) {
+		c.addStyleName(style);
+		return c;
+	}
 
-    public static Runnable confirmable(final Application app, final String windowCaption, final String message,
-                                       final Runnable runnable) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                ConfirmDialog.show(app.getMainWindow(),
-                        windowCaption, message,
-                        getLocalizedMessage("confirm.yes"),
-                        getLocalizedMessage("confirm.no"),
-                        new ConfirmDialog.Listener() {
-                            @Override
-                            public void onClose(ConfirmDialog confirmDialog) {
-                                if (confirmDialog.isConfirmed()) {
-                                    runnable.run();
-                                }
-                            }
-                        });
-            }
-        };
-    }
+	public static Runnable confirmable(final Application app, final String windowCaption, final String message,
+									   final Runnable runnable) {
+		return new Runnable() {
+			@Override
+			public void run() {
+				ConfirmDialog.show(app.getMainWindow(),
+						windowCaption, message,
+						getLocalizedMessage("confirm.yes"),
+						getLocalizedMessage("confirm.no"),
+						new ConfirmDialog.Listener() {
+							@Override
+							public void onClose(ConfirmDialog confirmDialog) {
+								if (confirmDialog.isConfirmed()) {
+									runnable.run();
+								}
+							}
+						});
+			}
+		};
+	}
 
-    public static Button linkButton(String caption, final Runnable onClick) {
-        Button b = button(caption, onClick);
-        b.setStyleName(Reindeer.BUTTON_LINK);
-        return b;
-    }
-    
-    public static Button button(String caption, final Runnable onClick) {
-        Button b = new Button(caption);
-        b.addListener(new Button.ClickListener() {
-            @Override
-            public void buttonClick(Button.ClickEvent event) {
-                onClick.run();
-            }
-        });
-        return b;
-    }
-    
-    public static <T extends Component> T width(T c, String width) {
-        c.setWidth(width);
-        return c;
-    }
+	public static Button linkButton(String caption, final Runnable onClick) {
+		Button b = button(caption, onClick);
+		b.setStyleName(Reindeer.BUTTON_LINK);
+		return b;
+	}
 
+	public static Button button(String caption, final Runnable onClick) {
+		Button b = new Button(caption);
+		b.addListener(new Button.ClickListener() {
+			@Override
+			public void buttonClick(Button.ClickEvent event) {
+				onClick.run();
+			}
+		});
+		return b;
+	}
+
+	public static <T extends Component> T width(T c, String width) {
+		c.setWidth(width);
+		return c;
+	}
+
+	public static  <C extends Component> Component joinHorizontally(List<C> components) {
+		switch (components.size()) {
+			case 0:
+				return null;
+			case 1:
+				return components.get(0);
+			default:
+				HorizontalLayout hl = new HorizontalLayout();
+				for (Component c : components) {
+					hl.addComponent(c);
+				}
+				return hl;
+		}
+	}
 }
