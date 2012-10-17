@@ -21,10 +21,12 @@ public class TableWithRowHeader extends CustomComponent implements ItemSetChange
 		this.rowHeight = rowHeight;
 		this.mainTable = mainTable;
 		this.headerTable = headerTable;
+		
+		headerTable.setWidth(200, UNITS_PIXELS);
 
-		mainTable.setImmediate(true);
+		mainTable.setImmediate(false);
 		mainTable.addListener((ItemSetChangeListener)this);
-		mainTable.addListener((ColumnResizeListener)this);
+		//mainTable.addListener((ColumnResizeListener)this);
 
 		panel = new Panel();
 		panel.setScrollable(true);
@@ -40,8 +42,16 @@ public class TableWithRowHeader extends CustomComponent implements ItemSetChange
 
 		hl.setExpandRatio(headerTable, 0);
 		hl.setExpandRatio(panel, 1);
+		
+		vl = new VerticalLayout();
+		vl.setSpacing(false);
+		vl.setMargin(false);
+		vl.setSizeUndefined();
+		vl.addComponent(mainTable);
+		
+		panel.setContent(vl);
 
-		updateWidth();
+		//updateWidth();
 		updateHeight();
 
 		setCompositionRoot(hl);
@@ -57,20 +67,16 @@ public class TableWithRowHeader extends CustomComponent implements ItemSetChange
 		updateWidth();
 	}
 
-	private void updateWidth() {
+	private void updateWidth() 
+	{
 		mainTable.setSizeUndefined();
-		vl = new VerticalLayout();
-		vl.setSpacing(false);
-		vl.setMargin(false);
 		vl.setSizeUndefined();
-		vl.addComponent(mainTable);
-		panel.setContent(vl);
 	}
 
 	void updateHeight(){
 		int items = headerTable.getContainerDataSource().getItemIds().size();
 		headerTable.setHeight(headerHeight + rowHeight * items + 2, Sizeable.UNITS_PIXELS);
-		mainTable.setHeight(headerHeight + rowHeight * items + 2, Sizeable.UNITS_PIXELS);
+		mainTable.setHeight(headerHeight + rowHeight * items, Sizeable.UNITS_PIXELS);
 		panel.setHeight(headerHeight + rowHeight * items + 20, Sizeable.UNITS_PIXELS);
 	}
 }
