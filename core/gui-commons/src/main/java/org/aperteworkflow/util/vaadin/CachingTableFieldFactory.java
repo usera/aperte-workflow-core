@@ -42,6 +42,13 @@ public class CachingTableFieldFactory implements TableFieldFactory {
 		return field;
 	}
 
+	public void invalidate(Object itemId, Object propertyId) {
+		Map<Object, Field> itemIdToFieldMap = fieldCache.get(propertyId);
+		if (itemIdToFieldMap != null) {
+			itemIdToFieldMap.remove(itemId);
+		}
+	}
+
 	public void invalidate(Object itemId) {
 		for (Map<Object, Field> itemIdToFieldMap : fieldCache.values()) {
 			itemIdToFieldMap.remove(itemId);
