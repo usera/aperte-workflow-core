@@ -98,6 +98,9 @@ public class LdapBridge {
         if (ldapUserAttributes == null || ldapUserAttributes.isEmpty()) {
             ldapUserAttributes = loadUserAttributesProperty(ctx);
         }
+        
+        logger.info("ldapUserAttributes are: "+ldapUserAttributes);
+        
         Map<Long, Set<Long>> ldapServerMappings = new HashMap<Long, Set<Long>>();
         Map<String, Properties> result = new HashMap<String, Properties>();
         for (UserData user : users) {
@@ -167,23 +170,38 @@ public class LdapBridge {
         }};
         String screenName = propertiesMap.size() == 1 ? propertiesMap.entrySet().iterator().next().getKey() : null;
         NamingEnumeration<SearchResult> enu = searchLdapUsers(context, companyId, ldapServerId, screenName, attributesToFetch);
-        while (enu.hasMoreElements()) {
+        
+        int ldapUserCount = 0;
+        
+        while (enu.hasMoreElements()) 
+        {
+        	ldapUserCount++;
             SearchResult result = enu.nextElement();
             Attributes attributes = result.getAttributes();
             String login = getAttributeValue(attributes, userMappingsScreenName, null);
+            logger.info("Teta user login: "+login);
+
             if (login != null) {
                 Properties userAttributes = propertiesMap.get(login);
+                
+                logger.info("Teta user userAttributes: "+userAttributes);
                 if (userAttributes != null) {
                     for (String propertyName : customAttributes.stringPropertyNames()) {
                         String value = getAttributeValue(attributes, customAttributes.getProperty(propertyName), null);
+                        logger.info("Teta user property="+propertyName+", value="+value);
                         if (value != null) {
                             userAttributes.setProperty(propertyName, value);
                         }
                     }
                 }
+                else
+                {
+                	 logger.info("Teta user userAttributes are empty for login="+login);
+                }
 
             }
         }
+        logger.info("LDAP users forund: "+ldapUserCount);
         enu.close();
     }
 

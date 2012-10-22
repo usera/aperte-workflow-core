@@ -117,7 +117,7 @@
 				</config.ProcessStateWidget>
 			</widgets>
 			<actions>
-				<config.ProcessStateAction actionType="secondary" bpmName="REJECT" label="user_substitution.Reject" description="user_substitution.ACCEPT_REQUEST.REJECT.text.1" buttonName="CommentButton" skipSaving="true" autohide="true" markProcessImportant="false" priority="1" />
+				<config.ProcessStateAction actionType="secondary" bpmName="REJECT" label="user_substitution.Reject" description="user_substitution.ACCEPT_REQUEST.REJECT.text.1" buttonName="CommentButton" skipSaving="true" autohide="true" markProcessImportant="true" priority="1" />
 				<config.ProcessStateAction bpmName="TO_HANDLE_ACCEPTANCE" label="user_substitution.Accept" description="user_substitution.ACCEPT_REQUEST.TO_HANDLE_ACCEPTANCE.text.1" buttonName="Default" skipSaving="false" autohide="true" markProcessImportant="false" priority="2" />
 			</actions>
 		</config.ProcessStateConfiguration>

@@ -111,7 +111,8 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		showHideButton0 = new Button();
 		showHideButton0.setStyleName(BaseTheme.BUTTON_LINK);
 		showHideButton0.setIcon(resourceCache.getImage("/img/guzik_1.png"));
-
+		showHideButton0.setSizeFull();
+		
 		showHideButton1 = new Button(); 
 		showHideButton1.setStyleName(BaseTheme.BUTTON_LINK);
 		showHideButton1.setIcon(resourceCache.getImage("/img/guzik_2.png"));
@@ -477,34 +478,38 @@ public class ActivityMainPane extends VerticalLayout implements ViewCallback
 		{
 			if(showPanel)
 			{
-				/* Fix for tab sheet - without those line, it doesn't expand */
-				leftPanel.setWidth(300, Sizeable.UNITS_PIXELS);
 				show();
-				horizontalLayout.setSizeFull();
-				horizontalLayout.requestRepaintAll();
 			}
 			else
 			{
-				/* Fix for tab sheet - without those line, it doesn't expand */
-				leftPanel.setWidth(0, Sizeable.UNITS_PIXELS);
 				hide();
-				horizontalLayout.setSizeFull();
-				horizontalLayout.requestRepaintAll();
 			}
 		}
 
 		public void hide()
 		{
+			/* Fix for tab sheet - without those line, it doesn't expand */
+			leftPanel.setWidth(0, Sizeable.UNITS_PIXELS);
+			
 			leftPanel.setVisible(false);
 			leftPanelVisible = false;
 			showHideButton0.setVisible(true);
+			
+			horizontalLayout.setSizeFull();
+			horizontalLayout.requestRepaintAll();
 		}
 
 		public void show()
 		{
+			/* Fix for tab sheet - without those line, it doesn't expand */
+			leftPanel.setWidth(300, Sizeable.UNITS_PIXELS);
+			
 			leftPanel.setVisible(true);
 			leftPanelVisible = true;
 			showHideButton0.setVisible(false);
+			
+			horizontalLayout.setSizeFull();
+			horizontalLayout.requestRepaintAll();
 		}
 	}
 
