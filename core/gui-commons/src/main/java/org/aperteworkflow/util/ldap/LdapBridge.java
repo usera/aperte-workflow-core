@@ -20,8 +20,11 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.aperteworkflow.util.liferay.LiferayBridge;
 import org.aperteworkflow.util.liferay.PortalBridge;
@@ -42,6 +45,7 @@ import com.liferay.portal.kernel.util.Validator;
 
 /**
  * @author amichalak@bluesoft.net.pl
+ * @author mpawlak@bluesoft.net.pl
  */
 public class LdapBridge {
     private static final Logger logger = Logger.getLogger(LdapBridge.class.getName());
@@ -168,52 +172,111 @@ public class LdapBridge {
                 add(customAttributes.getProperty(sn));
             }
         }};
-        String screenName = propertiesMap.size() == 1 ? propertiesMap.entrySet().iterator().next().getKey() : null;
-        NamingEnumeration<SearchResult> enu = searchLdapUsers(context, companyId, ldapServerId, screenName, attributesToFetch);
         
+        String screenName = propertiesMap.size() == 1 ? propertiesMap.entrySet().iterator().next().getKey() : null;
+        
+
+        /* User paged results to control page size. Some systems can have limited query size (for example Active Directory, which limits 
+         * results count to 1000. So we must use Range property to perform multiple search
+         */
+		PagedResultsControl pagedControls = new PagedResultsControl(500, Control.CRITICAL);
+		context.setRequestControls(new Control[] {pagedControls});
+		
+		/* Cookie is used to inform server to send another page */
+		byte[] cookie = null;
+	    int total = 0;
+
+        
+        /* Sum of all users imported from LDAP */
         int ldapUserCount = 0;
         
-        while (enu.hasMoreElements()) 
+        
+        do
         {
-        	ldapUserCount++;
-            SearchResult result = enu.nextElement();
-            Attributes attributes = result.getAttributes();
-            String login = getAttributeValue(attributes, userMappingsScreenName, null);
-            logger.info("Teta user login: "+login);
+        	/* Create search controls and apply range limit */
+        	SearchControls searchControls = createSearchControls(screenName, attributesToFetch);
+        	NamingEnumeration<SearchResult> enu = searchLdapUsers(context, companyId, ldapServerId, screenName, searchControls);
+        	
+        	/* There should be no exception here becouse we use paged searching */
+            while (enu.hasMore()) 
+            {
+            	ldapUserCount++;
+                SearchResult result = enu.nextElement();
+                Attributes attributes = result.getAttributes();
+                String login = getAttributeValue(attributes, userMappingsScreenName, null);
 
-            if (login != null) {
-                Properties userAttributes = propertiesMap.get(login);
-                
-                logger.info("Teta user userAttributes: "+userAttributes);
-                if (userAttributes != null) {
-                    for (String propertyName : customAttributes.stringPropertyNames()) {
-                        String value = getAttributeValue(attributes, customAttributes.getProperty(propertyName), null);
-                        logger.info("Teta user property="+propertyName+", value="+value);
-                        if (value != null) {
-                            userAttributes.setProperty(propertyName, value);
+                if (login != null) 
+                {
+                	logger.info("Teta user login: "+login);
+                    Properties userAttributes = propertiesMap.get(login);
+                    if (userAttributes != null) {
+                        for (String propertyName : customAttributes.stringPropertyNames()) {
+                            String value = getAttributeValue(attributes, customAttributes.getProperty(propertyName), null);
+                            logger.info("Teta user property="+propertyName+", value="+value);
+                            if (value != null) {
+                                userAttributes.setProperty(propertyName, value);
+                            }
                         }
                     }
-                }
-                else
-                {
-                	 logger.info("Teta user userAttributes are empty for login="+login);
-                }
+                    else
+                    {
+                    	 logger.info("Teta user userAttributes are empty for login="+login);
+                    }
 
+                }
             }
-        }
+            
+            /* Search response controls form paged results control */
+            Control[] controls = context.getResponseControls();
+            if (controls != null) 
+            {
+                for (int i = 0; i < controls.length; i++) 
+                {
+                    if (controls[i] instanceof PagedResultsResponseControl) 
+                    {
+                        PagedResultsResponseControl prrc = (PagedResultsResponseControl)controls[i];
+                        total = prrc.getResultSize();
+                        cookie = prrc.getCookie();
+                        
+                        /* Update ldap context. In this moment, we inform server that it should
+                         * send another page of results
+                         * 
+                         * If cookie == null, there is no more results
+                         */
+                        pagedControls = new PagedResultsControl(500, cookie, Control.CRITICAL);
+                		context.setRequestControls(new Control[] {pagedControls});
+                    }
+                }
+            }
+	            
+        	
+        	enu.close();
+        	
+        /* No more results, end of ldap synchronization */
+        } while(cookie != null);
+        
+
         logger.info("LDAP users forund: "+ldapUserCount);
-        enu.close();
+    }
+    
+    
+    private static SearchControls createSearchControls(String userLogin, Set<String> attributesToFetch)
+    {
+    	int count = Strings.hasText(userLogin) ? 1 : 0;
+
+        SearchControls searchControls = new SearchControls(SearchControls.SUBTREE_SCOPE, count, 0,
+                attributesToFetch.toArray(new String[attributesToFetch.size()]), false, false);
+        
+        return searchControls;
     }
 
     private static NamingEnumeration<SearchResult> searchLdapUsers(LdapContext context, Long companyId, Long ldapServerId, String userLogin,
-                                                                   Set<String> attributesToFetch) throws Exception {
-        int count = Strings.hasText(userLogin) ? 1 : 0;
+    		SearchControls searchControls) throws Exception 
+    		{
         String screenName = Strings.hasText(userLogin) ? userLogin : StringPool.STAR;
         String postfix = getPropertyPostfix(ldapServerId);
         String baseDN = PortalBridge.getString(companyId, PropsKeys.LDAP_BASE_DN + postfix);
         String filter = getAuthSearchFilter(ldapServerId, companyId, StringPool.BLANK, screenName, StringPool.BLANK);
-        SearchControls searchControls = new SearchControls(SearchControls.SUBTREE_SCOPE, count, 0,
-                attributesToFetch.toArray(new String[attributesToFetch.size()]), false, false);
         return context.search(baseDN, filter, searchControls);
     }
     
