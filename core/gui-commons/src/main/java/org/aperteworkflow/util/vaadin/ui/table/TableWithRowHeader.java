@@ -32,7 +32,7 @@ public class TableWithRowHeader extends CustomComponent implements ItemSetChange
 
 		mainTable.setImmediate(false);
 		mainTable.addListener((ItemSetChangeListener)this);
-		mainTable.addListener((ColumnResizeListener)this);
+		//mainTable.addListener((ColumnResizeListener)this);
 
 		panel = new Panel();
 		panel.setScrollable(true);
@@ -60,7 +60,7 @@ public class TableWithRowHeader extends CustomComponent implements ItemSetChange
 		
 		panel.setContent(vl);
 
-		//updateWidth();
+		updateWidth();
 		updateHeight();
 
 		setCompositionRoot(hl);
