@@ -42,7 +42,7 @@ public class NotificationHistoryPanel extends VerticalLayout implements DataLoad
 		notificationHistoryEntries = from(notificationHistoryEntries).orderBy(new F<NotificationHistoryEntry, Comparable>() {
 			@Override
 			public Comparable invoke(NotificationHistoryEntry x) {
-				return nvl(x.getSendDate(), x.getEnqueueDate());
+				return x.getEnqueueDate();
 			}
 		}).toList();
 		table.setItems(notificationHistoryEntries);
