@@ -84,10 +84,21 @@ public class DictionaryItemValuesField extends CustomField {
         for (ProcessDBDictionaryItemValue val : originalValue) {
             modifiedValue.add(val.exactCopy());
         }
+        
+        /* Some garbage, structured-style code... */
         Collections.sort(modifiedValue, new Comparator<ProcessDBDictionaryItemValue>() {
             @Override
-            public int compare(ProcessDBDictionaryItemValue o1, ProcessDBDictionaryItemValue o2) {
-                return o1.getValue().compareTo(o2.getValue());
+            public int compare(ProcessDBDictionaryItemValue o1, ProcessDBDictionaryItemValue o2) 
+            {
+            	/* The null value is higher then anything else */
+            	if(o1.getValidStartDate() == null)
+            		return Integer.MIN_VALUE;
+            	
+            	else if(o2.getValidStartDate() == null)
+            		return Integer.MAX_VALUE;
+            	
+            	/* The newer the date is the position of value is higher in collection */
+                return o2.getValidStartDate().compareTo(o1.getValidStartDate());
             }
         });
     }
