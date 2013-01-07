@@ -24,6 +24,8 @@ public class DictionaryItemForm extends Form {
     private GridLayout layout;
     private Button addButton;
 
+	private boolean validationEnabled = false;
+
     private static final Set<String> FIELDS_VISIBLE = new HashSet<String>() {{
         add("stringKey");
         add("description");
@@ -42,6 +44,7 @@ public class DictionaryItemForm extends Form {
         saveButton = smallButton(getMessage("button.save"));
         cancelButton = smallButton(getMessage("button.cancel"));
         initForm();
+		validationEnabled = true;
     }
 
     public void addSaveClickListener(ClickListener clickListener) {
@@ -60,7 +63,7 @@ public class DictionaryItemForm extends Form {
 
         setLayout(layout);
         setLocale(application.getLocale());
-        setFormFieldFactory(new DictionaryItemFormFieldFactory(application, source,
+        setFormFieldFactory(new DictionaryItemFormFieldFactory(application, this, source,
                 FIELDS_VISIBLE, FIELDS_EDITABLE, FIELDS_REQUIRED));
         setItemDataSource(item);
         setVisibleItemProperties(FIELDS_VISIBLE);
@@ -127,4 +130,8 @@ public class DictionaryItemForm extends Form {
         addButton.setReadOnly(readOnly);
         super.setReadOnly(readOnly);
     }
+
+	public boolean isValidationEnabled() {
+		return validationEnabled;
+	}
 }
