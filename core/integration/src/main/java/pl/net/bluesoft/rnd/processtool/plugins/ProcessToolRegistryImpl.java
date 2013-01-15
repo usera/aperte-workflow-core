@@ -62,6 +62,7 @@ import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolActionButton;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.ProcessToolWidget;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.annotations.AliasName;
 import pl.net.bluesoft.rnd.processtool.ui.widgets.taskitem.TaskItemProvider;
+import pl.net.bluesoft.rnd.util.ConfigurationResult;
 import pl.net.bluesoft.rnd.util.func.Func;
 import pl.net.bluesoft.rnd.util.i18n.I18NProvider;
 import pl.net.bluesoft.rnd.util.i18n.I18NSourceFactory;
@@ -678,7 +679,7 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
        }
 
        @Override
-       public void registerProcessDictionaries(InputStream is) {
+       public void registerProcessDictionaries(InputStream is, ConfigurationResult result) {
            if (is != null) {
                ProcessDictionaries dictionaries = (ProcessDictionaries) DictionaryLoader.getInstance().unmarshall(is);
                String processBpmKey = dictionaries.getProcessBpmDefinitionKey();
@@ -692,7 +693,10 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
                    if (definitionConfig == null) {
                        throw new DictionaryLoadingException("No active definition config with BPM key: " + processBpmKey);
                    }
-                   saveDictionaryInternal(session, definitionConfig, dictionaries);
+                   
+                   result.setNewOne(definitionConfig);
+                   
+                   saveDictionaryInternal(session, result, dictionaries);
                    tx.commit();
                    logger.warning("Registered dictionaries for process: " + processBpmKey);
                }
@@ -702,7 +706,7 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
            }
        }
 
-       private void saveDictionaryInternal(Session session, ProcessDefinitionConfig definitionConfig, ProcessDictionaries dictionaries) {
+       private void saveDictionaryInternal(Session session, ConfigurationResult result, ProcessDictionaries dictionaries) {
            ProcessDictionaryDAO dao = getProcessDictionaryDAO(session);
            List<ProcessDBDictionary> processDBDictionaries = DictionaryLoader.getDictionariesFromXML(dictionaries);
            for (ProcessDBDictionary dict : processDBDictionaries) {
@@ -716,11 +720,15 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
                }
            }
            DictionaryLoader.validateDictionaries(processDBDictionaries);
-           dao.createOrUpdateDictionaries(definitionConfig, processDBDictionaries,
+           
+           
+           
+           
+           dao.createOrUpdateDictionaries(result, processDBDictionaries,
                    dictionaries.getOverwrite() != null && dictionaries.getOverwrite());
        }
     @Override
-	public void deployOrUpdateProcessDefinition(final InputStream jpdlStream,
+	public ConfigurationResult deployOrUpdateProcessDefinition(final InputStream jpdlStream,
 	                                            final ProcessDefinitionConfig cfg,
 	                                            final ProcessQueueConfig[] queues,
 	                                            final InputStream imageStream,
@@ -728,12 +736,12 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
 		if (processToolContextFactory == null) {
 			throw new RuntimeException("No process tool context factory implementation registered");
 		}
-		processToolContextFactory.deployOrUpdateProcessDefinition(jpdlStream, cfg, queues, imageStream, logoStream);
+		return processToolContextFactory.deployOrUpdateProcessDefinition(jpdlStream, cfg, queues, imageStream, logoStream);
 	}
 
 
     @Override
-    public void deployOrUpdateProcessDefinition(InputStream jpdlStream,
+    public ConfigurationResult deployOrUpdateProcessDefinition(InputStream jpdlStream,
                                                 InputStream processToolConfigStream,
                                                 InputStream queueConfigStream,
                                                 InputStream imageStream,
@@ -741,7 +749,7 @@ public class ProcessToolRegistryImpl implements ProcessToolRegistry {
         if (processToolContextFactory == null) {
             throw new RuntimeException("No process tool context factory implementation registered");
         }
-        processToolContextFactory.deployOrUpdateProcessDefinition(jpdlStream, processToolConfigStream, queueConfigStream, imageStream, logoStream);
+        return processToolContextFactory.deployOrUpdateProcessDefinition(jpdlStream, processToolConfigStream, queueConfigStream, imageStream, logoStream);
     }
 
     @Override

@@ -1,40 +1,38 @@
 package pl.net.bluesoft.rnd.processtool.plugins.osgi;
 
-import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.util.FelixConstants;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig; 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.*;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
-import org.aperteworkflow.search.ProcessInstanceSearchAttribute;
-import org.aperteworkflow.search.ProcessInstanceSearchData;
-import org.aperteworkflow.search.SearchProvider;
-import org.aperteworkflow.ui.view.ViewRegistry;
-import org.aperteworkflow.ui.view.impl.DefaultViewRegistryImpl;
-import org.aperteworkflow.util.liferay.LiferayBridge;
-import org.osgi.framework.*;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.BUTTON_ENHANCEMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.GLOBAL_DICTIONARY;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.I18N_PROPERTY;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.MODEL_ENHANCEMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.PROCESS_DEPLOYMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.RESOURCES;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.ROLE_FILES;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.STEP_ENHANCEMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.TASK_ITEM_ENHANCEMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.WIDGET_ENHANCEMENT;
+import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.getBundleResourceStream;
+import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
+import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
 
-import com.thoughtworks.xstream.XStream;
-
-import pl.net.bluesoft.rnd.processtool.plugins.*;
-import pl.net.bluesoft.rnd.processtool.steps.ProcessToolProcessStep;
-import pl.net.bluesoft.rnd.util.i18n.impl.PropertiesBasedI18NProvider;
-import pl.net.bluesoft.rnd.util.i18n.impl.PropertyLoader;
-import pl.net.bluesoft.util.lang.cquery.func.F;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,9 +42,53 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static pl.net.bluesoft.rnd.processtool.plugins.osgi.OSGiBundleHelper.*;
-import static pl.net.bluesoft.util.lang.FormatUtil.nvl;
-import static pl.net.bluesoft.util.lang.cquery.CQuery.from;
+import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.FelixConstants;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
+import org.aperteworkflow.search.ProcessInstanceSearchAttribute;
+import org.aperteworkflow.search.ProcessInstanceSearchData;
+import org.aperteworkflow.search.SearchProvider;
+import org.aperteworkflow.ui.view.ViewRegistry;
+import org.aperteworkflow.ui.view.impl.DefaultViewRegistryImpl;
+import org.aperteworkflow.util.liferay.LiferayBridge;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
+
+import pl.net.bluesoft.rnd.processtool.plugins.PluginManagementException;
+import pl.net.bluesoft.rnd.processtool.plugins.PluginManager;
+import pl.net.bluesoft.rnd.processtool.plugins.PluginMetadata;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistry;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolRegistryImpl;
+import pl.net.bluesoft.rnd.processtool.plugins.ProcessToolServiceBridge;
+import pl.net.bluesoft.rnd.processtool.steps.ProcessToolProcessStep;
+import pl.net.bluesoft.rnd.util.ConfigurationResult;
+import pl.net.bluesoft.rnd.util.i18n.impl.PropertiesBasedI18NProvider;
+import pl.net.bluesoft.rnd.util.i18n.impl.PropertyLoader;
+import pl.net.bluesoft.util.lang.cquery.func.F;
+
+import com.thoughtworks.xstream.XStream;
 
 public class PluginHelper implements PluginManager, SearchProvider {
 
@@ -363,7 +405,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
             if (eventType == Bundle.ACTIVE) {
                 try {
                     String basePath = SEPARATOR + processPackage.replace(".", SEPARATOR) + SEPARATOR;
-                    toolRegistry.deployOrUpdateProcessDefinition(
+                    ConfigurationResult result = toolRegistry.deployOrUpdateProcessDefinition(
                             bundleHelper.getBundleResourceStream(basePath + "processdefinition." +
                                     toolRegistry.getBpmDefinitionLanguage() + ".xml"),
                             bundleHelper.getBundleResourceStream(basePath + "processtool-config.xml"),
@@ -378,7 +420,7 @@ public class PluginHelper implements PluginManager, SearchProvider {
                         }
                     }, "/" + processPackage.replace(".", SEPARATOR) + "/messages"), providerId);
 
-                    toolRegistry.registerProcessDictionaries(bundleHelper.getBundleResourceStream(basePath + "process-dictionaries.xml"));
+                    toolRegistry.registerProcessDictionaries(bundleHelper.getBundleResourceStream(basePath + "process-dictionaries.xml"),result);
 
                 }
                 catch (Exception e) {
