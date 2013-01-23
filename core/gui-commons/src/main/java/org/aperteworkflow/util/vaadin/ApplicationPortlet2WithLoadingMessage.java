@@ -45,11 +45,15 @@ public class ApplicationPortlet2WithLoadingMessage extends ApplicationPortlet2
 	{
 		super.handleRequest(request,response);
 		
-		for(Window window: application.getWindows())
+		if(application != null)
 		{
-			window.executeJavaScript("hideLoadingMessage('"+getLoaderTagId(request.getWindowID(), getPortletConfig())+"');");
+			for(Window window: application.getWindows())
+			{
+				window.executeJavaScript("hideLoadingMessage('"+getLoaderTagId(request.getWindowID(), getPortletConfig())+"');");
+			}
 		}
 	}
+		
 
 	private static String getLoaderTagId(String portletId, PortletConfig config) {
 		return ("vaadinLoader_" + config.getPortletName() + "_" + config.getPortletContext().getPortletContextName() + "_" + portletId.replace("-",""))
