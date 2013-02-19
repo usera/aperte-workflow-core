@@ -43,4 +43,6 @@ public abstract class PersistentEntity implements Serializable {
     public void setOptLock(Integer optLock) {
         this.optLock = optLock;
     }*/
+    
+    
 }

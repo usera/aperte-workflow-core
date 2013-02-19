@@ -8,3 +8,9 @@
 target
 bin/
 *.class
+/core/base-gui/src/main/resources/rebel.xml
+/core/gui-commons/src/main/java/rebel.xml
+/core/integration-interface/src/main/java/rebel.xml
+/core/integration/src/main/resources/rebel.xml
+/core/model/src/main/java/rebel.xml
+/plugins/base-widgets/src/main/resources/rebel.xml

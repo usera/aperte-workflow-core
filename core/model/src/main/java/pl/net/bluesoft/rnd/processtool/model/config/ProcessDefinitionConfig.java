@@ -164,4 +164,9 @@ public class ProcessDefinitionConfig extends PersistentEntity implements Seriali
     public void setPermissions(Set<ProcessDefinitionPermission> permissions) {
         this.permissions = permissions;
     }
+    
+    @Override
+    public String toString() {
+    	return processName;
+    }
 }

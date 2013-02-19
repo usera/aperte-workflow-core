@@ -36,11 +36,11 @@ public class DictionaryItemForm extends Form {
         add("stringKey");
     }};
 
-    public DictionaryItemForm(Application application, I18NSource source, BeanItem<ProcessDBDictionaryItem> item) {
+    public DictionaryItemForm(Application application, I18NSource source, ProcessDBDictionaryItem item) {
         super();
         this.application = application;
         this.source = source;
-        this.item = item;
+        this.item = new BeanItem<ProcessDBDictionaryItem>(item);
         saveButton = smallButton(getMessage("button.save"));
         cancelButton = smallButton(getMessage("button.cancel"));
         initForm();
