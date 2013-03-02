@@ -71,7 +71,7 @@ public class ProcessDBDictionaryItemValue extends PersistentEntity implements Pr
         this.validEndDate = itemValue.getValidEndDate();
         for (ProcessDBDictionaryItemExtension ext : itemValue.getExtensions())
         {
-        	extensions.add(ext.exactCopy());
+        	addExtension(ext.exactCopy());
         }
     }
 
@@ -183,6 +183,8 @@ public class ProcessDBDictionaryItemValue extends PersistentEntity implements Pr
 	}
 
 
-	
-    
+	public void addExtension(ProcessDBDictionaryItemExtension extension) {
+		extensions.add(extension);
+		extension.setItemValue(this);
+	}
 }
