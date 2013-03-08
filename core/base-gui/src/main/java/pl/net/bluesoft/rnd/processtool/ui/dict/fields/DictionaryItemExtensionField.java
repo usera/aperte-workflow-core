@@ -141,6 +141,7 @@ public class DictionaryItemExtensionField extends CustomField  {
             @Override
             public void buttonClick(ClickEvent event) 
             {
+            	ext.setItemValue(null);
             	getExtensions().remove(ext);
                 itemsLayout.removeComponent(form);
                 if (getExtensions().isEmpty()) {
@@ -279,6 +280,7 @@ public class DictionaryItemExtensionField extends CustomField  {
     	if(getValue() == null)
     		return new HashSet<ProcessDBDictionaryItemExtension>();
     	
-    	return (Set<ProcessDBDictionaryItemExtension>)getValue();
+    	Set<ProcessDBDictionaryItemExtension> extensions = (Set<ProcessDBDictionaryItemExtension>)getValue();
+    	return extensions;
     }
 }

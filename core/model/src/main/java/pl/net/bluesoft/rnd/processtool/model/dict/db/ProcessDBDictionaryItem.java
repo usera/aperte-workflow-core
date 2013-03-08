@@ -34,6 +34,7 @@ public class ProcessDBDictionaryItem extends PersistentEntity implements Process
     @Column(name="key_", nullable=false)
     private String key;
     private String valueType;
+
     @Lob
     @Type(type = "org.hibernate.type.StringClobType")
     private String description;
@@ -138,9 +139,8 @@ public class ProcessDBDictionaryItem extends PersistentEntity implements Process
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((key == null) ? 0 : key.hashCode());
-		result = prime * result
-				+ ((valueType == null) ? 0 : valueType.hashCode());
 		return result;
 	}
 
@@ -153,14 +153,21 @@ public class ProcessDBDictionaryItem extends PersistentEntity implements Process
 		if (getClass() != obj.getClass())
 			return false;
 		ProcessDBDictionaryItem other = (ProcessDBDictionaryItem) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
 		if (key == null) {
 			if (other.key != null)
 				return false;
+			else
+				return this == obj;
 		} else if (!key.equals(other.key))
 			return false;
-
 		return true;
 	}
+
     
     
 }
