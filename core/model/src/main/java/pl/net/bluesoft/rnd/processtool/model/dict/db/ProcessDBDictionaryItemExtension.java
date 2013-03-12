@@ -1,12 +1,16 @@
 package pl.net.bluesoft.rnd.processtool.model.dict.db;
 
-import pl.net.bluesoft.rnd.processtool.model.PersistentEntity;
-import pl.net.bluesoft.rnd.processtool.model.dict.ProcessDictionaryItemExtension;
-
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+
+import pl.net.bluesoft.rnd.processtool.model.PersistentEntity;
+import pl.net.bluesoft.rnd.processtool.model.dict.ProcessDictionaryItemExtension;
 
 @Entity
 @Table(name = "pt_dictionary_item_ext")
@@ -16,7 +20,6 @@ public class ProcessDBDictionaryItemExtension extends PersistentEntity implement
     private ProcessDBDictionaryItemValue itemValue;
 
     private String name;
-    private Long id;
     @Column(name="value_")
     private String value;
     @Column(name="description_")
